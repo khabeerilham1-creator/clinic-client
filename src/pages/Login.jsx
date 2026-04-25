@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import api from "../api";
 
 export default function Login() {
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -17,7 +16,7 @@ export default function Login() {
 
       alert("Login Success ✅");
 
-      // 🔥 HASH ROUTER REDIRECT
+      // HASH ROUTER redirect
       window.location.href = "#/dashboard";
 
     } catch (err) {
@@ -28,15 +27,10 @@ export default function Login() {
 
   return (
     <div style={{ width: 320, margin: "100px auto", textAlign: "center" }}>
-
-      <h2>Clinic Login Portal 🔐</h2>
-
-      <p>
-        Please enter your credentials to access the clinic system.
-      </p>
+      <h2>Clinic Login</h2>
 
       <input
-        placeholder="Username or Email"
+        placeholder="Username"
         onChange={(e) => setUsername(e.target.value)}
       />
       <br /><br />
@@ -49,7 +43,6 @@ export default function Login() {
       <br /><br />
 
       <button onClick={login}>Login</button>
-
     </div>
   );
 }
