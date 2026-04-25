@@ -6,7 +6,7 @@ function PatientSelect({ onSelect }) {
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/patients")
+    axios.get("http://https://pis-python-backend.onrender.com:8000/patients")
       .then(res => setPatients(res.data));
   }, []);
 
