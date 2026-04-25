@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 export default function Login() {
-  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +17,7 @@ export default function Login() {
 
       alert("Login Success ✅");
 
+      // 🔥 FORCE REDIRECT (works on Vercel)
       window.location.href = "/dashboard";
 
     } catch (err) {
