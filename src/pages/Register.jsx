@@ -1,34 +1,49 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 
-function Register() {
-
-  const [data, setData] = useState({
-    username: "",
-    password: "",
-    role: "office"
-  });
+export default function Register() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const register = async () => {
-    await axios.post("http://127.0.0.1:8000/register", data);
-    alert("Registered");
+    try {
+      await api.post("/auth/register", {
+        username,
+        password,
+        role: "office"
+      });
+
+      alert("Registered. Wait for approval.");
+      window.location.href = "/login";
+    } catch (err) {
+      alert(err.response?.data?.detail || "Error");
+    }
   };
 
   return (
-    <div style={{ padding: "50px" }}>
-      <h1>Register</h1>
+    <div style={box}>
+      <h2>Register</h2>
 
-      <input placeholder="Username" onChange={e=>setData({...data, username:e.target.value})}/>
-      <input type="password" placeholder="Password" onChange={e=>setData({...data, password:e.target.value})}/>
+      <input
+        placeholder="Username"
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-      <select onChange={e=>setData({...data, role:e.target.value})}>
-        <option value="admin">Admin</option>
-        <option value="office">Office</option>
-      </select>
+      <input
+        type="password"
+        placeholder="Password"
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
       <button onClick={register}>Register</button>
     </div>
   );
 }
 
-export default Register;
+const box = {
+  width: "300px",
+  margin: "100px auto",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px"
+};
