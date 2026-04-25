@@ -17,8 +17,8 @@ export default function Login() {
 
       alert("Login Success ✅");
 
-      // 🔥 FORCE REDIRECT (works on Vercel)
-      window.location.href = "/dashboard";
+      // 🔥 HASH ROUTER REDIRECT
+      window.location.href = "#/dashboard";
 
     } catch (err) {
       console.error(err);
@@ -32,8 +32,7 @@ export default function Login() {
       <h2>Clinic Login Portal 🔐</h2>
 
       <p>
-        Please enter your credentials to access the clinic management system.
-        Only authorized users are allowed.
+        Please enter your credentials to access the clinic system.
       </p>
 
       <input
@@ -50,10 +49,6 @@ export default function Login() {
       <br /><br />
 
       <button onClick={login}>Login</button>
-
-      <p style={{ marginTop: "10px", fontSize: "12px" }}>
-        Secure access • Protected system
-      </p>
 
     </div>
   );
