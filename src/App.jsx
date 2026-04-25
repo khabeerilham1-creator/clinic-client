@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+
 import Patients from "./pages/Patients";
 import FIS from "./pages/FIS";
 import CIS from "./pages/CIS";
@@ -12,15 +13,22 @@ import Invoice from "./pages/Invoice";
 import LVI from "./pages/LVI";
 import AFI from "./pages/AFI";
 import AdminUsers from "./pages/AdminUsers";
+import Register from "./pages/Register";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
 
-        {/* Main Pages */}
+        {/* AUTH */}
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* MAIN */}
         <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* MODULES */}
         <Route path="/patients" element={<Patients />} />
         <Route path="/fis" element={<FIS />} />
         <Route path="/cis" element={<CIS />} />
@@ -31,8 +39,9 @@ function App() {
         <Route path="/lvi" element={<LVI />} />
         <Route path="/afi" element={<AFI />} />
         <Route path="/admin" element={<AdminUsers />} />
+
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
