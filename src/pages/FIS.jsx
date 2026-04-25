@@ -4,6 +4,8 @@ import PatientSelect from "../components/PatientSelect";
 
 function FIS() {
 
+  const BASE_URL = "https://pis-python-backend.onrender.com";
+
   const [patient, setPatient] = useState(null);
 
   const [data, setData] = useState({
@@ -46,7 +48,7 @@ function FIS() {
   }, []);
 
   const load = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/invoices");
+    const res = await axios.get(`${BASE_URL}/invoices`);
     setInvoices(res.data);
   };
 
@@ -56,9 +58,9 @@ function FIS() {
 
   const save = async () => {
 
-    if (!patient) return alert("Select patient");
+    if (!patient) return alert("Select patient ❗");
 
-    await axios.post("http://127.0.0.1:8000/invoice", {
+    await axios.post(`${BASE_URL}/invoice`, {
       ...data,
       patient: patient.patient_no,
       total: finalTotal,
@@ -66,25 +68,34 @@ function FIS() {
       balance
     });
 
+    alert("Invoice Saved ✅");
     load();
   };
 
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>HDC Financial Intelligence System (FIS)</h1>
+      <h1>HDC Financial Intelligence System (FIS) 💰</h1>
+
+      <p>
+        This module manages billing, discount control, payment tracking,
+        and financial summaries for all patient treatments.
+      </p>
 
       <PatientSelect onSelect={setPatient} />
+
+      {patient && <p><strong>Selected Patient:</strong> {patient.name}</p>}
 
       <div style={grid}>
 
         {/* BILLING */}
         <div style={card}>
           <h3>1. Billing Engine</h3>
+          <p>Enter procedure details and pricing information.</p>
 
           <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
-          <input name="qty" placeholder="Qty" onChange={handleChange}/>
-          <input name="rate" placeholder="Rate" onChange={handleChange}/>
+          <input name="qty" placeholder="Quantity" onChange={handleChange}/>
+          <input name="rate" placeholder="Rate per unit" onChange={handleChange}/>
           <input name="package" placeholder="Package" onChange={handleChange}/>
           <input name="doctor" placeholder="Doctor" onChange={handleChange}/>
         </div>
@@ -92,6 +103,7 @@ function FIS() {
         {/* DISCOUNT */}
         <div style={card}>
           <h3>2. Discount Governance</h3>
+          <p>Apply discounts based on treatment category.</p>
 
           <input name="category" placeholder="Care category" onChange={handleChange}/>
           <input name="discount" placeholder="Discount %" onChange={handleChange}/>
@@ -100,6 +112,7 @@ function FIS() {
         {/* PAYMENT */}
         <div style={card}>
           <h3>3. Payment Tracking</h3>
+          <p>Record payments received from the patient.</p>
 
           <input name="payment1" placeholder="Payment 1" onChange={handleChange}/>
           <input name="payment2" placeholder="Payment 2" onChange={handleChange}/>
@@ -107,11 +120,11 @@ function FIS() {
 
         {/* SUMMARY */}
         <div style={summaryCard}>
-          <h3>Summary</h3>
+          <h3>Financial Summary</h3>
 
           <p>Total: {total}</p>
           <p>Discount: {discountAmount}</p>
-          <h2>Final: {finalTotal}</h2>
+          <h2>Final Amount: {finalTotal}</h2>
           <p>Paid: {paid}</p>
           <h2>Balance: {balance}</h2>
 
@@ -122,7 +135,7 @@ function FIS() {
 
       <hr/>
 
-      <h2>Invoices</h2>
+      <h2>Saved Invoices</h2>
 
       {invoices.map(i => (
         <div key={i._id} style={invoiceCard}>

@@ -3,6 +3,8 @@ import axios from "axios";
 
 function Reports() {
 
+  const BASE_URL = "https://pis-python-backend.onrender.com";
+
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -12,11 +14,11 @@ function Reports() {
 
   const loadPatients = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/patients");
+      const res = await axios.get(`${BASE_URL}/patients`);
       setPatients(res.data);
     } catch (err) {
       console.log(err);
-      alert("Failed to load patients");
+      alert("Failed to load patients ❌");
     }
   };
 
@@ -28,7 +30,12 @@ function Reports() {
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>Reports</h1>
+      <h1>Clinical Reports Module 📊</h1>
+
+      <p>
+        This module allows you to search patients and generate detailed
+        clinical reports including treatment history and diagnostics.
+      </p>
 
       {/* SEARCH */}
       <input
@@ -59,10 +66,10 @@ function Reports() {
 
           <button
             onClick={() =>
-              window.open(`http://127.0.0.1:8000/report/${p._id}`)
+              window.open(`${BASE_URL}/report/${p._id}`)
             }
           >
-            Show Report
+            View Report
           </button>
 
         </div>

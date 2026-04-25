@@ -3,6 +3,8 @@ import axios from "axios";
 
 function LVI() {
 
+  const BASE_URL = "https://pis-python-backend.onrender.com";
+
   const [data, setData] = useState({
     case_entry: "",
     lab_assignment: "",
@@ -23,7 +25,7 @@ function LVI() {
   }, []);
 
   const load = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/lvi");
+    const res = await axios.get(`${BASE_URL}/lvi`);
     setRecords(res.data);
   };
 
@@ -34,10 +36,10 @@ function LVI() {
   const save = async () => {
 
     if (editId) {
-      await axios.put(`http://127.0.0.1:8000/lvi/${editId}`, data);
+      await axios.put(`${BASE_URL}/lvi/${editId}`, data);
       setEditId(null);
     } else {
-      await axios.post("http://127.0.0.1:8000/lvi", data);
+      await axios.post(`${BASE_URL}/lvi`, data);
     }
 
     setData({
@@ -46,6 +48,7 @@ function LVI() {
       supplier: "", material: "", equipment: ""
     });
 
+    alert("Record Saved ✅");
     load();
   };
 
@@ -56,42 +59,53 @@ function LVI() {
 
   const remove = async (id) => {
     if (!window.confirm("Delete record?")) return;
-    await axios.delete(`http://127.0.0.1:8000/lvi/${id}`);
+    await axios.delete(`${BASE_URL}/lvi/${id}`);
     load();
   };
 
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>LAB & VENDOR INTELLIGENCE (LVI)</h1>
+      <h1>LAB & VENDOR INTELLIGENCE (LVI) 🏥</h1>
+
+      <p>
+        This module manages lab case tracking, vendor coordination,
+        and financial records related to laboratory work and materials.
+      </p>
 
       {/* ================= 1 ================= */}
       <h3>1. Lab Case Tracking</h3>
+      <p>Track all lab cases and assignments with deadlines.</p>
+
       <input name="case_entry" placeholder="Case entry" value={data.case_entry} onChange={handleChange} /><br/>
       <input name="lab_assignment" placeholder="Lab assignment" value={data.lab_assignment} onChange={handleChange} /><br/>
-      <input name="deadline" placeholder="Delivery deadlines" value={data.deadline} onChange={handleChange} /><br/>
+      <input name="deadline" placeholder="Delivery deadline" value={data.deadline} onChange={handleChange} /><br/>
 
       {/* ================= 2 ================= */}
       <h3>2. Financial Ledger</h3>
+      <p>Manage lab payments and outstanding balances.</p>
+
       <input name="lab_payable" placeholder="Lab payable" value={data.lab_payable} onChange={handleChange} /><br/>
-      <input name="paid" placeholder="Paid" value={data.paid} onChange={handleChange} /><br/>
-      <input name="pending" placeholder="Pending" value={data.pending} onChange={handleChange} /><br/>
+      <input name="paid" placeholder="Paid amount" value={data.paid} onChange={handleChange} /><br/>
+      <input name="pending" placeholder="Pending balance" value={data.pending} onChange={handleChange} /><br/>
 
       {/* ================= 3 ================= */}
       <h3>3. Vendor Management</h3>
-      <input name="supplier" placeholder="Suppliers" value={data.supplier} onChange={handleChange} /><br/>
+      <p>Track suppliers, materials, and equipment servicing.</p>
+
+      <input name="supplier" placeholder="Supplier name" value={data.supplier} onChange={handleChange} /><br/>
       <input name="material" placeholder="Material purchase" value={data.material} onChange={handleChange} /><br/>
       <input name="equipment" placeholder="Equipment servicing" value={data.equipment} onChange={handleChange} /><br/>
 
       <br/>
 
       <button onClick={save}>
-        {editId ? "Update" : "Save"}
+        {editId ? "Update Record" : "Save Record"}
       </button>
 
       <hr/>
 
-      <h2>Records</h2>
+      <h2>Saved Records</h2>
 
       {records.map(r => (
         <div key={r._id} style={{ border:"1px solid", margin:"10px", padding:"10px" }}>

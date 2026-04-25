@@ -4,6 +4,8 @@ import PatientSelect from "../components/PatientSelect";
 
 function CIS() {
 
+  const BASE_URL = "https://pis-python-backend.onrender.com";
+
   const [patient, setPatient] = useState(null);
 
   const [form, setForm] = useState({
@@ -25,53 +27,67 @@ function CIS() {
 
   const save = async () => {
 
-    if (!patient) return alert("Select patient first");
+    if (!patient) {
+      alert("Select patient first ❗");
+      return;
+    }
 
-    const data = new FormData();
+    try {
+      const data = new FormData();
 
-    data.append("patient_id", patient._id);
+      data.append("patient_id", patient._id);
 
-    Object.keys(form).forEach(key => {
-      data.append(key, form[key]);
-    });
+      Object.keys(form).forEach(key => {
+        data.append(key, form[key]);
+      });
 
-    if (file) data.append("photo", file);
+      if (file) data.append("photo", file);
 
-    await axios.post("http://127.0.0.1:8000/cis", data);
+      await axios.post(`${BASE_URL}/cis`, data);
 
-    alert("Saved ✅");
+      alert("Saved ✅");
+
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Error ❌");
+    }
   };
 
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>CIS</h1>
+      <h1>CLINICAL INFORMATION SYSTEM (CIS) ✅</h1>
 
-      {/* 🔥 PATIENT SELECT */}
+      <p>
+        This module manages treatment planning, procedure notes,
+        case documentation, and follow-up tracking.
+      </p>
+
+      {/* PATIENT SELECT */}
       <PatientSelect onSelect={setPatient} />
 
-      {patient && <p>Selected: {patient.name}</p>}
+      {patient && <p><strong>Selected Patient:</strong> {patient.name}</p>}
 
       <h3>1. Treatment Planning</h3>
-      <input name="treatment_plan" placeholder="Multi-phase plans" onChange={handleChange} />
-      <input name="cost" placeholder="Cost integration" onChange={handleChange} />
-      <input name="timeline" placeholder="Timeline mapping" onChange={handleChange} />
+      <input name="treatment_plan" placeholder="Treatment Plan" onChange={handleChange} />
+      <input name="cost" placeholder="Cost Estimate" onChange={handleChange} />
+      <input name="timeline" placeholder="Timeline" onChange={handleChange} />
 
       <h3>2. Procedure Notes</h3>
-      <input name="notes" placeholder="Chairside notes" onChange={handleChange} />
-      <input name="materials" placeholder="Materials used" onChange={handleChange} />
-      <input name="anesthesia" placeholder="Anesthesia logs" onChange={handleChange} />
+      <input name="notes" placeholder="Clinical Notes" onChange={handleChange} />
+      <input name="materials" placeholder="Materials Used" onChange={handleChange} />
+      <input name="anesthesia" placeholder="Anesthesia Details" onChange={handleChange} />
 
       <h3>3. Case Photography</h3>
       <input type="file" onChange={(e)=>setFile(e.target.files[0])} />
 
       <h3>4. Follow-up Protocols</h3>
-      <input name="followup" placeholder="Review reminders" onChange={handleChange} />
-      <input name="healing" placeholder="Healing tracking" onChange={handleChange} />
+      <input name="followup" placeholder="Follow-up Plan" onChange={handleChange} />
+      <input name="healing" placeholder="Healing Progress" onChange={handleChange} />
 
       <br/><br/>
 
-      <button onClick={save}>Save</button>
+      <button onClick={save}>Save Case</button>
 
     </div>
   );

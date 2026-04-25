@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -13,18 +16,29 @@ export default function Login() {
       });
 
       localStorage.setItem("token", res.data.access_token);
-      window.location.href = "/";
-    } catch {
-      alert("Invalid login");
+
+      alert("Login Success ✅");
+
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error(err);
+      alert("Login Failed ❌");
     }
   };
 
   return (
-    <div style={{ width: 300, margin: "100px auto" }}>
-      <h2>Login</h2>
+    <div style={{ width: 320, margin: "100px auto", textAlign: "center" }}>
+
+      <h2>Clinic Login Portal 🔐</h2>
+
+      <p>
+        Please enter your credentials to access the clinic management system.
+        Only authorized users are allowed.
+      </p>
 
       <input
-        placeholder="Username"
+        placeholder="Username or Email"
         onChange={(e) => setUsername(e.target.value)}
       />
       <br /><br />
@@ -37,6 +51,11 @@ export default function Login() {
       <br /><br />
 
       <button onClick={login}>Login</button>
+
+      <p style={{ marginTop: "10px", fontSize: "12px" }}>
+        Secure access • Protected system
+      </p>
+
     </div>
   );
 }

@@ -5,9 +5,15 @@ function AdminUsers() {
 
   const [users, setUsers] = useState([]);
 
+  const BASE_URL = "https://pis-python-backend.onrender.com";
+
   const load = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/users/pending");
-    setUsers(res.data);
+    try {
+      const res = await axios.get(`${BASE_URL}/users/pending`);
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Error loading users:", err);
+    }
   };
 
   useEffect(() => {
@@ -15,21 +21,40 @@ function AdminUsers() {
   }, []);
 
   const approve = async (id) => {
-    await axios.put(`http://127.0.0.1:8000/users/approve/${id}`);
-    load();
+    try {
+      await axios.put(`${BASE_URL}/users/approve/${id}`);
+      load();
+    } catch (err) {
+      console.error("Error approving user:", err);
+    }
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Pending Users</h1>
+      <h1>Pending Users Approval Panel ✅</h1>
+
+      <p>
+        This section allows admin to approve newly registered users.
+        Only approved users will be able to access the system.
+      </p>
+
+      {users.length === 0 && <p>No pending users found.</p>}
 
       {users.map(u => (
-        <div key={u._id} style={{ border: "1px solid", margin: "10px", padding: "10px" }}>
-          <p>{u.username}</p>
-          <p>{u.role}</p>
+        <div
+          key={u._id}
+          style={{
+            border: "1px solid #ccc",
+            margin: "10px 0",
+            padding: "10px",
+            borderRadius: "8px"
+          }}
+        >
+          <p><strong>Username:</strong> {u.username}</p>
+          <p><strong>Role:</strong> {u.role}</p>
 
           <button onClick={() => approve(u._id)}>
-            Approve
+            Approve User
           </button>
         </div>
       ))}

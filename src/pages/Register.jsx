@@ -13,35 +13,45 @@ export default function Register() {
         role: "office"
       });
 
-      alert("Registered. Wait for approval.");
+      alert("Registered successfully. Wait for admin approval ✅");
       window.location.href = "/login";
+
     } catch (err) {
-      alert(err.response?.data?.detail || "Error");
+      alert(err.response?.data?.detail || "Error ❌");
     }
   };
 
   return (
     <div style={box}>
-      <h2>Register</h2>
+      <h2>User Registration 📝</h2>
+
+      <p style={{ fontSize: "14px", textAlign: "center" }}>
+        Create a new account to access the clinic system.
+        Your account will be activated after admin approval.
+      </p>
 
       <input
-        placeholder="Username"
+        placeholder="Enter Username / Email"
         onChange={(e) => setUsername(e.target.value)}
       />
 
       <input
         type="password"
-        placeholder="Password"
+        placeholder="Enter Password"
         onChange={(e) => setPassword(e.target.value)}
       />
 
       <button onClick={register}>Register</button>
+
+      <p style={{ fontSize: "12px", textAlign: "center" }}>
+        Access is restricted to authorized clinic staff only.
+      </p>
     </div>
   );
 }
 
 const box = {
-  width: "300px",
+  width: "320px",
   margin: "100px auto",
   display: "flex",
   flexDirection: "column",

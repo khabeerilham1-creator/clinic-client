@@ -3,6 +3,8 @@ import axios from "axios";
 
 function Patients() {
 
+  const BASE_URL = "https://pis-python-backend.onrender.com";
+
   const [patients, setPatients] = useState([]);
 
   const [form, setForm] = useState({
@@ -23,7 +25,7 @@ function Patients() {
   }, []);
 
   const loadPatients = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/patients");
+    const res = await axios.get(`${BASE_URL}/patients`);
     setPatients(res.data);
   };
 
@@ -31,7 +33,6 @@ function Patients() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ================= IMAGE HANDLER =================
   const handleFile = (e) => {
     const file = e.target.files[0];
     setXray(file);
@@ -41,7 +42,6 @@ function Patients() {
     }
   };
 
-  // ================= SAVE =================
   const savePatient = async () => {
     try {
 
@@ -56,13 +56,13 @@ function Patients() {
       }
 
       if (editId) {
-        await axios.put(`http://127.0.0.1:8000/patients/${editId}`, formData);
+        await axios.put(`${BASE_URL}/patients/${editId}`, formData);
         setEditId(null);
       } else {
-        await axios.post("http://127.0.0.1:8000/patients", formData);
+        await axios.post(`${BASE_URL}/patients`, formData);
       }
 
-      alert("Saved ✅");
+      alert("Patient Saved ✅");
 
       setForm({
         name: "", age: "", gender: "", phone: "", address: "",
@@ -84,7 +84,7 @@ function Patients() {
   };
 
   const deletePatient = async (id) => {
-    await axios.delete(`http://127.0.0.1:8000/patients/${id}`);
+    await axios.delete(`${BASE_URL}/patients/${id}`);
     loadPatients();
   };
 
@@ -96,7 +96,12 @@ function Patients() {
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>PATIENT INTELLIGENCE SYSTEM (PIS)</h1>
+      <h1>PATIENT INTELLIGENCE SYSTEM (PIS) 👤</h1>
+
+      <p>
+        This module manages complete patient records including demographics,
+        medical history, dental data, imaging, and legal documentation.
+      </p>
 
       {/* ================= FORM ================= */}
 
@@ -120,9 +125,7 @@ function Patients() {
       <input name="complaints" placeholder="Complaints" value={form.complaints} onChange={handleChange} /><br/><br/>
       <input name="habits" placeholder="Habits" value={form.habits} onChange={handleChange} /><br/><br/>
 
-      {/* ================= IMAGING ================= */}
       <h3>4. Imaging Archive</h3>
-
       <input type="file" onChange={handleFile} /><br/><br/>
 
       {preview && (
@@ -160,10 +163,9 @@ function Patients() {
           <b>Dental:</b><br/>
           {p.complaints}<br/><br/>
 
-          {/* IMAGE DISPLAY */}
           {p.xray && (
             <img
-              src={`http://127.0.0.1:8000/${p.xray}`}
+              src={`${BASE_URL}/${p.xray}`}
               alt="xray"
               style={{ width: "120px" }}
             />

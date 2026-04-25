@@ -1,91 +1,64 @@
-import React, { useState } from "react";
-import axios from "axios";
+import { Link } from "react-router-dom";
 
-function Dashboard() {
-
-  const [id, setId] = useState("");
-  const [data, setData] = useState(null);
-
-  const load = async () => {
-    const res = await axios.get(`http://127.0.0.1:8000/dashboard/${id}`);
-    setData(res.data);
-  };
-
+export default function Dashboard() {
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: 20 }}>
+      <h1>Clinic Management Dashboard ✅</h1>
 
-      <h1>Patient Dashboard</h1>
+      <p>
+        Welcome to the clinic management system. From here, you can access all
+        major modules including patient records, clinical workflows, financial
+        tracking, and administrative controls.
+      </p>
 
-      <input placeholder="Patient ID" onChange={(e)=>setId(e.target.value)} />
-      <button onClick={load}>Load</button>
+      <h3>Available Modules:</h3>
 
-      {data && (
-        <div>
+      <ul>
+        <li>
+          <Link to="/patients">Patients</Link> – Manage patient records, history, and profiles
+        </li>
 
-          {/* PATIENT */}
-          <div style={card}>
-            <h2>Patient Info</h2>
-            <p>{data.patient?.name}</p>
-            <p>{data.patient?.phone}</p>
-          </div>
+        <li>
+          <Link to="/fis">FIS</Link> – Full Intraoral Scan and dental analysis
+        </li>
 
-          {/* CHECKUPS */}
-          <div style={card}>
-            <h2>Checkups</h2>
-            {data.checkups.map((c,i)=>(
-              <p key={i}>{c.complaint}</p>
-            ))}
-          </div>
+        <li>
+          <Link to="/cis">CIS</Link> – Clinical Information System for treatment planning
+        </li>
 
-          {/* INVOICES */}
-          <div style={card}>
-            <h2>Invoices</h2>
-            {data.invoices.map((i)=>(
-              <p key={i._id}>Rs {i.total}</p>
-            ))}
-          </div>
+        <li>
+          <Link to="/checkup">Checkup</Link> – Dental checkups and tooth condition tracking
+        </li>
 
-          {/* APPOINTMENTS */}
-          <div style={card}>
-            <h2>Appointments</h2>
-            {data.appointments.map((a)=>(
-              <p key={a._id}>
-                {a.appointment_date} - {a.appointment_time}
-              </p>
-            ))}
-          </div>
+        <li>
+          <Link to="/reports">Reports</Link> – Generate clinical and financial reports
+        </li>
 
-          {/* CIS + IMAGE */}
-          <div style={card}>
-            <h2>Clinical Records</h2>
-            {data.cis.map((c)=>(
-              <div key={c._id}>
-                <p>{c.treatment_plan}</p>
+        <li>
+          <Link to="/visits">Visits</Link> – Track patient visits and appointment history
+        </li>
 
-                {c.photo && (
-                  <img
-                    src={`http://127.0.0.1:8000/${c.photo}`}
-                    alt=""
-                    style={{ width: "150px" }}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+        <li>
+          <Link to="/invoice">Invoice</Link> – Billing and payment management
+        </li>
 
-        </div>
-      )}
+        <li>
+          <Link to="/lvi">LVI</Link> – Lab and visual imaging data management
+        </li>
 
+        <li>
+          <Link to="/afi">AFI</Link> – Appointment & Flow Intelligence system
+        </li>
+
+        <li>
+          <Link to="/admin">Admin Users</Link> – Approve and manage system users
+        </li>
+      </ul>
+
+      <p>
+        Use the modules above to navigate through different parts of the system.
+        Each section is designed to streamline clinic operations and improve efficiency.
+      </p>
     </div>
   );
 }
-
-const card = {
-  border: "1px solid #ccc",
-  padding: "15px",
-  marginTop: "15px",
-  borderRadius: "10px",
-  background: "#f9f9f9"
-};
-
-export default Dashboard;

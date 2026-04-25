@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const BASE_URL = "https://pis-python-backend.onrender.com";
+
 const conditionsMap = {
   Caries: "Filling",
   Missing: "Implant",
@@ -34,13 +36,21 @@ function Checkup() {
   }, []);
 
   const loadPatients = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/patients");
-    setPatients(res.data);
+    try {
+      const res = await axios.get(`${BASE_URL}/patients`);
+      setPatients(res.data);
+    } catch (err) {
+      console.error("Patients load error:", err);
+    }
   };
 
   const loadCheckups = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/checkups");
-    setCheckups(res.data);
+    try {
+      const res = await axios.get(`${BASE_URL}/checkups`);
+      setCheckups(res.data);
+    } catch (err) {
+      console.error("Checkups load error:", err);
+    }
   };
 
   // ================= SELECT TOOTH =================
@@ -67,16 +77,16 @@ function Checkup() {
   const saveCheckup = async () => {
     try {
 
-      if (!patientId) return alert("Select patient");
-      if (!tasks.length) return alert("Select at least one tooth");
+      if (!patientId) return alert("Select patient ❗");
+      if (!tasks.length) return alert("Select at least one tooth ❗");
 
       const payload = { patient_id: patientId, complaint, tasks };
 
       if (editId) {
-        await axios.put(`http://127.0.0.1:8000/checkups/${editId}`, payload);
+        await axios.put(`${BASE_URL}/checkups/${editId}`, payload);
         setEditId(null);
       } else {
-        await axios.post("http://127.0.0.1:8000/checkups", payload);
+        await axios.post(`${BASE_URL}/checkups`, payload);
       }
 
       alert("Saved ✅");
@@ -100,14 +110,19 @@ function Checkup() {
 
   const deleteCheckup = async (id) => {
     if (!window.confirm("Delete?")) return;
-    await axios.delete(`http://127.0.0.1:8000/checkups/${id}`);
+    await axios.delete(`${BASE_URL}/checkups/${id}`);
     loadCheckups();
   };
 
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>Checkup Module</h1>
+      <h1>Checkup Module ✅</h1>
+
+      <p>
+        This module records dental conditions, treatments, and patient complaints
+        using an interactive tooth chart.
+      </p>
 
       {/* PATIENT */}
       <select value={patientId} onChange={(e)=>setPatientId(e.target.value)}>
@@ -127,7 +142,7 @@ function Checkup() {
 
       <br/><br/>
 
-      {/* 🔥 DENTAL CHART BACK */}
+      {/* DENTAL CHART */}
       <img
         src="/teeth.png"
         alt="Dental Chart"
@@ -136,12 +151,11 @@ function Checkup() {
       />
 
       <map name="teethmap">
-        <area coords="10,20,60,80" onClick={()=>selectTooth(1)} aria-label="Tooth 1" />
-        <area coords="60,20,110,80" onClick={()=>selectTooth(2)} aria-label="Tooth 2" />
-        <area coords="110,20,160,80" onClick={()=>selectTooth(3)} aria-label="Tooth 3" />
-        <area coords="160,20,210,80" onClick={()=>selectTooth(4)} aria-label="Tooth 4" />
-
-        <area coords="10,100,60,170" onClick={()=>selectTooth(32)} aria-label="Tooth 32" />
+        <area coords="10,20,60,80" onClick={()=>selectTooth(1)} />
+        <area coords="60,20,110,80" onClick={()=>selectTooth(2)} />
+        <area coords="110,20,160,80" onClick={()=>selectTooth(3)} />
+        <area coords="160,20,210,80" onClick={()=>selectTooth(4)} />
+        <area coords="10,100,60,170" onClick={()=>selectTooth(32)} />
       </map>
 
       <br/><br/>
@@ -151,7 +165,6 @@ function Checkup() {
 
       {tasks.map((t, i) => (
         <div key={i}>
-
           Tooth {t.tooth}
 
           <select
@@ -168,7 +181,6 @@ function Checkup() {
           <input value={t.treatment} readOnly />
 
           <button onClick={()=>removeTooth(i)}>X</button>
-
         </div>
       ))}
 
@@ -185,7 +197,6 @@ function Checkup() {
 
       {checkups.map(c => (
         <div key={c._id} style={{ border:"1px solid", padding:"10px", margin:"10px" }}>
-
           <b>{c.complaint}</b>
 
           {c.tasks?.map((t,i)=>(
@@ -196,7 +207,6 @@ function Checkup() {
 
           <button onClick={()=>editCheckup(c)}>Edit</button>
           <button onClick={()=>deleteCheckup(c._id)}>Delete</button>
-
         </div>
       ))}
 
