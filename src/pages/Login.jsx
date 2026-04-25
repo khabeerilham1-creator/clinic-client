@@ -19,7 +19,7 @@ export default function Login() {
 
       alert("Login Success ✅");
 
-      navigate("/dashboard");
+      window.location.href = "/dashboard";
 
     } catch (err) {
       console.error(err);
