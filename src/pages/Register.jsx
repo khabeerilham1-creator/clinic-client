@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import api from "../api";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -7,17 +6,31 @@ export default function Register() {
 
   const register = async () => {
     try {
-      await api.post("/auth/register", {
-        username,
-        password,
-        role: "office"
+      const res = await fetch("https://pis-python-backend.onrender.com/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          role: "office"
+        })
       });
 
-      alert("Registered successfully. Wait for admin approval ✅");
-      window.location.href = "/login";
+      const data = await res.json();
+      console.log("REGISTER:", data);
+
+      if (res.ok) {
+        alert("Registered successfully. Wait for admin approval ✅");
+        window.location.href = "/login";
+      } else {
+        alert(data.detail || "Error ❌");
+      }
 
     } catch (err) {
-      alert(err.response?.data?.detail || "Error ❌");
+      console.error(err);
+      alert("Network Error ❌");
     }
   };
 
@@ -32,12 +45,14 @@ export default function Register() {
 
       <input
         placeholder="Enter Username / Email"
+        value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
 
       <input
         type="password"
         placeholder="Enter Password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
