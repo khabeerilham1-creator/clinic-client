@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -12,12 +15,15 @@ export default function Login() {
         password,
       });
 
-      localStorage.setItem("token", res.data.access_token);
+      // ✅ FIX: use success instead of access_token
+      if (res.data.success) {
+        alert("Login Success ✅");
 
-      alert("Login Success ✅");
-
-      // HASH ROUTER redirect
-      window.location.href = "#/dashboard";
+        // ✅ no localStorage needed (cookie is already set)
+        navigate("/dashboard");
+      } else {
+        alert("Invalid credentials ❌");
+      }
 
     } catch (err) {
       console.error(err);
@@ -31,6 +37,7 @@ export default function Login() {
 
       <input
         placeholder="Username"
+        value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <br /><br />
@@ -38,6 +45,7 @@ export default function Login() {
       <input
         type="password"
         placeholder="Password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
       <br /><br />
