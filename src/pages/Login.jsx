@@ -1,56 +1,31 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
+const login = async () => {
+  try {
+    const res = await api.post("/auth/login", {
+      username,
+      password,
+    });
 
-export default function Login() {
-  const navigate = useNavigate();
+    console.log("SUCCESS RESPONSE:", res.data);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+    // ✅ IMPORTANT FIX
+    if (res.data && res.data.access_token) {
+      localStorage.setItem("token", res.data.access_token);
 
-  const login = async () => {
-    try {
-      const res = await api.post("/auth/login", {
-        username,
-        password,
-      });
-
-      // ✅ FIX: use success instead of access_token
-      if (res.data.success) {
-        alert("Login Success ✅");
-
-        // ✅ no localStorage needed (cookie is already set)
-        navigate("/dashboard");
-      } else {
-        alert("Invalid credentials ❌");
-      }
-
-    } catch (err) {
-      console.error(err);
-      alert("Login Failed ❌");
+      alert("Login Success ✅");
+      navigate("/dashboard");
+    } else {
+      alert("Invalid credentials ❌");
     }
-  };
 
-  return (
-    <div style={{ width: 320, margin: "100px auto", textAlign: "center" }}>
-      <h2>Clinic Login</h2>
+  } catch (err) {
+    console.log("FULL ERROR:", err);
 
-      <input
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <br /><br />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
-
-      <button onClick={login}>Login</button>
-    </div>
-  );
-}
+    // 🔥 IMPORTANT: show real backend error
+    if (err.response) {
+      console.log("ERROR RESPONSE:", err.response.data);
+      alert(err.response.data.detail || "Login Failed ❌");
+    } else {
+      alert("Network Error ❌");
+    }
+  }
+};
