@@ -14,8 +14,8 @@ export default function Login() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          username: username,
-          password: password
+          username,
+          password
         })
       });
 
@@ -25,8 +25,6 @@ export default function Login() {
       if (data && data.access_token) {
         localStorage.setItem("token", data.access_token);
         alert("Login Success ✅");
-
-        // redirect after login
         window.location.href = "/dashboard";
       } else {
         alert("Login Failed ❌");
@@ -40,28 +38,25 @@ export default function Login() {
 
   return (
     <div style={{ width: "300px", margin: "100px auto", textAlign: "center" }}>
-      <h2>Clinic Login</h2>
+      <h2>Login</h2>
 
       <input
         type="text"
-        placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        style={{ display: "block", margin: "10px auto", padding: "8px", width: "100%" }}
+        placeholder="Username"
+        style={{ display: "block", margin: "10px", padding: "10px", width: "90%" }}
       />
 
       <input
         type="password"
-        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ display: "block", margin: "10px auto", padding: "8px", width: "100%" }}
+        placeholder="Password"
+        style={{ display: "block", margin: "10px", padding: "10px", width: "90%" }}
       />
 
-      <button
-        onClick={login}
-        style={{ padding: "10px", width: "100%", cursor: "pointer" }}
-      >
+      <button onClick={login} style={{ padding: "10px", width: "95%" }}>
         Login
       </button>
     </div>
