@@ -8,14 +8,9 @@ export default function Dashboard() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      navigate("/"); // ❌ not logged in → go back
+      navigate("/");
     }
   }, []);
 
-  return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h1>Dashboard ✅</h1>
-      <p>You are logged in.</p>
-    </div>
-  );
+  return <h1>Dashboard ✅</h1>;
 }

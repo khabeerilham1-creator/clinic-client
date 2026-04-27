@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const BASE_URL = "https://pis-backend-final-1.onrender.com";
+
 export default function Login() {
   const [username, setUsername] = useState("admin@hdc.com");
   const [password, setPassword] = useState("123456");
@@ -8,7 +10,7 @@ export default function Login() {
 
   const login = async () => {
     try {
-      const res = await fetch("https://pis-backend-final-1.onrender.com/auth/login", {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -17,43 +19,38 @@ export default function Login() {
       });
 
       const data = await res.json();
+      console.log("RESPONSE:", data);
 
-      if (data && data.access_token) {
+      if (data?.access_token) {
         localStorage.setItem("token", data.access_token);
         alert("Login Success ✅");
-
-        navigate("/dashboard"); // ✅ correct redirect
+        navigate("/dashboard");
       } else {
         alert("Login Failed ❌");
       }
 
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Network Error ❌");
     }
   };
 
   return (
-    <div style={{ width: "300px", margin: "100px auto", textAlign: "center" }}>
+    <div style={{ textAlign: "center", marginTop: "100px" }}>
       <h2>Clinic Login</h2>
 
       <input
-        type="text"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        style={{ margin: "10px", padding: "10px", width: "90%" }}
       />
 
       <input
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ margin: "10px", padding: "10px", width: "90%" }}
       />
 
-      <button onClick={login} style={{ padding: "10px", width: "95%" }}>
-        Login
-      </button>
+      <button onClick={login}>Login</button>
     </div>
   );
 }
