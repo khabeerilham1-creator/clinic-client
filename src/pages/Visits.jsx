@@ -3,7 +3,7 @@ import axios from "axios";
 
 function Visits() {
 
-  const BASE_URL = "https://pis-python-backend.onrender.com";
+  const BASE_URL = "https://https://pis-backend-final-1.onrender.com.onrender.com";
 
   const [name, setName] = useState("");
   const [diagnosis, setDiagnosis] = useState("");

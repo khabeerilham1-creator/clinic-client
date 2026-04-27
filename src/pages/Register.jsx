@@ -6,7 +6,7 @@ export default function Register() {
 
   const register = async () => {
     try {
-      const res = await fetch("https://pis-python-backend.onrender.com/auth/register", {
+      const res = await fetch("https://https://pis-backend-final-1.onrender.com.onrender.com/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

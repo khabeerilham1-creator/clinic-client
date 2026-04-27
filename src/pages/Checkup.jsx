@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const BASE_URL = "https://pis-python-backend.onrender.com";
+const BASE_URL = "https://https://pis-backend-final-1.onrender.com.onrender.com";
 
 const conditionsMap = {
   Caries: "Filling",

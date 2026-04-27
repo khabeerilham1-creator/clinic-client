@@ -4,6 +4,8 @@ import PatientSelect from "../components/PatientSelect";
 
 function AFI() {
 
+  const BASE_URL = "https://https://pis-backend-final-1.onrender.com.onrender.com";
+
   const [patient, setPatient] = useState(null);
 
   const [data, setData] = useState({
@@ -24,51 +26,93 @@ function AFI() {
 
   const [list, setList] = useState([]);
 
-  useEffect(()=>{ load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const load = async () => {
-    const res = await axios.get("http://127.0.0.1:8000/appointments");
-    setList(res.data);
+    try {
+      const res = await axios.get(`${BASE_URL}/appointments`);
+      setList(res.data);
+    } catch (err) {
+      console.error("Error loading appointments:", err);
+    }
   };
 
   const save = async () => {
 
-    await axios.post("http://127.0.0.1:8000/appointments", {
-      ...data,
-      patient: patient.patient_no
-    });
+    if (!patient) {
+      alert("Select patient first ❗");
+      return;
+    }
 
-    load();
+    try {
+      await axios.post(`${BASE_URL}/appointments`, {
+        ...data,
+        patient: patient.patient_no
+      });
+
+      alert("Appointment Saved ✅");
+      load();
+
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Error saving ❌");
+    }
   };
 
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>APPOINTMENT & FLOW INTELLIGENCE (AFI)</h1>
+      <h1>APPOINTMENT & FLOW INTELLIGENCE (AFI) ✅</h1>
+
+      <p>
+        This module manages appointment scheduling, patient flow tracking,
+        delays, and clinic efficiency analysis.
+      </p>
 
       <PatientSelect onSelect={setPatient} />
 
       <h3>1. Smart Scheduling</h3>
-      <input placeholder="Multi-doctor calendar" onChange={e=>setData({...data, doctor:e.target.value})}/>
-      <input placeholder="Chair allocation" onChange={e=>setData({...data, chair:e.target.value})}/>
-      <input placeholder="Procedure duration mapping" onChange={e=>setData({...data, procedure:e.target.value})}/>
 
-      <input type="date" onChange={e=>setData({...data, appointment_date:e.target.value})}/>
-      <input type="time" onChange={e=>setData({...data, appointment_time:e.target.value})}/>
+      <input placeholder="Doctor Name"
+        onChange={e => setData({ ...data, doctor: e.target.value })} />
+
+      <input placeholder="Chair Allocation"
+        onChange={e => setData({ ...data, chair: e.target.value })} />
+
+      <input placeholder="Procedure Type"
+        onChange={e => setData({ ...data, procedure: e.target.value })} />
+
+      <input type="date"
+        onChange={e => setData({ ...data, appointment_date: e.target.value })} />
+
+      <input type="time"
+        onChange={e => setData({ ...data, appointment_time: e.target.value })} />
 
       <h3>2. Patient Flow Tracking</h3>
-      <input type="time" onChange={e=>setData({...data, arrival_time:e.target.value})}/>
-      <input type="time" onChange={e=>setData({...data, chair_entry:e.target.value})}/>
-      <input type="time" onChange={e=>setData({...data, exit_time:e.target.value})}/>
+
+      <input type="time"
+        onChange={e => setData({ ...data, arrival_time: e.target.value })} />
+
+      <input type="time"
+        onChange={e => setData({ ...data, chair_entry: e.target.value })} />
+
+      <input type="time"
+        onChange={e => setData({ ...data, exit_time: e.target.value })} />
 
       <h3>3. Delay Intelligence</h3>
-      <input placeholder="Doctor delay" onChange={e=>setData({...data, doctor_delay:e.target.value})}/>
-      <input placeholder="Patient delay" onChange={e=>setData({...data, patient_delay:e.target.value})}/>
+
+      <input placeholder="Doctor Delay (minutes)"
+        onChange={e => setData({ ...data, doctor_delay: e.target.value })} />
+
+      <input placeholder="Patient Delay (minutes)"
+        onChange={e => setData({ ...data, patient_delay: e.target.value })} />
 
       <h3>4. Reminder System</h3>
-      <p>SMS / WhatsApp</p>
+      <p>SMS / WhatsApp integration (coming soon)</p>
 
-      <button onClick={save}>Save</button>
+      <button onClick={save}>Save Appointment</button>
 
     </div>
   );

@@ -4,7 +4,7 @@ import PatientSelect from "../components/PatientSelect";
 
 function CIS() {
 
-  const BASE_URL = "https://pis-python-backend.onrender.com";
+  const BASE_URL = "https://https://pis-backend-final-1.onrender.com.onrender.com";
 
   const [patient, setPatient] = useState(null);
 
