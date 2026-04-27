@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
+import api from "../api";
 
 export default function Login() {
   const [username, setUsername] = useState("admin@hdc.com");
@@ -12,15 +11,12 @@ export default function Login() {
     try {
       console.log("SENDING:", username, password);
 
-      const res = await fetch(`${BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username, password })
+      const res = await api.post("/auth/login", {
+        username,
+        password
       });
 
-      const data = await res.json();
+      const data = res.data;
       console.log("RESPONSE:", data);
 
       if (data?.access_token) {
@@ -44,12 +40,14 @@ export default function Login() {
       <input
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        placeholder="Username"
       />
 
       <input
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
       />
 
       <button onClick={login}>Login</button>

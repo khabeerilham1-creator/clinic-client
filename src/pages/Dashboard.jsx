@@ -12,5 +12,9 @@ export default function Dashboard() {
     }
   }, []);
 
-  return <h1>Dashboard ✅</h1>;
+  return (
+    <div style={{ textAlign: "center", marginTop: "100px" }}>
+      <h1>Dashboard ✅</h1>
+    </div>
+  );
 }
