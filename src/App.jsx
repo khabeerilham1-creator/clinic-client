@@ -1,16 +1,18 @@
-import { HashRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
-export default function App() {
+function App() {
   return (
-    <HashRouter>
+    <Router>
       <Routes>
-        {/* ONLY TWO ROUTES FOR NOW (no conflicts) */}
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
-    </HashRouter>
+    </Router>
   );
 }
+
+export default App;
