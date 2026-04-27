@@ -10,6 +10,8 @@ export default function Login() {
 
   const login = async () => {
     try {
+      console.log("SENDING:", username, password);
+
       const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
