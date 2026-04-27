@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("admin@hdc.com");
+  const [password, setPassword] = useState("123456");
 
   const login = async () => {
     try {
@@ -14,8 +14,8 @@ export default function Login() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          username,
-          password
+          username: username,
+          password: password
         })
       });
 
@@ -39,28 +39,28 @@ export default function Login() {
   };
 
   return (
-    <div style={{ width: "300px", margin: "100px auto", display: "flex", flexDirection: "column", gap: "10px", textAlign: "center" }}>
+    <div style={{ width: "300px", margin: "100px auto", textAlign: "center" }}>
       <h2>Clinic Login</h2>
 
       <input
         type="text"
-        placeholder="Enter Username / Email"
+        placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        style={{ padding: "10px" }}
+        style={{ display: "block", margin: "10px auto", padding: "8px", width: "100%" }}
       />
 
       <input
         type="password"
-        placeholder="Enter Password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ padding: "10px" }}
+        style={{ display: "block", margin: "10px auto", padding: "8px", width: "100%" }}
       />
 
       <button
         onClick={login}
-        style={{ padding: "10px", cursor: "pointer" }}
+        style={{ padding: "10px", width: "100%", cursor: "pointer" }}
       >
         Login
       </button>
