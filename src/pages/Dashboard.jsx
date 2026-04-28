@@ -2,85 +2,81 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export default function Dashboard() {
-
   const navigate = useNavigate();
 
-  // ✅ protect route
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/");
-    }
+    if (!token) navigate("/");
   }, [navigate]);
 
+  const modules = [
+    { name: "Patients", path: "/patients" },
+    { name: "Visits", path: "/visits" },
+    { name: "AFI", path: "/afi" },
+    { name: "FIS", path: "/fis" },
+    { name: "CIS", path: "/cis" },
+    { name: "Checkup", path: "/checkup" },
+    { name: "Reports", path: "/reports" },
+    { name: "Invoice", path: "/invoice" },
+    { name: "LVI", path: "/lvi" },
+    { name: "Admin", path: "/admin" }
+  ];
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Clinic Management Dashboard ✅</h1>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
 
-      <p>
-        Welcome to the clinic management system. From here, you can access all
-        major modules including patient records, clinical workflows, financial
-        tracking, and administrative controls.
-      </p>
+      {/* Sidebar */}
+      <div style={{
+        width: "220px",
+        background: "#1e293b",
+        color: "white",
+        padding: "20px"
+      }}>
+        <h2>Clinic 🏥</h2>
 
-      <h3>Available Modules:</h3>
+        {modules.map((m, i) => (
+          <div key={i} style={{ margin: "10px 0" }}>
+            <Link to={m.path} style={{ color: "white" }}>
+              {m.name}
+            </Link>
+          </div>
+        ))}
 
-      <ul>
-        <li>
-          <Link to="/patients">Patients</Link> – Manage patient records, history, and profiles
-        </li>
+        <button
+          onClick={() => {
+            localStorage.removeItem("token");
+            navigate("/");
+          }}
+          style={{ marginTop: "20px" }}
+        >
+          Logout
+        </button>
+      </div>
 
-        <li>
-          <Link to="/fis">FIS</Link> – Full Intraoral Scan and dental analysis
-        </li>
+      {/* Main */}
+      <div style={{ flex: 1, padding: "30px" }}>
+        <h1>Dashboard</h1>
 
-        <li>
-          <Link to="/cis">CIS</Link> – Clinical Information System for treatment planning
-        </li>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "20px"
+        }}>
+          {modules.map((m, i) => (
+            <Link key={i} to={m.path}>
+              <div style={{
+                background: "#f1f5f9",
+                padding: "20px",
+                borderRadius: "10px",
+                textAlign: "center"
+              }}>
+                {m.name}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
 
-        <li>
-          <Link to="/checkup">Checkup</Link> – Dental checkups and tooth condition tracking
-        </li>
-
-        <li>
-          <Link to="/reports">Reports</Link> – Generate clinical and financial reports
-        </li>
-
-        <li>
-          <Link to="/visits">Visits</Link> – Track patient visits and appointment history
-        </li>
-
-        <li>
-          <Link to="/invoice">Invoice</Link> – Billing and payment management
-        </li>
-
-        <li>
-          <Link to="/lvi">LVI</Link> – Lab and visual imaging data management
-        </li>
-
-        <li>
-          <Link to="/afi">AFI</Link> – Appointment & Flow Intelligence system
-        </li>
-
-        <li>
-          <Link to="/admin">Admin Users</Link> – Approve and manage system users
-        </li>
-      </ul>
-
-      <p>
-        Use the modules above to navigate through different parts of the system.
-        Each section is designed to streamline clinic operations and improve efficiency.
-      </p>
-
-      {/* ✅ added logout */}
-      <button
-        onClick={() => {
-          localStorage.removeItem("token");
-          navigate("/");
-        }}
-      >
-        Logout
-      </button>
     </div>
   );
 }
