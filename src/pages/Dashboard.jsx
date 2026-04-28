@@ -1,3 +1,4 @@
+console.log("NEW DASHBOARD LOADED 🚀");
 import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
