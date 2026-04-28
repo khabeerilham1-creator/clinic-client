@@ -4,7 +4,8 @@ import PatientSelect from "../components/PatientSelect";
 
 function AFI() {
 
-  const BASE_URL = "https://https://pis-backend-final-1.onrender.com.onrender.com";
+  // ✅ FIXED URL
+  const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patient, setPatient] = useState(null);
 
@@ -71,7 +72,8 @@ function AFI() {
         delays, and clinic efficiency analysis.
       </p>
 
-      <PatientSelect onSelect={setPatient} />
+      {/* ✅ small fix: correct prop name */}
+      <PatientSelect onChange={setPatient} />
 
       <h3>1. Smart Scheduling</h3>
 
