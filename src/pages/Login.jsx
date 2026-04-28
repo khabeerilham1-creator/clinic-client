@@ -9,15 +9,12 @@ export default function Login() {
 
   const login = async () => {
     try {
-      console.log("SENDING:", username, password);
-
       const res = await api.post("/auth/login", {
         username,
         password
       });
 
       const data = res.data;
-      console.log("RESPONSE:", data);
 
       if (data?.access_token) {
         localStorage.setItem("token", data.access_token);
@@ -43,12 +40,16 @@ export default function Login() {
         placeholder="Username"
       />
 
+      <br /><br />
+
       <input
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
       />
+
+      <br /><br />
 
       <button onClick={login}>Login</button>
     </div>
