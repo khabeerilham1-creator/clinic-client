@@ -4,7 +4,7 @@ import PatientSelect from "../components/PatientSelect";
 
 function AFI() {
 
-  // ✅ FIXED URL
+  // ✅ fixed URL
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patient, setPatient] = useState(null);
@@ -25,16 +25,14 @@ function AFI() {
     bottleneck: ""
   });
 
-  const [list, setList] = useState([]);
-
   useEffect(() => {
     load();
   }, []);
 
   const load = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/appointments`);
-      setList(res.data);
+      await axios.get(`${BASE_URL}/appointments`);
+      // ❌ removed setList (unused)
     } catch (err) {
       console.error("Error loading appointments:", err);
     }
@@ -72,7 +70,7 @@ function AFI() {
         delays, and clinic efficiency analysis.
       </p>
 
-      {/* ✅ small fix: correct prop name */}
+      {/* ✅ fixed prop */}
       <PatientSelect onChange={setPatient} />
 
       <h3>1. Smart Scheduling</h3>
