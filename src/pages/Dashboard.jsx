@@ -19,24 +19,32 @@ export default function Dashboard() {
     { name: "Reports", path: "/reports" },
     { name: "Invoice", path: "/invoice" },
     { name: "LVI", path: "/lvi" },
-    { name: "Admin", path: "/admin" }
   ];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial" }}>
 
       {/* Sidebar */}
       <div style={{
-        width: "220px",
-        background: "#1e293b",
+        width: "230px",
+        background: "#0f172a",
         color: "white",
         padding: "20px"
       }}>
-        <h2>Clinic 🏥</h2>
+        <h2 style={{ marginBottom: "20px" }}>🏥 Clinic</h2>
 
         {modules.map((m, i) => (
-          <div key={i} style={{ margin: "10px 0" }}>
-            <Link to={m.path} style={{ color: "white" }}>
+          <div key={i} style={{ marginBottom: "12px" }}>
+            <Link
+              to={m.path}
+              style={{
+                color: "white",
+                textDecoration: "none",
+                display: "block",
+                padding: "8px",
+                borderRadius: "6px"
+              }}
+            >
               {m.name}
             </Link>
           </div>
@@ -47,15 +55,24 @@ export default function Dashboard() {
             localStorage.removeItem("token");
             navigate("/");
           }}
-          style={{ marginTop: "20px" }}
+          style={{
+            marginTop: "30px",
+            width: "100%",
+            padding: "10px",
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer"
+          }}
         >
           Logout
         </button>
       </div>
 
       {/* Main */}
-      <div style={{ flex: 1, padding: "30px" }}>
-        <h1>Dashboard</h1>
+      <div style={{ flex: 1, padding: "30px", background: "#f8fafc" }}>
+        <h1 style={{ marginBottom: "20px" }}>Dashboard</h1>
 
         <div style={{
           display: "grid",
@@ -63,14 +80,17 @@ export default function Dashboard() {
           gap: "20px"
         }}>
           {modules.map((m, i) => (
-            <Link key={i} to={m.path}>
+            <Link key={i} to={m.path} style={{ textDecoration: "none" }}>
               <div style={{
-                background: "#f1f5f9",
+                background: "white",
                 padding: "20px",
-                borderRadius: "10px",
-                textAlign: "center"
+                borderRadius: "12px",
+                textAlign: "center",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                cursor: "pointer",
+                transition: "0.2s"
               }}>
-                {m.name}
+                <h3>{m.name}</h3>
               </div>
             </Link>
           ))}
