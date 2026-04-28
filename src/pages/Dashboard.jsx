@@ -11,7 +11,9 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Dashboard ✅</h1>
+      <h1>Clinic Dashboard 🏥</h1>
+
+      <h3>Modules</h3>
 
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
         <Link to="/patients"><button>Patients</button></Link>
@@ -22,10 +24,12 @@ export default function Dashboard() {
 
       <br />
 
-      <button onClick={() => {
-        localStorage.removeItem("token");
-        navigate("/");
-      }}>
+      <button
+        onClick={() => {
+          localStorage.removeItem("token");
+          navigate("/");
+        }}
+      >
         Logout
       </button>
     </div>
