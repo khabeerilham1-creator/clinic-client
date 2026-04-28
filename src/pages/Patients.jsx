@@ -4,7 +4,7 @@ import axios from "axios";
 function Patients() {
 
   // ✅ FIXED URL (only change)
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
+const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patients, setPatients] = useState([]);
 
