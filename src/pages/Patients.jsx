@@ -2,18 +2,29 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const BASE_URL = "https://pis-backend-final-1.onrender.com";
+
 function Patients({ setIsLoggedIn }) {
-
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
-
   const [patients, setPatients] = useState([]);
 
   const [form, setForm] = useState({
-    name: "", age: "", gender: "", phone: "", address: "",
-    referral: "", care_category: "",
-    conditions: "", allergies: "", medications: "", risk_flags: "",
-    past_treatments: "", complaints: "", habits: "",
-    signed_forms: "", estimates: "", legal_consents: ""
+    name: "",
+    age: "",
+    gender: "",
+    phone: "",
+    address: "",
+    referral: "",
+    care_category: "",
+    conditions: "",
+    allergies: "",
+    medications: "",
+    risk_flags: "",
+    past_treatments: "",
+    complaints: "",
+    habits: "",
+    signed_forms: "",
+    estimates: "",
+    legal_consents: ""
   });
 
   const [xray, setXray] = useState(null);
@@ -24,113 +35,93 @@ function Patients({ setIsLoggedIn }) {
     loadPatients();
   }, []);
 
-  // LOAD
   const loadPatients = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/patients`);
+      const res = await axios.get(BASE_URL + "/patients");
       setPatients(res.data);
     } catch (err) {
       console.log(err);
     }
   };
 
-  // INPUT CHANGE
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // FILE
   const handleFile = (e) => {
     const file = e.target.files[0];
     setXray(file);
-
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    }
+    if (file) setPreview(URL.createObjectURL(file));
   };
 
-  // SAVE / UPDATE (FINAL FIX)
   const savePatient = async () => {
     try {
-
       if (!form.name || !form.age || !form.gender || !form.phone || !form.address) {
-        alert("Fill all required fields ❗");
+        alert("Fill required fields ❗");
         return;
       }
 
       const formData = new FormData();
 
-      // REQUIRED
-      formData.append("name", String(form.name));
-      formData.append("age", String(form.age));
-      formData.append("gender", String(form.gender));
-      formData.append("phone", String(form.phone));
-      formData.append("address", String(form.address));
-
-      // OPTIONAL
-      formData.append("referral", form.referral || "");
-      formData.append("care_category", form.care_category || "");
-      formData.append("conditions", form.conditions || "");
-      formData.append("allergies", form.allergies || "");
-      formData.append("medications", form.medications || "");
-      formData.append("risk_flags", form.risk_flags || "");
-      formData.append("past_treatments", form.past_treatments || "");
-      formData.append("complaints", form.complaints || "");
-      formData.append("habits", form.habits || "");
-      formData.append("signed_forms", form.signed_forms || "");
-      formData.append("estimates", form.estimates || "");
-      formData.append("legal_consents", form.legal_consents || "");
+      Object.keys(form).forEach(key => {
+        formData.append(key, form[key] || "");
+      });
 
       if (xray) formData.append("xray", xray);
 
       if (editId) {
-        await axios.put(`${BASE_URL}/patients/${editId}`, formData);
-        setEditId(null);
+        await axios.put(BASE_URL + "/patients/" + editId, formData);
       } else {
-        await axios.post(`${BASE_URL}/patients`, formData);
+        await axios.post(BASE_URL + "/patients", formData);
       }
 
-      alert("Patient Saved ✅");
+      alert("Saved ✅");
 
       setForm({
-        name: "", age: "", gender: "", phone: "", address: "",
-        referral: "", care_category: "",
-        conditions: "", allergies: "", medications: "", risk_flags: "",
-        past_treatments: "", complaints: "", habits: "",
-        signed_forms: "", estimates: "", legal_consents: ""
+        name: "",
+        age: "",
+        gender: "",
+        phone: "",
+        address: "",
+        referral: "",
+        care_category: "",
+        conditions: "",
+        allergies: "",
+        medications: "",
+        risk_flags: "",
+        past_treatments: "",
+        complaints: "",
+        habits: "",
+        signed_forms: "",
+        estimates: "",
+        legal_consents: ""
       });
 
       setXray(null);
       setPreview("");
+      setEditId(null);
 
       loadPatients();
 
     } catch (err) {
-      console.log("ERROR:", err.response?.data);
+      console.log(err.response?.data || err);
       alert("Error ❌");
     }
   };
 
-  // DELETE
   const deletePatient = async (id) => {
-    try {
-      await axios.delete(`${BASE_URL}/patients/${id}`);
-      loadPatients();
-    } catch (err) {
-      console.log(err);
-    }
+    await axios.delete(BASE_URL + "/patients/" + id);
+    loadPatients();
   };
 
-  // EDIT
   const editPatient = (p) => {
     setForm(p);
     setEditId(p._id);
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-
-      <h1>PATIENT SYSTEM 👤</h1>
+    <div style={{ padding: 20 }}>
+      <h1>PATIENT SYSTEM</h1>
 
       <button onClick={() => {
         localStorage.removeItem("token");
@@ -141,58 +132,46 @@ function Patients({ setIsLoggedIn }) {
 
       <hr />
 
-      <h2>Patient Form</h2>
+      <h3>Demographics</h3>
+      <input name="name" value={form.name} onChange={handleChange} placeholder="Name" /><br/><br/>
+      <input name="age" value={form.age} onChange={handleChange} placeholder="Age" /><br/><br/>
+      <input name="gender" value={form.gender} onChange={handleChange} placeholder="Gender" /><br/><br/>
+      <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" /><br/><br/>
+      <input name="address" value={form.address} onChange={handleChange} placeholder="Address" /><br/><br/>
 
-      {/* DEMOGRAPHICS */}
-      <input name="name" placeholder="Name" value={form.name} onChange={handleChange} /><br/><br/>
-      <input name="age" placeholder="Age" value={form.age} onChange={handleChange} /><br/><br/>
-      <input name="gender" placeholder="Gender" value={form.gender} onChange={handleChange} /><br/><br/>
-      <input name="phone" placeholder="Phone" value={form.phone} onChange={handleChange} /><br/><br/>
-      <input name="address" placeholder="Address" value={form.address} onChange={handleChange} /><br/><br/>
+      <h3>Medical</h3>
+      <input name="conditions" value={form.conditions} onChange={handleChange} placeholder="Conditions" /><br/><br/>
+      <input name="allergies" value={form.allergies} onChange={handleChange} placeholder="Allergies" /><br/><br/>
 
-      {/* MEDICAL */}
-      <input name="conditions" placeholder="Conditions" value={form.conditions} onChange={handleChange} /><br/><br/>
-      <input name="allergies" placeholder="Allergies" value={form.allergies} onChange={handleChange} /><br/><br/>
+      <h3>Dental</h3>
+      <input name="complaints" value={form.complaints} onChange={handleChange} placeholder="Complaints" /><br/><br/>
 
-      {/* DENTAL */}
-      <input name="complaints" placeholder="Complaints" value={form.complaints} onChange={handleChange} /><br/><br/>
-
-      {/* FILE */}
+      <h3>Imaging</h3>
       <input type="file" onChange={handleFile} /><br/><br/>
-
-      {preview && <img src={preview} alt="preview" width="120" />}
+      {preview && <img src={preview} width="120" alt="preview" />}
 
       <br/><br/>
-
-      <button onClick={savePatient}>
-        {editId ? "Update Patient" : "Save Patient"}
-      </button>
+      <button onClick={savePatient}>{editId ? "Update" : "Save"}</button>
 
       <hr />
 
-      <h2>Patients List</h2>
+      <h2>Patients</h2>
 
       {patients.map(p => (
-        <div key={p._id} style={{ border: "1px solid #ccc", padding: 10, marginBottom: 10 }}>
-
+        <div key={p._id} style={{ border: "1px solid gray", padding: 10, marginBottom: 10 }}>
           <h3>{p.name}</h3>
-
           <p>{p.age} | {p.gender}</p>
           <p>{p.phone}</p>
-          <p>{p.address}</p>
 
           {p.xray && (
-            <img src={`${BASE_URL}/${p.xray}`} width="100" alt="xray" />
+            <img src={BASE_URL + p.xray} width="100" alt="xray" />
           )}
 
-          <br/><br/>
-
+          <br/>
           <button onClick={() => editPatient(p)}>Edit</button>
           <button onClick={() => deletePatient(p._id)}>Delete</button>
-
         </div>
       ))}
-
     </div>
   );
 }
