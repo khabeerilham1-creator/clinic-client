@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function Patients() {
+function Patients({ setIsLoggedIn }) {
 
-  // ✅ FIXED (removed extra /api)
+  // ✅ CORRECT BASE URL
   const BASE_URL = "https://pis-backend-final-1.onrender.com/api";
 
   const [patients, setPatients] = useState([]);
@@ -45,7 +45,6 @@ function Patients() {
 
   const savePatient = async () => {
     try {
-
       const formData = new FormData();
 
       Object.keys(form).forEach(key => {
@@ -98,6 +97,16 @@ function Patients() {
     <div style={{ padding: "20px" }}>
 
       <h1>PATIENT INTELLIGENCE SYSTEM (PIS) 👤</h1>
+
+      {/* 🔥 ADDED LOGOUT BUTTON */}
+      <button
+        onClick={() => {
+          localStorage.removeItem("token");
+          setIsLoggedIn(false);
+        }}
+      >
+        Logout
+      </button>
 
       <p>
         This module manages complete patient records including demographics,

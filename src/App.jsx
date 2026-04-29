@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import Login from "./pages/Login";
 import Patients from "./pages/Patients";
 
 function App() {
-
-  // simple toggle (after login you can switch)
-  const isLoggedIn = false; // change to true after login
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("token")
+  );
 
   return (
     <div>
-      {isLoggedIn ? <Patients /> : <Login />}
+      {isLoggedIn
+        ? <Patients setIsLoggedIn={setIsLoggedIn} />
+        : <Login setIsLoggedIn={setIsLoggedIn} />}
     </div>
   );
 }
