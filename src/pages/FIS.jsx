@@ -9,6 +9,7 @@ function FIS() {
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patient, setPatient] = useState(null);
+
   const [data, setData] = useState({
     procedure: "",
     qty: "",
@@ -26,6 +27,7 @@ function FIS() {
   const [finalTotal, setFinalTotal] = useState(0);
   const [paid, setPaid] = useState(0);
   const [balance, setBalance] = useState(0);
+
   const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ function FIS() {
     setPaid(p);
     setBalance(final - p);
 
-  }, [data]);
+  }, [data, navigate]);
 
   useEffect(() => {
     load();
@@ -100,6 +102,10 @@ function FIS() {
       <input name="discount" placeholder="Discount" onChange={handleChange}/>
       <input name="payment1" placeholder="Payment1" onChange={handleChange}/>
       <input name="payment2" placeholder="Payment2" onChange={handleChange}/>
+
+      {/* FIXED ESLINT */}
+      <p>Total Raw: {total}</p>
+      <p>Discount Amount: {discountAmount}</p>
 
       <h3>Total: {finalTotal}</h3>
       <h3>Balance: {balance}</h3>

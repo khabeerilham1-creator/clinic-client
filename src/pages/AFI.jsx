@@ -30,7 +30,7 @@ function AFI() {
     const token = localStorage.getItem("token");
     if (!token) navigate("/");
     load();
-  }, []);
+  }, [navigate]);
 
   const load = async () => {
     try {
@@ -80,7 +80,6 @@ function AFI() {
 
       <hr />
 
-      {/* FIXED */}
       <PatientSelect onSelect={setPatient} />
 
       <h3>Smart Scheduling</h3>
