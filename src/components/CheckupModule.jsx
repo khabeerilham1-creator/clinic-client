@@ -85,7 +85,7 @@ function CheckupModule() {
     }
 
     try {
-      await axios.post("http://https://https://pis-backend-final-1.onrender.com/api/api.onrender.com:8000/checkup", {
+      await axios.post("http://https://https://pis-backend-final-1.onrender.com"https://pis-backend-final-1.onrender.com/api".onrender.com:8000/checkup", {
         patient_name: patientName,
         contact,
         date,

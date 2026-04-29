@@ -5,7 +5,7 @@ function AdminUsers() {
 
   const [users, setUsers] = useState([]);
 
-  const BASE_URL = "https://https://pis-backend-final-1.onrender.com/api/api.onrender.com";
+  const BASE_URL = "https://https://pis-backend-final-1.onrender.com"https://pis-backend-final-1.onrender.com/api".onrender.com";
 
   const load = async () => {
     try {
