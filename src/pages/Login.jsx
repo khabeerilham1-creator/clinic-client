@@ -1,52 +1,58 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
 function Login({ setIsLoggedIn }) {
+  const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    username: "",
+    password: ""
+  });
 
-  const handleLogin = async () => {
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const login = async () => {
     try {
-      const res = await axios.post(
-        "https://pis-backend-final-1.onrender.com/auth/login",
-        {
-          username,
-          password
-        }
-      );
+      const res = await axios.post(BASE_URL + "/auth/login", form);
 
       if (res.data.access_token) {
         localStorage.setItem("token", res.data.access_token);
         setIsLoggedIn(true);
+        navigate("/dashboard");
       } else {
-        alert("Invalid ❌");
+        alert("Invalid login ❌");
       }
-
     } catch (err) {
       console.log(err);
-      alert("Login Failed ❌");
+      alert("Login failed ❌");
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Clinic Login</h2>
+    <div style={{ padding: 40 }}>
+      <h1>Login</h1>
 
       <input
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Email"
+        name="username"
+        placeholder="Username"
+        value={form.username}
+        onChange={handleChange}
       /><br/><br/>
 
       <input
+        name="password"
         type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
+        value={form.password}
+        onChange={handleChange}
       /><br/><br/>
 
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={login}>Login</button>
     </div>
   );
 }

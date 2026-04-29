@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
 function Patients({ setIsLoggedIn }) {
+  const navigate = useNavigate();
+
   const [patients, setPatients] = useState([]);
+
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -30,8 +34,10 @@ function Patients({ setIsLoggedIn }) {
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/");
     loadPatients();
-  }, []);
+  }, [navigate]);
 
   const loadPatients = async () => {
     try {
@@ -60,6 +66,7 @@ function Patients({ setIsLoggedIn }) {
       }
 
       const formData = new FormData();
+
       Object.keys(form).forEach((key) => {
         formData.append(key, form[key] || "");
       });
@@ -99,6 +106,7 @@ function Patients({ setIsLoggedIn }) {
       setEditId(null);
 
       loadPatients();
+
     } catch (err) {
       console.log(err);
       alert("Error ❌");
@@ -117,12 +125,21 @@ function Patients({ setIsLoggedIn }) {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>PATIENT SYSTEM</h1>
 
-      <button onClick={() => {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
-      }}>
+      <h1>Patients Module</h1>
+
+      <button onClick={() => navigate("/dashboard")}>
+        ⬅ Back
+      </button>
+
+      <button
+        style={{ marginLeft: 10 }}
+        onClick={() => {
+          localStorage.removeItem("token");
+          if (setIsLoggedIn) setIsLoggedIn(false);
+          navigate("/");
+        }}
+      >
         Logout
       </button>
 
@@ -147,14 +164,20 @@ function Patients({ setIsLoggedIn }) {
       {preview && <img src={preview} width="120" alt="preview" />}
 
       <br/><br/>
-      <button onClick={savePatient}>{editId ? "Update" : "Save"}</button>
+      <button onClick={savePatient}>
+        {editId ? "Update" : "Save"}
+      </button>
 
       <hr />
 
-      <h2>Patients</h2>
+      <h2>Patients List</h2>
 
       {patients.map((p) => (
-        <div key={p._id} style={{ border: "1px solid gray", padding: 10, marginBottom: 10 }}>
+        <div key={p._id} style={{
+          border: "1px solid gray",
+          padding: 10,
+          marginBottom: 10
+        }}>
           <h3>{p.name}</h3>
           <p>{p.age} | {p.gender}</p>
           <p>{p.phone}</p>
