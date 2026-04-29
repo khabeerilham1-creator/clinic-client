@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 
 function FIS() {
   const navigate = useNavigate();
-
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patient, setPatient] = useState(null);
@@ -14,36 +13,26 @@ function FIS() {
     procedure: "",
     qty: "",
     rate: "",
-    doctor: "",
-    package: "",
-    category: "",
     discount: "",
     payment1: "",
     payment2: ""
   });
 
-  const [total, setTotal] = useState(0);
-  const [discountAmount, setDiscountAmount] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
-  const [paid, setPaid] = useState(0);
   const [balance, setBalance] = useState(0);
-
   const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) navigate("/");
 
-    const t = (Number(data.qty) || 0) * (Number(data.rate) || 0);
-    const d = (t * (Number(data.discount) || 0)) / 100;
-    const final = t - d;
-    const p = (Number(data.payment1) || 0) + (Number(data.payment2) || 0);
+    const total = (Number(data.qty) || 0) * (Number(data.rate) || 0);
+    const discount = (total * (Number(data.discount) || 0)) / 100;
+    const final = total - discount;
+    const paid = (Number(data.payment1) || 0) + (Number(data.payment2) || 0);
 
-    setTotal(t);
-    setDiscountAmount(d);
     setFinalTotal(final);
-    setPaid(p);
-    setBalance(final - p);
+    setBalance(final - paid);
 
   }, [data, navigate]);
 
@@ -67,7 +56,6 @@ function FIS() {
       ...data,
       patient: patient.patient_no,
       total: finalTotal,
-      paid,
       balance
     });
 
@@ -76,19 +64,12 @@ function FIS() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: 20 }}>
 
       <h1>FIS Module</h1>
 
-      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
-
-      <button
-        style={{ marginLeft: 10 }}
-        onClick={() => {
-          localStorage.removeItem("token");
-          navigate("/");
-        }}
-      >
+      <button onClick={() => navigate("/dashboard")}>Back</button>
+      <button onClick={() => { localStorage.removeItem("token"); navigate("/"); }}>
         Logout
       </button>
 
@@ -103,16 +84,12 @@ function FIS() {
       <input name="payment1" placeholder="Payment1" onChange={handleChange}/>
       <input name="payment2" placeholder="Payment2" onChange={handleChange}/>
 
-      {/* FIXED ESLINT */}
-      <p>Total Raw: {total}</p>
-      <p>Discount Amount: {discountAmount}</p>
-
       <h3>Total: {finalTotal}</h3>
       <h3>Balance: {balance}</h3>
 
       <button onClick={save}>Save</button>
 
-      <hr/>
+      <hr />
 
       {invoices.map(i => (
         <div key={i._id}>
