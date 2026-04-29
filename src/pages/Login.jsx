@@ -1,57 +1,72 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
+import axios from "axios";
 
-export default function Login() {
-  const [username, setUsername] = useState("admin@hdc.com");
-  const [password, setPassword] = useState("123456");
-  const navigate = useNavigate();
+function Login() {
 
-  const login = async () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
     try {
-      const res = await api.post("/auth/login", {
-        username,
-        password
-      });
 
-      const data = res.data;
+      const res = await axios.post(
+        "https://pis-backend-final-1.onrender.com/auth/login",
+        {
+          username,
+          password
+        },
+        {
+          timeout: 10000 // 🔥 important for Render
+        }
+      );
 
-      if (data?.access_token) {
-        localStorage.setItem("token", data.access_token);
+      console.log(res.data);
+
+      if (res.data.access_token) {
         alert("Login Success ✅");
-        navigate("/dashboard");
+
+        // OPTIONAL: store token
+        localStorage.setItem("token", res.data.access_token);
+
       } else {
-        alert("Login Failed ❌");
+        alert("Invalid credentials ❌");
       }
 
     } catch (err) {
-      console.error(err);
-      alert("Network Error ❌");
+
+      console.log("ERROR:", err);
+
+      // 🔥 Better error handling
+      if (err.code === "ECONNABORTED") {
+        alert("Server waking up... try again in 10 sec ⏳");
+      } else if (err.response) {
+        alert("Login failed ❌");
+      } else {
+        alert("Network error ❌ (backend not reachable)");
+      }
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>Clinic Login</h2>
+    <div style={{ padding: 20 }}>
+      <h2>Login</h2>
 
       <input
+        placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
-      />
-
-      <br /><br />
+      /><br/><br/>
 
       <input
         type="password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
+      /><br/><br/>
 
-      <br /><br />
-
-      <button onClick={login}>Login</button>
+      <button onClick={handleLogin}>Login</button>
     </div>
   );
 }
+
+export default Login;
