@@ -3,8 +3,8 @@ import axios from "axios";
 
 function Patients() {
 
-  // ✅ ONLY FIX (added /api)
-  const BASE_URL = "https://pis-backend-final-1.onrender.com/api/api/api";
+  // ✅ FIXED (removed extra /api)
+  const BASE_URL = "https://pis-backend-final-1.onrender.com/api";
 
   const [patients, setPatients] = useState([]);
 
