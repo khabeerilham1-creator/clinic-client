@@ -1,6 +1,7 @@
 import axios from "axios";
 
-await axios.post(
-  "https://pis-backend-final-1.onrender.com/auth/login",
-  { username, password }
-);
+const api = axios.create({
+  baseURL: "https://pis-backend-final-1.onrender.com"
+});
+
+export default api;
