@@ -8,13 +8,20 @@ function Login({ setIsLoggedIn }) {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post(
-        "https://pis-backend-final-1.onrender.com/auth/login",
-        {
+      const res = await axios({
+        method: "POST",
+        url: "https://pis-backend-final-1.onrender.com/auth/login",
+        data: {
           username,
           password
-        }
-      );
+        },
+        headers: {
+          "Content-Type": "application/json"
+        },
+        timeout: 15000
+      });
+
+      console.log("SUCCESS:", res.data);
 
       if (res.data.access_token) {
         localStorage.setItem("token", res.data.access_token);
@@ -24,8 +31,15 @@ function Login({ setIsLoggedIn }) {
       }
 
     } catch (err) {
-      console.log(err);
-      alert("Network Error ❌");
+      console.log("FULL ERROR:", err);
+
+      if (err.code === "ECONNABORTED") {
+        alert("Server waking up... try again ⏳");
+      } else if (err.response) {
+        alert("Login failed ❌");
+      } else {
+        alert("Network Error ❌ (backend unreachable)");
+      }
     }
   };
 
