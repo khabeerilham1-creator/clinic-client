@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 
 function Login({ setIsLoggedIn }) {
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -9,7 +10,10 @@ function Login({ setIsLoggedIn }) {
     try {
       const res = await axios.post(
         "https://pis-backend-final-1.onrender.com/auth/login",
-        { username, password }
+        {
+          username,
+          password
+        }
       );
 
       if (res.data.access_token) {
@@ -18,6 +22,7 @@ function Login({ setIsLoggedIn }) {
       } else {
         alert("Invalid credentials ❌");
       }
+
     } catch (err) {
       console.log(err);
       alert("Network Error ❌");
