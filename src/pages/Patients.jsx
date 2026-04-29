@@ -3,7 +3,6 @@ import axios from "axios";
 
 function Patients({ setIsLoggedIn }) {
 
-  // ✅ CORRECT BASE URL
   const BASE_URL = "https://pis-backend-final-1.onrender.com/api";
 
   const [patients, setPatients] = useState([]);
@@ -18,22 +17,28 @@ function Patients({ setIsLoggedIn }) {
 
   const [xray, setXray] = useState(null);
   const [preview, setPreview] = useState("");
-
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     loadPatients();
   }, []);
 
+  // 🔥 LOAD
   const loadPatients = async () => {
-    const res = await axios.get(`${BASE_URL}/patients`);
-    setPatients(res.data);
+    try {
+      const res = await axios.get(`${BASE_URL}/patients`);
+      setPatients(res.data);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
+  // 🔥 INPUT CHANGE
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // 🔥 FILE
   const handleFile = (e) => {
     const file = e.target.files[0];
     setXray(file);
@@ -43,6 +48,7 @@ function Patients({ setIsLoggedIn }) {
     }
   };
 
+  // 🔥 SAVE / UPDATE
   const savePatient = async () => {
     try {
       const formData = new FormData();
@@ -51,9 +57,7 @@ function Patients({ setIsLoggedIn }) {
         formData.append(key, form[key]);
       });
 
-      if (xray) {
-        formData.append("xray", xray);
-      }
+      if (xray) formData.append("xray", xray);
 
       if (editId) {
         await axios.put(`${BASE_URL}/patients/${editId}`, formData);
@@ -83,11 +87,17 @@ function Patients({ setIsLoggedIn }) {
     }
   };
 
+  // 🔥 DELETE
   const deletePatient = async (id) => {
-    await axios.delete(`${BASE_URL}/patients/${id}`);
-    loadPatients();
+    try {
+      await axios.delete(`${BASE_URL}/patients/${id}`);
+      loadPatients();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
+  // 🔥 EDIT
   const editPatient = (p) => {
     setForm(p);
     setEditId(p._id);
@@ -98,7 +108,7 @@ function Patients({ setIsLoggedIn }) {
 
       <h1>PATIENT INTELLIGENCE SYSTEM (PIS) 👤</h1>
 
-      {/* 🔥 ADDED LOGOUT BUTTON */}
+      {/* 🔥 LOGOUT */}
       <button
         onClick={() => {
           localStorage.removeItem("token");
@@ -109,8 +119,7 @@ function Patients({ setIsLoggedIn }) {
       </button>
 
       <p>
-        This module manages complete patient records including demographics,
-        medical history, dental data, imaging, and legal documentation.
+        Manage patient demographics, medical history, dental data, imaging, and legal records.
       </p>
 
       <h3>1. Demographics</h3>
@@ -172,7 +181,7 @@ function Patients({ setIsLoggedIn }) {
 
           {p.xray && (
             <img
-              src={`${BASE_URL.replace("/api","")}/${p.xray}`}
+              src={`https://pis-backend-final-1.onrender.com/${p.xray}`}
               alt="xray"
               style={{ width: "120px" }}
             />
@@ -181,7 +190,9 @@ function Patients({ setIsLoggedIn }) {
           <br/><br/>
 
           <button onClick={() => editPatient(p)}>Edit</button>
-          <button onClick={() => deletePatient(p._id)} style={{ marginLeft:10 }}>Delete</button>
+          <button onClick={() => deletePatient(p._id)} style={{ marginLeft:10 }}>
+            Delete
+          </button>
 
         </div>
       ))}
