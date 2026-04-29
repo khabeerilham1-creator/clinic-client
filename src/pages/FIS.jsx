@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PatientSelect from "../components/PatientSelect";
+import { useNavigate } from "react-router-dom";
 
 function FIS() {
+  const navigate = useNavigate();
 
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patient, setPatient] = useState(null);
-
   const [data, setData] = useState({
     procedure: "",
     qty: "",
@@ -25,10 +26,11 @@ function FIS() {
   const [finalTotal, setFinalTotal] = useState(0);
   const [paid, setPaid] = useState(0);
   const [balance, setBalance] = useState(0);
-
   const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/");
 
     const t = (Number(data.qty) || 0) * (Number(data.rate) || 0);
     const d = (t * (Number(data.discount) || 0)) / 100;
@@ -48,7 +50,7 @@ function FIS() {
   }, []);
 
   const load = async () => {
-    const res = await axios.get(`${BASE_URL}/invoices`);
+    const res = await axios.get(BASE_URL + "/invoices");
     setInvoices(res.data);
   };
 
@@ -57,10 +59,9 @@ function FIS() {
   };
 
   const save = async () => {
-
     if (!patient) return alert("Select patient ❗");
 
-    await axios.post(`${BASE_URL}/invoice`, {
+    await axios.post(BASE_URL + "/invoice", {
       ...data,
       patient: patient.patient_no,
       total: finalTotal,
@@ -68,111 +69,53 @@ function FIS() {
       balance
     });
 
-    alert("Invoice Saved ✅");
+    alert("Saved ✅");
     load();
   };
 
   return (
     <div style={{ padding: "20px" }}>
 
-      <h1>HDC Financial Intelligence System (FIS) 💰</h1>
+      <h1>FIS Module</h1>
 
-      <p>
-        This module manages billing, discount control, payment tracking,
-        and financial summaries for all patient treatments.
-      </p>
+      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+
+      <button
+        style={{ marginLeft: 10 }}
+        onClick={() => {
+          localStorage.removeItem("token");
+          navigate("/");
+        }}
+      >
+        Logout
+      </button>
+
+      <hr />
 
       <PatientSelect onSelect={setPatient} />
 
-      {patient && <p><strong>Selected Patient:</strong> {patient.name}</p>}
+      <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
+      <input name="qty" placeholder="Qty" onChange={handleChange}/>
+      <input name="rate" placeholder="Rate" onChange={handleChange}/>
+      <input name="discount" placeholder="Discount" onChange={handleChange}/>
+      <input name="payment1" placeholder="Payment1" onChange={handleChange}/>
+      <input name="payment2" placeholder="Payment2" onChange={handleChange}/>
 
-      <div style={grid}>
+      <h3>Total: {finalTotal}</h3>
+      <h3>Balance: {balance}</h3>
 
-        {/* BILLING */}
-        <div style={card}>
-          <h3>1. Billing Engine</h3>
-          <p>Enter procedure details and pricing information.</p>
-
-          <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
-          <input name="qty" placeholder="Quantity" onChange={handleChange}/>
-          <input name="rate" placeholder="Rate per unit" onChange={handleChange}/>
-          <input name="package" placeholder="Package" onChange={handleChange}/>
-          <input name="doctor" placeholder="Doctor" onChange={handleChange}/>
-        </div>
-
-        {/* DISCOUNT */}
-        <div style={card}>
-          <h3>2. Discount Governance</h3>
-          <p>Apply discounts based on treatment category.</p>
-
-          <input name="category" placeholder="Care category" onChange={handleChange}/>
-          <input name="discount" placeholder="Discount %" onChange={handleChange}/>
-        </div>
-
-        {/* PAYMENT */}
-        <div style={card}>
-          <h3>3. Payment Tracking</h3>
-          <p>Record payments received from the patient.</p>
-
-          <input name="payment1" placeholder="Payment 1" onChange={handleChange}/>
-          <input name="payment2" placeholder="Payment 2" onChange={handleChange}/>
-        </div>
-
-        {/* SUMMARY */}
-        <div style={summaryCard}>
-          <h3>Financial Summary</h3>
-
-          <p>Total: {total}</p>
-          <p>Discount: {discountAmount}</p>
-          <h2>Final Amount: {finalTotal}</h2>
-          <p>Paid: {paid}</p>
-          <h2>Balance: {balance}</h2>
-
-          <button onClick={save}>Save Invoice</button>
-        </div>
-
-      </div>
+      <button onClick={save}>Save</button>
 
       <hr/>
 
-      <h2>Saved Invoices</h2>
-
       {invoices.map(i => (
-        <div key={i._id} style={invoiceCard}>
-          <b>Rs {i.total}</b>
+        <div key={i._id}>
+          Rs {i.total}
         </div>
       ))}
 
     </div>
   );
 }
-
-/* STYLES */
-
-const grid = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "20px"
-};
-
-const card = {
-  border: "1px solid #ddd",
-  padding: "15px",
-  borderRadius: "10px",
-  background: "#fff"
-};
-
-const summaryCard = {
-  border: "2px solid #2b4c7e",
-  padding: "15px",
-  borderRadius: "10px",
-  background: "#eef4ff"
-};
-
-const invoiceCard = {
-  border: "1px solid #ccc",
-  padding: "10px",
-  marginTop: "10px"
-};
 
 export default FIS;
