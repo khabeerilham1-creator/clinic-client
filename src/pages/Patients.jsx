@@ -3,8 +3,8 @@ import axios from "axios";
 
 function Patients() {
 
-  // ✅ FIXED URL (only change)
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
+  // ✅ ONLY FIX (added /api)
+  const BASE_URL = "https://pis-backend-final-1.onrender.com/api";
 
   const [patients, setPatients] = useState([]);
 
@@ -104,8 +104,6 @@ const BASE_URL = "https://pis-backend-final-1.onrender.com";
         medical history, dental data, imaging, and legal documentation.
       </p>
 
-      {/* ================= FORM ================= */}
-
       <h3>1. Demographics</h3>
       <input name="name" placeholder="Name" value={form.name} onChange={handleChange} /><br/><br/>
       <input name="age" placeholder="Age" value={form.age} onChange={handleChange} /><br/><br/>
@@ -144,7 +142,6 @@ const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
       <hr />
 
-      {/* ================= DISPLAY ================= */}
       <h2>Saved Patients</h2>
 
       {patients.map(p => (
@@ -166,7 +163,7 @@ const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
           {p.xray && (
             <img
-              src={`${BASE_URL}/${p.xray}`}
+              src={`${BASE_URL.replace("/api","")}/${p.xray}`}
               alt="xray"
               style={{ width: "120px" }}
             />
