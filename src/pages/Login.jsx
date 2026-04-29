@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../api";
+import axios from "axios";
 
 function Login({ setIsLoggedIn }) {
 
@@ -8,12 +8,13 @@ function Login({ setIsLoggedIn }) {
 
   const handleLogin = async () => {
     try {
-
-      // ✅ CORRECT ENDPOINT
-      const res = await api.post("/auth/login", {
-        username,
-        password
-      });
+      const res = await axios.post(
+        "https://pis-backend-final-1.onrender.com/auth/login",
+        {
+          username,
+          password
+        }
+      );
 
       if (res.data.access_token) {
         localStorage.setItem("token", res.data.access_token);
