@@ -5,7 +5,7 @@ import PatientSelect from "../components/PatientSelect";
 function AFI() {
 
   // ✅ fixed URL
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
+  const BASE_URL = "https://pis-backend-final-1.onrender.com/api/api";
 
   const [patient, setPatient] = useState(null);
 

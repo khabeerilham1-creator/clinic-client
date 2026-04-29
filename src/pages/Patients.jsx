@@ -4,7 +4,7 @@ import axios from "axios";
 function Patients() {
 
   // ✅ ONLY FIX (added /api)
-  const BASE_URL = "https://pis-backend-final-1.onrender.com/api";
+  const BASE_URL = "https://pis-backend-final-1.onrender.com/api/api/api";
 
   const [patients, setPatients] = useState([]);
 
