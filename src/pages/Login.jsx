@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 function Login({ setIsLoggedIn }) {
 
@@ -8,20 +8,18 @@ function Login({ setIsLoggedIn }) {
 
   const handleLogin = async () => {
     try {
-      // ✅ IMPORTANT: DIRECT URL (NO /api)
-      const res = await axios.post(
-        "https://pis-backend-final-1.onrender.com/auth/login",
-        {
-          username,
-          password
-        }
-      );
+
+      // ✅ CORRECT ENDPOINT
+      const res = await api.post("/auth/login", {
+        username,
+        password
+      });
 
       if (res.data.access_token) {
         localStorage.setItem("token", res.data.access_token);
         setIsLoggedIn(true);
       } else {
-        alert("Invalid credentials ❌");
+        alert("Invalid ❌");
       }
 
     } catch (err) {
