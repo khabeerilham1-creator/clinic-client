@@ -81,7 +81,8 @@ function Checkup() {
       if (!patientId) return alert("Select patient ❗");
       if (!tasks.length) return alert("Select at least one tooth ❗");
 
-      const payload = { patient_id: patientId, complaint, tasks };
+      // ✅ ONLY FIX HERE (patient_id → patient)
+      const payload = { patient: patientId, complaint, tasks };
 
       if (editId) {
         await axios.put(`${BASE_URL}/checkups/${editId}`, payload);
@@ -97,7 +98,7 @@ function Checkup() {
       loadCheckups();
 
     } catch (err) {
-      console.log(err);
+      console.log(err.response?.data || err); // better debug
       alert("Error ❌");
     }
   };
