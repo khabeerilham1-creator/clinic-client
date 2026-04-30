@@ -1,44 +1,58 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import PatientSelect from "../components/PatientSelect";
+
+const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
 function AFI() {
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
-
-  const [patient, setPatient] = useState(null);
 
   const [data, setData] = useState({
     doctor: "",
     chair: "",
-    procedure: ""
+    procedure: "",
+    appointment_date: "",
+    appointment_time: "",
+    arrival_time: "",
+    chair_entry: "",
+    exit_time: "",
+    doctor_delay: "",
+    patient_delay: ""
   });
 
+  const handleChange = (e) => {
+    setData({ ...data, [e.target.name]: e.target.value });
+  };
+
   const save = async () => {
-    if (!patient) return alert("Select patient");
-
     try {
-      await axios.post(BASE_URL + "/appointments", {
-        ...data,
-        patient: patient?.patient_no || ""
-      });
-
-      alert("Saved");
-    } catch (err) {
-      console.log(err);
-      alert("Error");
+      await axios.post(BASE_URL + "/appointments", data);
+      alert("Saved ✅");
+    } catch {
+      alert("Error ❌");
     }
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>AFI</h1>
+      <h1>APPOINTMENT & FLOW INTELLIGENCE (AFI)</h1>
 
-      {/* SAFE */}
-      <PatientSelect onSelect={(p) => setPatient(p)} />
+      {/* SCHEDULING */}
+      <h3>Smart Scheduling</h3>
+      <input name="doctor" placeholder="Doctor" onChange={handleChange}/>
+      <input name="chair" placeholder="Chair" onChange={handleChange}/>
+      <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
+      <input type="date" name="appointment_date" onChange={handleChange}/>
+      <input type="time" name="appointment_time" onChange={handleChange}/>
 
-      <input placeholder="Doctor" onChange={e => setData({ ...data, doctor: e.target.value })}/>
-      <input placeholder="Chair" onChange={e => setData({ ...data, chair: e.target.value })}/>
-      <input placeholder="Procedure" onChange={e => setData({ ...data, procedure: e.target.value })}/>
+      {/* FLOW */}
+      <h3>Patient Flow Tracking</h3>
+      <input type="time" name="arrival_time" onChange={handleChange}/>
+      <input type="time" name="chair_entry" onChange={handleChange}/>
+      <input type="time" name="exit_time" onChange={handleChange}/>
+
+      {/* DELAYS */}
+      <h3>Delay Intelligence</h3>
+      <input name="doctor_delay" placeholder="Doctor Delay" onChange={handleChange}/>
+      <input name="patient_delay" placeholder="Patient Delay" onChange={handleChange}/>
 
       <button onClick={save}>Save</button>
     </div>
