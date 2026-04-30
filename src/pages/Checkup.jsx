@@ -47,7 +47,7 @@ function Checkup() {
 
   const loadCheckups = async () => {
     try {
-      const res = await axios.get(BASE_URL + "/checkups"); // ✅ FINAL
+      const res = await axios.get(BASE_URL + "/checkups");
       setCheckups(res.data);
     } catch (err) {
       console.error("Checkups load error:", err);
@@ -90,6 +90,8 @@ function Checkup() {
 
       setTasks([]);
       setComplaint("");
+      setPatientId("");
+
       loadCheckups();
 
     } catch (err) {
@@ -109,6 +111,11 @@ function Checkup() {
     if (!window.confirm("Delete?")) return;
     await axios.delete(BASE_URL + "/checkups/" + id);
     loadCheckups();
+  };
+
+  const getPatientName = (id) => {
+    const p = patients.find(p => p._id === id);
+    return p ? p.name : "Unknown";
   };
 
   return (
@@ -143,8 +150,8 @@ function Checkup() {
       {tasks.map((t, i) => (
         <div key={i}>
           Tooth {t.tooth}
-          <select onChange={(e)=>updateCondition(i, e.target.value)}>
-            <option>Condition</option>
+          <select value={t.condition} onChange={(e)=>updateCondition(i, e.target.value)}>
+            <option value="">Condition</option>
             <option>Caries</option>
             <option>Missing</option>
             <option>Fracture</option>
@@ -161,9 +168,25 @@ function Checkup() {
 
       <hr/>
 
+      <h2>Checkup List</h2>
+
       {checkups.map(c => (
-        <div key={c._id}>
-          {c.complaint}
+        <div key={c._id} style={{
+          border: "1px solid gray",
+          padding: "10px",
+          marginBottom: "10px"
+        }}>
+          <h3>{getPatientName(c.patient)}</h3>
+          <p><strong>Complaint:</strong> {c.complaint}</p>
+
+          {c.tasks && c.tasks.map((t, i) => (
+            <p key={i}>
+              Tooth {t.tooth} — {t.condition} → {t.treatment}
+            </p>
+          ))}
+
+          <button onClick={()=>editCheckup(c)}>Edit</button>
+          <button onClick={()=>deleteCheckup(c._id)}>Delete</button>
         </div>
       ))}
 
