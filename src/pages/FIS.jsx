@@ -20,7 +20,6 @@ function FIS() {
 
   const [finalTotal, setFinalTotal] = useState(0);
   const [balance, setBalance] = useState(0);
-  const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,21 +35,12 @@ function FIS() {
 
   }, [data, navigate]);
 
-  useEffect(() => {
-    load();
-  }, []);
-
-  const load = async () => {
-    const res = await axios.get(BASE_URL + "/invoices");
-    setInvoices(res.data);
-  };
-
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
 
   const save = async () => {
-    if (!patient) return alert("Select patient ❗");
+    if (!patient) return alert("Select patient");
 
     await axios.post(BASE_URL + "/invoice", {
       ...data,
@@ -59,44 +49,22 @@ function FIS() {
       balance
     });
 
-    alert("Saved ✅");
-    load();
+    alert("Saved");
   };
 
   return (
     <div style={{ padding: 20 }}>
-
-      <h1>FIS Module</h1>
-
-      <button onClick={() => navigate("/dashboard")}>Back</button>
-      <button onClick={() => { localStorage.removeItem("token"); navigate("/"); }}>
-        Logout
-      </button>
-
-      <hr />
+      <h1>FIS</h1>
 
       <PatientSelect onSelect={setPatient} />
 
-      <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
-      <input name="qty" placeholder="Qty" onChange={handleChange}/>
-      <input name="rate" placeholder="Rate" onChange={handleChange}/>
-      <input name="discount" placeholder="Discount" onChange={handleChange}/>
-      <input name="payment1" placeholder="Payment1" onChange={handleChange}/>
-      <input name="payment2" placeholder="Payment2" onChange={handleChange}/>
+      <input name="procedure" onChange={handleChange}/>
+      <input name="qty" onChange={handleChange}/>
+      <input name="rate" onChange={handleChange}/>
 
-      <h3>Total: {finalTotal}</h3>
-      <h3>Balance: {balance}</h3>
+      <h3>{finalTotal}</h3>
 
       <button onClick={save}>Save</button>
-
-      <hr />
-
-      {invoices.map(i => (
-        <div key={i._id}>
-          Rs {i.total}
-        </div>
-      ))}
-
     </div>
   );
 }
