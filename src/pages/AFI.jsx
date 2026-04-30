@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PatientSelect from "../components/PatientSelect";
-import { useNavigate } from "react-router-dom";
 
 function AFI() {
-  const navigate = useNavigate();
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [patient, setPatient] = useState(null);
@@ -12,38 +10,31 @@ function AFI() {
   const [data, setData] = useState({
     doctor: "",
     chair: "",
-    procedure: "",
-    duration: "",
-    appointment_date: "",
-    appointment_time: "",
-    arrival_time: "",
-    chair_entry: "",
-    exit_time: "",
-    doctor_delay: "",
-    patient_delay: ""
+    procedure: ""
   });
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) navigate("/");
-  }, [navigate]);
 
   const save = async () => {
     if (!patient) return alert("Select patient");
 
-    await axios.post(BASE_URL + "/appointments", {
-      ...data,
-      patient: patient.patient_no
-    });
+    try {
+      await axios.post(BASE_URL + "/appointments", {
+        ...data,
+        patient: patient?.patient_no || ""
+      });
 
-    alert("Saved");
+      alert("Saved");
+    } catch (err) {
+      console.log(err);
+      alert("Error");
+    }
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h1>AFI</h1>
 
-      <PatientSelect onSelect={setPatient} />
+      {/* SAFE */}
+      <PatientSelect onSelect={(p) => setPatient(p)} />
 
       <input placeholder="Doctor" onChange={e => setData({ ...data, doctor: e.target.value })}/>
       <input placeholder="Chair" onChange={e => setData({ ...data, chair: e.target.value })}/>
