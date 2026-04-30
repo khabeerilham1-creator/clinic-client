@@ -38,35 +38,32 @@ function Checkup() {
 
   const loadPatients = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/patients`);
+      const res = await axios.get(BASE_URL + "/patients");
       setPatients(res.data);
     } catch (err) {
-      console.error("Patients load error:", err);
+      console.error(err);
     }
   };
 
   const loadCheckups = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/checkup`); // ✅ FIXED
+      const res = await axios.get(BASE_URL + "/checkups"); // ✅ FINAL
       setCheckups(res.data);
     } catch (err) {
       console.error("Checkups load error:", err);
     }
   };
 
-  // ================= SELECT TOOTH =================
   const selectTooth = (tooth) => {
     if (!tasks.find(t => t.tooth === tooth)) {
       setTasks([...tasks, { tooth, condition: "", treatment: "" }]);
     }
   };
 
-  // ================= REMOVE =================
   const removeTooth = (index) => {
     setTasks(tasks.filter((_, i) => i !== index));
   };
 
-  // ================= CONDITION =================
   const updateCondition = (index, condition) => {
     const updated = [...tasks];
     updated[index].condition = condition;
@@ -74,7 +71,6 @@ function Checkup() {
     setTasks(updated);
   };
 
-  // ================= SAVE =================
   const saveCheckup = async () => {
     try {
 
@@ -84,10 +80,10 @@ function Checkup() {
       const payload = { patient: patientId, complaint, tasks };
 
       if (editId) {
-        await axios.put(`${BASE_URL}/checkup/${editId}`, payload); // ✅ FIXED
+        await axios.put(BASE_URL + "/checkups/" + editId, payload);
         setEditId(null);
       } else {
-        await axios.post(`${BASE_URL}/checkup`, payload); // ✅ FIXED
+        await axios.post(BASE_URL + "/checkups", payload);
       }
 
       alert("Saved ✅");
@@ -103,7 +99,7 @@ function Checkup() {
   };
 
   const editCheckup = (c) => {
-    setPatientId(c.patient_id);
+    setPatientId(c.patient);
     setComplaint(c.complaint);
     setTasks(c.tasks || []);
     setEditId(c._id);
@@ -111,21 +107,14 @@ function Checkup() {
 
   const deleteCheckup = async (id) => {
     if (!window.confirm("Delete?")) return;
-    await axios.delete(`${BASE_URL}/checkup/${id}`); // ✅ FIXED
+    await axios.delete(BASE_URL + "/checkups/" + id);
     loadCheckups();
   };
 
   return (
     <div style={{ padding: "20px" }}>
+      <h1>Checkup Module</h1>
 
-      <h1>Checkup Module ✅</h1>
-
-      <p>
-        This module records dental conditions, treatments, and patient complaints
-        using an interactive tooth chart.
-      </p>
-
-      {/* PATIENT */}
       <select value={patientId} onChange={(e)=>setPatientId(e.target.value)}>
         <option value="">Select Patient</option>
         {patients.map(p => (
@@ -135,7 +124,6 @@ function Checkup() {
 
       <br/><br/>
 
-      {/* COMPLAINT */}
       <select value={complaint} onChange={(e)=>setComplaint(e.target.value)}>
         <option value="">Chief Complaint</option>
         {complaintsList.map(c => <option key={c}>{c}</option>)}
@@ -143,49 +131,29 @@ function Checkup() {
 
       <br/><br/>
 
-      {/* DENTAL CHART */}
-      <img
-        src="/teeth.png"
-        alt="Dental Chart"
-        useMap="#teethmap"
-        style={{ width: "700px" }}
-      />
+      <img src="/teeth.png" useMap="#teethmap" style={{ width: "700px" }}/>
 
       <map name="teethmap">
         <area coords="10,20,60,80" onClick={()=>selectTooth(1)} />
         <area coords="60,20,110,80" onClick={()=>selectTooth(2)} />
-        <area coords="110,20,160,80" onClick={()=>selectTooth(3)} />
-        <area coords="160,20,210,80" onClick={()=>selectTooth(4)} />
-        <area coords="10,100,60,170" onClick={()=>selectTooth(32)} />
       </map>
 
-      <br/><br/>
-
-      {/* SELECTED */}
       <h3>Selected Teeth</h3>
 
       {tasks.map((t, i) => (
         <div key={i}>
           Tooth {t.tooth}
-
-          <select
-            value={t.condition}
-            onChange={(e)=>updateCondition(i, e.target.value)}
-          >
-            <option value="">Condition</option>
+          <select onChange={(e)=>updateCondition(i, e.target.value)}>
+            <option>Condition</option>
             <option>Caries</option>
             <option>Missing</option>
             <option>Fracture</option>
             <option>Infection</option>
           </select>
-
           <input value={t.treatment} readOnly />
-
           <button onClick={()=>removeTooth(i)}>X</button>
         </div>
       ))}
-
-      <br/>
 
       <button onClick={saveCheckup}>
         {editId ? "Update" : "Save"}
@@ -193,21 +161,9 @@ function Checkup() {
 
       <hr/>
 
-      {/* SAVED */}
-      <h2>Saved Checkups</h2>
-
       {checkups.map(c => (
-        <div key={c._id} style={{ border:"1px solid", padding:"10px", margin:"10px" }}>
-          <b>{c.complaint}</b>
-
-          {c.tasks?.map((t,i)=>(
-            <div key={i}>
-              Tooth {t.tooth} → {t.condition}
-            </div>
-          ))}
-
-          <button onClick={()=>editCheckup(c)}>Edit</button>
-          <button onClick={()=>deleteCheckup(c._id)}>Delete</button>
+        <div key={c._id}>
+          {c.complaint}
         </div>
       ))}
 
