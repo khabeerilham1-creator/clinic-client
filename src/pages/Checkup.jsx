@@ -47,7 +47,7 @@ function Checkup() {
 
   const loadCheckups = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/checkups`);
+      const res = await axios.get(`${BASE_URL}/checkup`); // ✅ FIXED
       setCheckups(res.data);
     } catch (err) {
       console.error("Checkups load error:", err);
@@ -81,14 +81,13 @@ function Checkup() {
       if (!patientId) return alert("Select patient ❗");
       if (!tasks.length) return alert("Select at least one tooth ❗");
 
-      // ✅ ONLY FIX HERE (patient_id → patient)
       const payload = { patient: patientId, complaint, tasks };
 
       if (editId) {
-        await axios.put(`${BASE_URL}/checkups/${editId}`, payload);
+        await axios.put(`${BASE_URL}/checkup/${editId}`, payload); // ✅ FIXED
         setEditId(null);
       } else {
-        await axios.post(`${BASE_URL}/checkups`, payload);
+        await axios.post(`${BASE_URL}/checkup`, payload); // ✅ FIXED
       }
 
       alert("Saved ✅");
@@ -98,7 +97,7 @@ function Checkup() {
       loadCheckups();
 
     } catch (err) {
-      console.log(err.response?.data || err); // better debug
+      console.log(err.response?.data || err);
       alert("Error ❌");
     }
   };
@@ -112,7 +111,7 @@ function Checkup() {
 
   const deleteCheckup = async (id) => {
     if (!window.confirm("Delete?")) return;
-    await axios.delete(`${BASE_URL}/checkups/${id}`);
+    await axios.delete(`${BASE_URL}/checkup/${id}`); // ✅ FIXED
     loadCheckups();
   };
 
