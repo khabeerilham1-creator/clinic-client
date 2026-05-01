@@ -3,34 +3,35 @@ import api from "../api";
 
 function LVI() {
 
-  const [records, setRecords] = useState([]);
-  const [form, setForm] = useState({
+  // STATES
+  const [cases, setCases] = useState([]);
+  const [ledger, setLedger] = useState([]);
+  const [vendors, setVendors] = useState([]);
+
+  const [caseForm, setCaseForm] = useState({
     patient_name: "",
-    tooth: "",
-    note: ""
+    lab: "",
+    deadline: ""
+  });
+
+  const [ledgerForm, setLedgerForm] = useState({
+    lab: "",
+    amount: "",
+    status: ""
+  });
+
+  const [vendorForm, setVendorForm] = useState({
+    name: "",
+    service: ""
   });
 
   // =========================
   // LOAD DATA
   // =========================
   const load = async () => {
-    try {
-      const res = await api.get("/lvi/");
-
-      console.log("LVI DATA:", res.data);
-
-      if (Array.isArray(res.data)) {
-        setRecords(res.data);
-      } else if (res.data.data) {
-        setRecords(res.data.data);
-      } else {
-        setRecords([]);
-      }
-
-    } catch (err) {
-      console.log("LVI LOAD ERROR:", err.response?.data || err);
-      setRecords([]);
-    }
+    setCases((await api.get("/lvi/case")).data || []);
+    setLedger((await api.get("/lvi/ledger")).data || []);
+    setVendors((await api.get("/lvi/vendor")).data || []);
   };
 
   useEffect(() => {
@@ -38,92 +39,81 @@ function LVI() {
   }, []);
 
   // =========================
-  // HANDLE INPUT
+  // SAVE FUNCTIONS
   // =========================
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const saveCase = async () => {
+    await api.post("/lvi/case", caseForm);
+    load();
   };
 
-  // =========================
-  // SAVE
-  // =========================
-  const save = async () => {
-    try {
-      await api.post("/lvi/", form);
-
-      alert("Saved ✅");
-
-      setForm({
-        patient_name: "",
-        tooth: "",
-        note: ""
-      });
-
-      load();
-
-    } catch (err) {
-      console.log("SAVE ERROR:", err.response?.data || err);
-      alert("Error ❌");
-    }
+  const saveLedger = async () => {
+    await api.post("/lvi/ledger", ledgerForm);
+    load();
   };
 
-  // =========================
-  // DELETE
-  // =========================
-  const del = async (id) => {
-    try {
-      await api.delete("/lvi/" + id);
-      load();
-    } catch (err) {
-      console.log("DELETE ERROR:", err.response?.data || err);
-    }
+  const saveVendor = async () => {
+    await api.post("/lvi/vendor", vendorForm);
+    load();
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>LVI Module</h1>
 
-      {/* FORM */}
-      <input
-        name="patient_name"
-        placeholder="Patient Name"
-        value={form.patient_name}
-        onChange={handleChange}
-      /><br/><br/>
+      <h1>LVI — Lab Intelligence System 🧪</h1>
 
-      <input
-        name="tooth"
-        placeholder="Tooth"
-        value={form.tooth}
-        onChange={handleChange}
-      /><br/><br/>
+      {/* ========================= */}
+      {/* 1. LAB CASE TRACKING */}
+      {/* ========================= */}
+      <h2>Lab Case Tracking</h2>
 
-      <input
-        name="note"
-        placeholder="Note"
-        value={form.note}
-        onChange={handleChange}
-      /><br/><br/>
+      <input placeholder="Patient" onChange={e => setCaseForm({...caseForm, patient_name:e.target.value})}/>
+      <input placeholder="Lab" onChange={e => setCaseForm({...caseForm, lab:e.target.value})}/>
+      <input type="date" onChange={e => setCaseForm({...caseForm, deadline:e.target.value})}/>
 
-      <button onClick={save}>Save</button>
+      <button onClick={saveCase}>Save Case</button>
+
+      {cases.map(c => (
+        <div key={c._id}>
+          {c.patient_name} → {c.lab} → {c.deadline}
+        </div>
+      ))}
 
       <hr />
 
-      {/* LIST */}
-      <h2>Records</h2>
+      {/* ========================= */}
+      {/* 2. FINANCIAL LEDGER */}
+      {/* ========================= */}
+      <h2>Financial Ledger</h2>
 
-      {Array.isArray(records) && records.length > 0 ? (
-        records.map((r) => (
-          <div key={r._id}>
-            <b>{r.patient_name}</b> - {r.tooth} - {r.note}
-            <br/>
-            <button onClick={() => del(r._id)}>Delete</button>
-            <hr />
-          </div>
-        ))
-      ) : (
-        <p>No data</p>
-      )}
+      <input placeholder="Lab" onChange={e => setLedgerForm({...ledgerForm, lab:e.target.value})}/>
+      <input placeholder="Amount" onChange={e => setLedgerForm({...ledgerForm, amount:e.target.value})}/>
+      <input placeholder="Status (paid/pending)" onChange={e => setLedgerForm({...ledgerForm, status:e.target.value})}/>
+
+      <button onClick={saveLedger}>Add Entry</button>
+
+      {ledger.map(l => (
+        <div key={l._id}>
+          {l.lab} → {l.amount} → {l.status}
+        </div>
+      ))}
+
+      <hr />
+
+      {/* ========================= */}
+      {/* 3. VENDOR MANAGEMENT */}
+      {/* ========================= */}
+      <h2>Vendor Management</h2>
+
+      <input placeholder="Vendor Name" onChange={e => setVendorForm({...vendorForm, name:e.target.value})}/>
+      <input placeholder="Service" onChange={e => setVendorForm({...vendorForm, service:e.target.value})}/>
+
+      <button onClick={saveVendor}>Add Vendor</button>
+
+      {vendors.map(v => (
+        <div key={v._id}>
+          {v.name} → {v.service}
+        </div>
+      ))}
 
     </div>
   );
