@@ -6,17 +6,11 @@ const BASE_URL = "https://pis-backend-final-1.onrender.com";
 function CIS() {
 
   const [form, setForm] = useState({
-    treatment_plan: "",
-    cost: "",
-    timeline: "",
-    notes: "",
-    materials: "",
-    anesthesia: "",
-    followup: "",
-    healing: ""
+    patient_id: "",
+    diagnosis: "",
+    treatment: "",
+    notes: ""
   });
-
-  const [file, setFile] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,16 +18,36 @@ function CIS() {
 
   const save = async () => {
     try {
-      const data = new FormData();
+      const token = localStorage.getItem("token");
 
-      Object.keys(form).forEach(k => data.append(k, form[k]));
-      if (file) data.append("photo", file);
+      await axios.post(
+        BASE_URL + "/cis/",
+        {
+          patient_id: form.patient_id,
+          diagnosis: form.diagnosis,
+          treatment: form.treatment,
+          notes: form.notes
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-      await axios.post(BASE_URL + "/cis", data);
+      alert("CIS Saved ✅");
 
-      alert("Saved ✅");
+      // reset form
+      setForm({
+        patient_id: "",
+        diagnosis: "",
+        treatment: "",
+        notes: ""
+      });
 
-    } catch {
+    } catch (err) {
+      console.log("CIS ERROR:", err.response?.data || err);
       alert("Error ❌");
     }
   };
@@ -42,26 +56,35 @@ function CIS() {
     <div style={{ padding: 20 }}>
       <h1>CLINICAL INTELLIGENCE SYSTEM (CIS)</h1>
 
-      {/* TREATMENT */}
-      <h3>Treatment Planning</h3>
-      <input name="treatment_plan" placeholder="Plan" onChange={handleChange}/>
-      <input name="cost" placeholder="Cost" onChange={handleChange}/>
-      <input name="timeline" placeholder="Timeline" onChange={handleChange}/>
+      <h3>Patient Clinical Data</h3>
 
-      {/* NOTES */}
-      <h3>Procedure Notes</h3>
-      <input name="notes" placeholder="Notes" onChange={handleChange}/>
-      <input name="materials" placeholder="Materials" onChange={handleChange}/>
-      <input name="anesthesia" placeholder="Anesthesia" onChange={handleChange}/>
+      <input
+        name="patient_id"
+        placeholder="Patient ID"
+        value={form.patient_id}
+        onChange={handleChange}
+      /><br/><br/>
 
-      {/* PHOTO */}
-      <h3>Case Photography</h3>
-      <input type="file" onChange={(e)=>setFile(e.target.files[0])}/>
+      <input
+        name="diagnosis"
+        placeholder="Diagnosis"
+        value={form.diagnosis}
+        onChange={handleChange}
+      /><br/><br/>
 
-      {/* FOLLOWUP */}
-      <h3>Follow-up</h3>
-      <input name="followup" placeholder="Follow-up" onChange={handleChange}/>
-      <input name="healing" placeholder="Healing" onChange={handleChange}/>
+      <input
+        name="treatment"
+        placeholder="Treatment"
+        value={form.treatment}
+        onChange={handleChange}
+      /><br/><br/>
+
+      <input
+        name="notes"
+        placeholder="Notes"
+        value={form.notes}
+        onChange={handleChange}
+      /><br/><br/>
 
       <button onClick={save}>Save</button>
     </div>
