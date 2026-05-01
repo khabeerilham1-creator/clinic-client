@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import api from "../api";   // ✅ FIXED
+import axios from "axios";
+
+const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
 function FIS() {
 
   const [form, setForm] = useState({
+    patient_name: "",
     procedure: "",
     doctor: "",
     qty: "",
     rate: "",
-    package: "",
-    category: "",
     discount: "",
     payment1: "",
     payment2: ""
@@ -23,7 +24,6 @@ function FIS() {
     const newData = { ...form, [e.target.name]: e.target.value };
     setForm(newData);
 
-    // ===== SAFE CALCULATION =====
     const qty = Number(newData.qty) || 0;
     const rate = Number(newData.rate) || 0;
     const discount = Number(newData.discount) || 0;
@@ -31,10 +31,7 @@ function FIS() {
     const p2 = Number(newData.payment2) || 0;
 
     const t = qty * rate;
-
-    // discount is % (0–100)
     const discountAmount = (t * discount) / 100;
-
     const f = t - discountAmount;
     const paid = p1 + p2;
     const b = f - paid;
@@ -46,14 +43,25 @@ function FIS() {
 
   const save = async () => {
     try {
-      await api.post("/fis/billing", {   // ✅ FIXED ROUTE + TOKEN
-        ...form,
-        total,
-        final,
-        balance
-      });
+      const token = localStorage.getItem("token");
 
-      alert("Saved ✅");
+      // ✅ ONLY SEND WHAT BACKEND EXPECTS
+      await axios.post(
+        BASE_URL + "/fis/billing",
+        {
+          patient_name: form.patient_name,
+          procedure: form.procedure,
+          doctor: form.doctor,
+          amount: final   // 🔥 IMPORTANT
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      alert("Billing Saved ✅");
 
     } catch (err) {
       console.log("FIS ERROR:", err.response?.data || err);
@@ -65,25 +73,21 @@ function FIS() {
     <div style={{ padding: 20 }}>
       <h1>FINANCIAL INTELLIGENCE SYSTEM (FIS)</h1>
 
-      {/* BILLING */}
       <h3>Billing Engine</h3>
+
+      <input name="patient_name" placeholder="Patient Name" onChange={handleChange}/>
       <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
       <input name="doctor" placeholder="Doctor" onChange={handleChange}/>
       <input name="qty" placeholder="Quantity" onChange={handleChange}/>
       <input name="rate" placeholder="Rate" onChange={handleChange}/>
-      <input name="package" placeholder="Package" onChange={handleChange}/>
 
-      {/* DISCOUNT */}
-      <h3>Discount Governance</h3>
-      <input name="category" placeholder="Category" onChange={handleChange}/>
+      <h3>Discount</h3>
       <input name="discount" placeholder="Discount %" onChange={handleChange}/>
 
-      {/* PAYMENT */}
-      <h3>Payment Tracking</h3>
+      <h3>Payment</h3>
       <input name="payment1" placeholder="Payment 1" onChange={handleChange}/>
       <input name="payment2" placeholder="Payment 2" onChange={handleChange}/>
 
-      {/* SUMMARY */}
       <h3>Summary</h3>
       <p>Total: {total}</p>
       <p>Final: {final}</p>
