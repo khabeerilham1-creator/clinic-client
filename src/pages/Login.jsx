@@ -3,6 +3,7 @@ import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Login({ setIsLoggedIn }) {
+
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -43,7 +44,6 @@ function Login({ setIsLoggedIn }) {
       <input
         name="username"
         placeholder="Username"
-        value={form.username}
         onChange={handleChange}
       /><br/><br/>
 
@@ -51,7 +51,6 @@ function Login({ setIsLoggedIn }) {
         name="password"
         type="password"
         placeholder="Password"
-        value={form.password}
         onChange={handleChange}
       /><br/><br/>
 

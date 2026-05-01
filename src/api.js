@@ -4,11 +4,11 @@ const api = axios.create({
   baseURL: "https://pis-backend-final-1.onrender.com"
 });
 
-// 🔐 Attach JWT token automatically
+// 🔐 AUTO ADD TOKEN
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
-  if (token && token !== "dummy_token") {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
