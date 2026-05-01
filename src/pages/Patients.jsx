@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";   // ✅ FIXED (use api instead of axios)
 import { useNavigate } from "react-router-dom";
-
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
+import PatientTimeline from "../components/PatientTimeline";
 
 function Patients({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -39,12 +39,16 @@ function Patients({ setIsLoggedIn }) {
     loadPatients();
   }, [navigate]);
 
+  // =========================
+  // LOAD PATIENTS (FIXED)
+  // =========================
   const loadPatients = async () => {
     try {
-      const res = await axios.get(BASE_URL + "/patients");
+      const res = await api.get("/patients/");  // ✅ FIXED
       setPatients(res.data);
     } catch (err) {
       console.log(err);
+      alert("Failed to load patients ❌");
     }
   };
 
@@ -58,6 +62,9 @@ function Patients({ setIsLoggedIn }) {
     if (file) setPreview(URL.createObjectURL(file));
   };
 
+  // =========================
+  // SAVE PATIENT (FIXED)
+  // =========================
   const savePatient = async () => {
     try {
       if (!form.name || !form.age || !form.gender || !form.phone || !form.address) {
@@ -74,9 +81,9 @@ function Patients({ setIsLoggedIn }) {
       if (xray) formData.append("xray", xray);
 
       if (editId) {
-        await axios.put(BASE_URL + "/patients/" + editId, formData);
+        await api.put("/patients/" + editId, formData);   // ✅ FIXED
       } else {
-        await axios.post(BASE_URL + "/patients", formData);
+        await api.post("/patients/", formData);           // ✅ FIXED
       }
 
       alert("Saved ✅");
@@ -108,13 +115,16 @@ function Patients({ setIsLoggedIn }) {
       loadPatients();
 
     } catch (err) {
-      console.log(err);
+      console.log("SAVE ERROR:", err.response?.data || err);
       alert("Error ❌");
     }
   };
 
+  // =========================
+  // DELETE (FIXED)
+  // =========================
   const deletePatient = async (id) => {
-    await axios.delete(BASE_URL + "/patients/" + id);
+    await api.delete("/patients/" + id);  // ✅ FIXED
     loadPatients();
   };
 
@@ -183,14 +193,24 @@ function Patients({ setIsLoggedIn }) {
           <p>{p.phone}</p>
 
           {p.xray && (
-            <img src={BASE_URL + "/" + p.xray} width="100" alt="xray" />
+            <img src={`https://pis-backend-final-1.onrender.com/${p.xray}`} width="100" alt="xray" />
           )}
 
           <br/>
+
           <button onClick={() => editPatient(p)}>Edit</button>
           <button onClick={() => deletePatient(p._id)}>Delete</button>
+
+          <button onClick={() => setSelectedPatient(p._id)}>
+            View Timeline
+          </button>
+
+          {selectedPatient === p._id && (
+            <PatientTimeline patientId={p._id} />
+          )}
         </div>
       ))}
+
     </div>
   );
 }

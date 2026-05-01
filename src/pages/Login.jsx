@@ -1,8 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";   // ✅ use api instead of axios
 import { useNavigate } from "react-router-dom";
-
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
 function Login({ setIsLoggedIn }) {
   const navigate = useNavigate();
@@ -18,17 +16,24 @@ function Login({ setIsLoggedIn }) {
 
   const login = async () => {
     try {
-      const res = await axios.post(BASE_URL + "/auth/login", form);
+      const res = await api.post("/auth/login", form);
+
+      console.log("LOGIN RESPONSE:", res.data);
 
       if (res.data.access_token) {
         localStorage.setItem("token", res.data.access_token);
+
         setIsLoggedIn(true);
+
+        alert("Login success ✅");
+
         navigate("/dashboard");
       } else {
         alert("Invalid login ❌");
       }
+
     } catch (err) {
-      console.log(err);
+      console.log("LOGIN ERROR:", err.response?.data || err);
       alert("Login failed ❌");
     }
   };
