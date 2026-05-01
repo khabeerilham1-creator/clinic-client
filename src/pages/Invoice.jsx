@@ -7,23 +7,29 @@ function Invoice({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
-  const [selected, setSelected] = useState("");
+  const [form, setForm] = useState({
+    patient_name: "",
+    procedure: "",
+    qty: "",
+    rate: "",
+    payment1: "",
+    payment2: ""
+  });
 
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   // =========================
-  // AUTH CHECK
+  // AUTH
   // =========================
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Login required ❌");
       navigate("/");
     } else {
       loadPatients();
     }
-  }, [navigate]);
+  }, []);
 
   // =========================
   // LOAD PATIENTS
@@ -33,8 +39,28 @@ function Invoice({ setIsLoggedIn }) {
       const res = await api.get("/patients/");
       setPatients(res.data);
     } catch (err) {
-      console.log("PATIENT LOAD ERROR:", err.response?.data || err);
+      console.log("PATIENT ERROR:", err.response?.data || err);
       alert("Failed to load patients ❌");
+    }
+  };
+
+  // =========================
+  // HANDLE INPUT
+  // =========================
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // =========================
+  // SAVE INVOICE
+  // =========================
+  const saveInvoice = async () => {
+    try {
+      await api.post("/invoice", form);
+      alert("Invoice Saved ✅");
+    } catch (err) {
+      console.log(err);
+      alert("Error saving ❌");
     }
   };
 
@@ -58,12 +84,12 @@ function Invoice({ setIsLoggedIn }) {
 
       <hr />
 
+      {/* ===================== */}
+      {/* SELECT PATIENT */}
+      {/* ===================== */}
       <h3>Select Patient</h3>
 
-      <select
-        value={selected}
-        onChange={(e) => setSelected(e.target.value)}
-      >
+      <select name="patient_name" onChange={handleChange}>
         <option value="">-- Select Patient --</option>
 
         {patients.map((p) => (
@@ -73,15 +99,35 @@ function Invoice({ setIsLoggedIn }) {
         ))}
       </select>
 
-      <br/><br/>
+      <hr />
 
-      {selected && (
+      {/* ===================== */}
+      {/* MANUAL BILL FORM */}
+      {/* ===================== */}
+      <h3>Manual Billing</h3>
+
+      <input name="procedure" placeholder="Procedure" onChange={handleChange} /><br/><br/>
+      <input name="qty" placeholder="Quantity" onChange={handleChange} /><br/><br/>
+      <input name="rate" placeholder="Rate" onChange={handleChange} /><br/><br/>
+
+      <h3>Payments</h3>
+      <input name="payment1" placeholder="Payment 1" onChange={handleChange} /><br/><br/>
+      <input name="payment2" placeholder="Payment 2" onChange={handleChange} /><br/><br/>
+
+      <button onClick={saveInvoice}>Save Invoice</button>
+
+      <hr />
+
+      {/* ===================== */}
+      {/* PDF */}
+      {/* ===================== */}
+      {form.patient_name && (
         <a
-          href={`${BASE_URL}/invoice-pdf/${selected}`}
+          href={`${BASE_URL}/invoice-pdf/${form.patient_name}`}
           target="_blank"
           rel="noreferrer"
         >
-          <button>Generate Invoice PDF 🧾</button>
+          <button>Generate PDF 🧾</button>
         </a>
       )}
 
