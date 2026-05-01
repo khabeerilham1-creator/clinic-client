@@ -1,24 +1,33 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";   // ✅ FIXED
 
 function Visits() {
-
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   const [name, setName] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [treatment, setTreatment] = useState("");
 
   const addVisit = async () => {
-    await axios.post(`${BASE_URL}/visits`, {
-      patient_name: name,
-      diagnosis,
-      treatment,
-      medicines: "",
-      fee: 0
-    });
+    try {
+      await api.post("/visits", {   // ✅ FIXED
+        patient_name: name,
+        diagnosis,
+        treatment,
+        medicines: "",
+        fee: 0
+      });
 
-    alert("Visit added ✅");
+      alert("Visit added ✅");
+
+      // optional reset
+      setName("");
+      setDiagnosis("");
+      setTreatment("");
+
+    } catch (err) {
+      console.log("VISIT ERROR:", err.response?.data || err);
+      alert("Failed ❌");
+    }
   };
 
   return (
@@ -33,16 +42,19 @@ function Visits() {
 
       <input
         placeholder="Patient Name"
+        value={name}
         onChange={e => setName(e.target.value)}
       />
 
       <input
         placeholder="Diagnosis"
+        value={diagnosis}
         onChange={e => setDiagnosis(e.target.value)}
       />
 
       <input
         placeholder="Treatment"
+        value={treatment}
         onChange={e => setTreatment(e.target.value)}
       />
 
