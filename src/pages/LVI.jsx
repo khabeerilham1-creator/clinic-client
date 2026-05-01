@@ -1,124 +1,129 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import api from "../api";
 
 function LVI() {
 
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
-
-  const [data, setData] = useState({
-    case_entry: "",
-    lab_assignment: "",
-    deadline: "",
-    lab_payable: "",
-    paid: "",
-    pending: "",
-    supplier: "",
-    material: "",
-    equipment: ""
+  const [records, setRecords] = useState([]);
+  const [form, setForm] = useState({
+    patient_name: "",
+    tooth: "",
+    note: ""
   });
 
-  const [records, setRecords] = useState([]);
-  const [editId, setEditId] = useState(null);
+  // =========================
+  // LOAD DATA
+  // =========================
+  const load = async () => {
+    try {
+      const res = await api.get("/lvi/");
+
+      console.log("LVI DATA:", res.data);
+
+      if (Array.isArray(res.data)) {
+        setRecords(res.data);
+      } else if (res.data.data) {
+        setRecords(res.data.data);
+      } else {
+        setRecords([]);
+      }
+
+    } catch (err) {
+      console.log("LVI LOAD ERROR:", err.response?.data || err);
+      setRecords([]);
+    }
+  };
 
   useEffect(() => {
     load();
   }, []);
 
-  const load = async () => {
-    const res = await axios.get(`${BASE_URL}/lvi`);
-    setRecords(res.data);
-  };
-
+  // =========================
+  // HANDLE INPUT
+  // =========================
   const handleChange = (e) => {
-    setData({ ...data, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // =========================
+  // SAVE
+  // =========================
   const save = async () => {
+    try {
+      await api.post("/lvi/", form);
 
-    if (editId) {
-      await axios.put(`${BASE_URL}/lvi/${editId}`, data);
-      setEditId(null);
-    } else {
-      await axios.post(`${BASE_URL}/lvi`, data);
+      alert("Saved ✅");
+
+      setForm({
+        patient_name: "",
+        tooth: "",
+        note: ""
+      });
+
+      load();
+
+    } catch (err) {
+      console.log("SAVE ERROR:", err.response?.data || err);
+      alert("Error ❌");
     }
-
-    setData({
-      case_entry: "", lab_assignment: "", deadline: "",
-      lab_payable: "", paid: "", pending: "",
-      supplier: "", material: "", equipment: ""
-    });
-
-    alert("Record Saved ✅");
-    load();
   };
 
-  const edit = (r) => {
-    setData(r);
-    setEditId(r._id);
-  };
-
-  const remove = async (id) => {
-    if (!window.confirm("Delete record?")) return;
-    await axios.delete(`${BASE_URL}/lvi/${id}`);
-    load();
+  // =========================
+  // DELETE
+  // =========================
+  const del = async (id) => {
+    try {
+      await api.delete("/lvi/" + id);
+      load();
+    } catch (err) {
+      console.log("DELETE ERROR:", err.response?.data || err);
+    }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: 20 }}>
+      <h1>LVI Module</h1>
 
-      <h1>LAB & VENDOR INTELLIGENCE (LVI) 🏥</h1>
+      {/* FORM */}
+      <input
+        name="patient_name"
+        placeholder="Patient Name"
+        value={form.patient_name}
+        onChange={handleChange}
+      /><br/><br/>
 
-      <p>
-        This module manages lab case tracking, vendor coordination,
-        and financial records related to laboratory work and materials.
-      </p>
+      <input
+        name="tooth"
+        placeholder="Tooth"
+        value={form.tooth}
+        onChange={handleChange}
+      /><br/><br/>
 
-      {/* ================= 1 ================= */}
-      <h3>1. Lab Case Tracking</h3>
-      <p>Track all lab cases and assignments with deadlines.</p>
+      <input
+        name="note"
+        placeholder="Note"
+        value={form.note}
+        onChange={handleChange}
+      /><br/><br/>
 
-      <input name="case_entry" placeholder="Case entry" value={data.case_entry} onChange={handleChange} /><br/>
-      <input name="lab_assignment" placeholder="Lab assignment" value={data.lab_assignment} onChange={handleChange} /><br/>
-      <input name="deadline" placeholder="Delivery deadline" value={data.deadline} onChange={handleChange} /><br/>
+      <button onClick={save}>Save</button>
 
-      {/* ================= 2 ================= */}
-      <h3>2. Financial Ledger</h3>
-      <p>Manage lab payments and outstanding balances.</p>
+      <hr />
 
-      <input name="lab_payable" placeholder="Lab payable" value={data.lab_payable} onChange={handleChange} /><br/>
-      <input name="paid" placeholder="Paid amount" value={data.paid} onChange={handleChange} /><br/>
-      <input name="pending" placeholder="Pending balance" value={data.pending} onChange={handleChange} /><br/>
+      {/* LIST */}
+      <h2>Records</h2>
 
-      {/* ================= 3 ================= */}
-      <h3>3. Vendor Management</h3>
-      <p>Track suppliers, materials, and equipment servicing.</p>
-
-      <input name="supplier" placeholder="Supplier name" value={data.supplier} onChange={handleChange} /><br/>
-      <input name="material" placeholder="Material purchase" value={data.material} onChange={handleChange} /><br/>
-      <input name="equipment" placeholder="Equipment servicing" value={data.equipment} onChange={handleChange} /><br/>
-
-      <br/>
-
-      <button onClick={save}>
-        {editId ? "Update Record" : "Save Record"}
-      </button>
-
-      <hr/>
-
-      <h2>Saved Records</h2>
-
-      {records.map(r => (
-        <div key={r._id} style={{ border:"1px solid", margin:"10px", padding:"10px" }}>
-
-          <b>{r.case_entry}</b> — {r.lab_assignment}
-
-          <br/>
-
-          <button onClick={()=>edit(r)}>Edit</button>
-          <button onClick={()=>remove(r._id)}>Delete</button>
-
-        </div>
-      ))}
+      {Array.isArray(records) && records.length > 0 ? (
+        records.map((r) => (
+          <div key={r._id}>
+            <b>{r.patient_name}</b> - {r.tooth} - {r.note}
+            <br/>
+            <button onClick={() => del(r._id)}>Delete</button>
+            <hr />
+          </div>
+        ))
+      ) : (
+        <p>No data</p>
+      )}
 
     </div>
   );
