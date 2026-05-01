@@ -19,16 +19,18 @@ function Invoice({ setIsLoggedIn }) {
   const BASE_URL = "https://pis-backend-final-1.onrender.com";
 
   // =========================
-  // AUTH
+  // AUTH CHECK
   // =========================
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (!token) {
+      alert("Login required ❌");
       navigate("/");
-    } else {
-      loadPatients();
+      return;
     }
+
+    loadPatients();
   }, []);
 
   // =========================
@@ -84,11 +86,8 @@ function Invoice({ setIsLoggedIn }) {
 
       <hr />
 
-      {/* ===================== */}
       {/* SELECT PATIENT */}
-      {/* ===================== */}
       <h3>Select Patient</h3>
-
       <select name="patient_name" onChange={handleChange}>
         <option value="">-- Select Patient --</option>
 
@@ -101,9 +100,7 @@ function Invoice({ setIsLoggedIn }) {
 
       <hr />
 
-      {/* ===================== */}
-      {/* MANUAL BILL FORM */}
-      {/* ===================== */}
+      {/* MANUAL BILL */}
       <h3>Manual Billing</h3>
 
       <input name="procedure" placeholder="Procedure" onChange={handleChange} /><br/><br/>
@@ -118,9 +115,7 @@ function Invoice({ setIsLoggedIn }) {
 
       <hr />
 
-      {/* ===================== */}
       {/* PDF */}
-      {/* ===================== */}
       {form.patient_name && (
         <a
           href={`${BASE_URL}/invoice-pdf/${form.patient_name}`}

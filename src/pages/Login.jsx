@@ -18,15 +18,14 @@ function Login({ setIsLoggedIn }) {
     try {
       const res = await api.post("/auth/login", form);
 
+      console.log("LOGIN RESPONSE:", res.data);
+
       if (res.data.access_token) {
+        // ✅ SAVE REAL TOKEN
         localStorage.setItem("token", res.data.access_token);
 
-        console.log("TOKEN SAVED:", res.data.access_token); // debug
-
-        if (setIsLoggedIn) setIsLoggedIn(true);
-
-        alert("Login success ✅");
-        navigate("/patients");
+        setIsLoggedIn(true);
+        navigate("/dashboard");
       } else {
         alert("Invalid login ❌");
       }
