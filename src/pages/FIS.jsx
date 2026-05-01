@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
-
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
+import api from "../api";   // ✅ FIXED
 
 function FIS() {
 
@@ -25,26 +23,40 @@ function FIS() {
     const newData = { ...form, [e.target.name]: e.target.value };
     setForm(newData);
 
-    const t = (Number(newData.qty) || 0) * (Number(newData.rate) || 0);
-    const d = (t * (Number(newData.discount) || 0)) / 100;
-    const f = t - d;
-    const paid = (Number(newData.payment1) || 0) + (Number(newData.payment2) || 0);
+    // ===== SAFE CALCULATION =====
+    const qty = Number(newData.qty) || 0;
+    const rate = Number(newData.rate) || 0;
+    const discount = Number(newData.discount) || 0;
+    const p1 = Number(newData.payment1) || 0;
+    const p2 = Number(newData.payment2) || 0;
+
+    const t = qty * rate;
+
+    // discount is % (0–100)
+    const discountAmount = (t * discount) / 100;
+
+    const f = t - discountAmount;
+    const paid = p1 + p2;
+    const b = f - paid;
 
     setTotal(t);
     setFinal(f);
-    setBalance(f - paid);
+    setBalance(b);
   };
 
   const save = async () => {
     try {
-      await axios.post(BASE_URL + "/invoice", {
+      await api.post("/fis/billing", {   // ✅ FIXED ROUTE + TOKEN
         ...form,
-        total: final,
+        total,
+        final,
         balance
       });
 
       alert("Saved ✅");
-    } catch {
+
+    } catch (err) {
+      console.log("FIS ERROR:", err.response?.data || err);
       alert("Error ❌");
     }
   };
