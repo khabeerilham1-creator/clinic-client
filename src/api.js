@@ -1,10 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://pis-backend-final-1.onrender.com",
+  baseURL: "https://pis-backend-final-1.onrender.com"
 });
 
-// attach JWT to every request
+// 🔥 AUTO ATTACH TOKEN
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 

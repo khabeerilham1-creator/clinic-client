@@ -1,84 +1,85 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
+import { useNavigate } from "react-router-dom";
 
 function Reports() {
-
-  const BASE_URL = "https://pis-backend-final-1.onrender.com";
+  const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadPatients();
-  }, []);
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      navigate("/");
+    } else {
+      loadPatients();
+    }
+  }, [navigate]);
+
+  // =========================
+  // LOAD PATIENTS
+  // =========================
   const loadPatients = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/patients`);
+      const res = await api.get("/patients/");
       setPatients(res.data);
     } catch (err) {
-      console.log(err);
+      console.log("REPORT ERROR:", err.response?.data || err);
       alert("Failed to load patients ❌");
     }
   };
 
-  const filteredPatients = patients.filter(p =>
+  // =========================
+  // SEARCH FILTER
+  // =========================
+  const filtered = patients.filter((p) =>
     p.name?.toLowerCase().includes(search.toLowerCase()) ||
     p.phone?.includes(search)
   );
 
-  return (
-    <div style={{ padding: "20px" }}>
+  // =========================
+  // VIEW REPORT
+  // =========================
+  const viewReport = (id) => {
+    const token = localStorage.getItem("token");
 
+    window.open(
+      `https://pis-backend-final-1.onrender.com/reports/${id}?token=${token}`,
+      "_blank"
+    );
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
       <h1>Clinical Reports Module 📊</h1>
 
       <p>
-        This module allows you to search patients and generate detailed
-        clinical reports including treatment history and diagnostics.
+        This module allows you to search patients and generate detailed clinical reports.
       </p>
 
-      {/* SEARCH */}
       <input
         placeholder="Search patient by name or phone..."
         value={search}
-        onChange={(e)=>setSearch(e.target.value)}
-        style={{ padding: "8px", width: "300px" }}
+        onChange={(e) => setSearch(e.target.value)}
       />
 
-      <br/><br/>
+      <br /><br />
 
-      {/* LIST */}
-      {filteredPatients.map(p => (
-        <div
-          key={p._id}
-          style={{
-            border: "1px solid #ccc",
-            padding: "15px",
-            marginBottom: "10px"
-          }}
-        >
-
-          <b>{p.name}</b> <br/>
-          Phone: {p.phone} <br/>
-          Address: {p.address}
-
-          <br/><br/>
-
-          <button
-            onClick={() =>
-              window.open(`${BASE_URL}/report/${p._id}`)
-            }
-          >
-            View Report
-          </button>
-
-        </div>
-      ))}
-
-      {filteredPatients.length === 0 && (
+      {filtered.length === 0 ? (
         <p>No patients found</p>
+      ) : (
+        filtered.map((p) => (
+          <div key={p._id} style={{ marginBottom: 10 }}>
+            <b>{p.name}</b> - {p.phone}
+            <br />
+            <button onClick={() => viewReport(p._id)}>
+              View Report
+            </button>
+          </div>
+        ))
       )}
-
     </div>
   );
 }
