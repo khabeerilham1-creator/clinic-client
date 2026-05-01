@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
-import api from "../api";   // ✅ FIXED (use api instead of axios)
+import api from "../api";
 import { useNavigate } from "react-router-dom";
-import PatientTimeline from "../components/PatientTimeline";
 
 function Patients({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
-  const [selectedPatient, setSelectedPatient] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -15,76 +13,56 @@ function Patients({ setIsLoggedIn }) {
     gender: "",
     phone: "",
     address: "",
-    referral: "",
-    care_category: "",
     conditions: "",
-    allergies: "",
-    medications: "",
-    risk_flags: "",
-    past_treatments: "",
-    complaints: "",
-    habits: "",
-    signed_forms: "",
-    estimates: "",
-    legal_consents: ""
+    complaints: ""
   });
 
-  const [xray, setXray] = useState(null);
-  const [preview, setPreview] = useState("");
-  const [editId, setEditId] = useState(null);
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) navigate("/");
-    loadPatients();
+
+    if (!token) {
+      navigate("/");
+    } else {
+      loadPatients();
+    }
   }, [navigate]);
 
   // =========================
-  // LOAD PATIENTS (FIXED)
+  // LOAD PATIENTS
   // =========================
   const loadPatients = async () => {
     try {
-      const res = await api.get("/patients/");  // ✅ FIXED
+      const res = await api.get("/patients/");
       setPatients(res.data);
     } catch (err) {
-      console.log(err);
+      console.log("LOAD ERROR:", err.response?.data || err);
       alert("Failed to load patients ❌");
     }
   };
 
+  // =========================
+  // HANDLE INPUT
+  // =========================
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
-    setXray(file);
-    if (file) setPreview(URL.createObjectURL(file));
-  };
-
   // =========================
-  // SAVE PATIENT (FIXED)
+  // SAVE PATIENT
   // =========================
   const savePatient = async () => {
     try {
-      if (!form.name || !form.age || !form.gender || !form.phone || !form.address) {
-        alert("Fill required fields ❗");
-        return;
-      }
-
       const formData = new FormData();
 
       Object.keys(form).forEach((key) => {
-        formData.append(key, form[key] || "");
+        formData.append(key, form[key]);
       });
 
-      if (xray) formData.append("xray", xray);
+      if (file) formData.append("xray", file);
 
-      if (editId) {
-        await api.put("/patients/" + editId, formData);   // ✅ FIXED
-      } else {
-        await api.post("/patients/", formData);           // ✅ FIXED
-      }
+      await api.post("/patients/", formData);
 
       alert("Saved ✅");
 
@@ -94,23 +72,11 @@ function Patients({ setIsLoggedIn }) {
         gender: "",
         phone: "",
         address: "",
-        referral: "",
-        care_category: "",
         conditions: "",
-        allergies: "",
-        medications: "",
-        risk_flags: "",
-        past_treatments: "",
-        complaints: "",
-        habits: "",
-        signed_forms: "",
-        estimates: "",
-        legal_consents: ""
+        complaints: ""
       });
 
-      setXray(null);
-      setPreview("");
-      setEditId(null);
+      setFile(null);
 
       loadPatients();
 
@@ -121,26 +87,22 @@ function Patients({ setIsLoggedIn }) {
   };
 
   // =========================
-  // DELETE (FIXED)
+  // DELETE
   // =========================
   const deletePatient = async (id) => {
-    await api.delete("/patients/" + id);  // ✅ FIXED
-    loadPatients();
-  };
-
-  const editPatient = (p) => {
-    setForm(p);
-    setEditId(p._id);
+    try {
+      await api.delete("/patients/" + id);
+      loadPatients();
+    } catch (err) {
+      console.log("DELETE ERROR:", err.response?.data || err);
+    }
   };
 
   return (
     <div style={{ padding: 20 }}>
-
       <h1>Patients Module</h1>
 
-      <button onClick={() => navigate("/dashboard")}>
-        ⬅ Back
-      </button>
+      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
 
       <button
         style={{ marginLeft: 10 }}
@@ -164,53 +126,26 @@ function Patients({ setIsLoggedIn }) {
 
       <h3>Medical</h3>
       <input name="conditions" value={form.conditions} onChange={handleChange} placeholder="Conditions" /><br/><br/>
-      <input name="allergies" value={form.allergies} onChange={handleChange} placeholder="Allergies" /><br/><br/>
 
       <h3>Dental</h3>
       <input name="complaints" value={form.complaints} onChange={handleChange} placeholder="Complaints" /><br/><br/>
 
       <h3>Imaging</h3>
-      <input type="file" onChange={handleFile} /><br/><br/>
-      {preview && <img src={preview} width="120" alt="preview" />}
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} /><br/><br/>
 
-      <br/><br/>
-      <button onClick={savePatient}>
-        {editId ? "Update" : "Save"}
-      </button>
+      <button onClick={savePatient}>Save</button>
 
       <hr />
 
       <h2>Patients List</h2>
 
       {patients.map((p) => (
-        <div key={p._id} style={{
-          border: "1px solid gray",
-          padding: 10,
-          marginBottom: 10
-        }}>
-          <h3>{p.name}</h3>
-          <p>{p.age} | {p.gender}</p>
-          <p>{p.phone}</p>
-
-          {p.xray && (
-            <img src={`https://pis-backend-final-1.onrender.com/${p.xray}`} width="100" alt="xray" />
-          )}
-
+        <div key={p._id}>
+          <b>{p.name}</b> - {p.phone}
           <br/>
-
-          <button onClick={() => editPatient(p)}>Edit</button>
           <button onClick={() => deletePatient(p._id)}>Delete</button>
-
-          <button onClick={() => setSelectedPatient(p._id)}>
-            View Timeline
-          </button>
-
-          {selectedPatient === p._id && (
-            <PatientTimeline patientId={p._id} />
-          )}
         </div>
       ))}
-
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../api";   // ✅ use api instead of axios
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Login({ setIsLoggedIn }) {
@@ -18,16 +18,15 @@ function Login({ setIsLoggedIn }) {
     try {
       const res = await api.post("/auth/login", form);
 
-      console.log("LOGIN RESPONSE:", res.data);
-
       if (res.data.access_token) {
         localStorage.setItem("token", res.data.access_token);
 
-        setIsLoggedIn(true);
+        console.log("TOKEN SAVED:", res.data.access_token); // debug
+
+        if (setIsLoggedIn) setIsLoggedIn(true);
 
         alert("Login success ✅");
-
-        navigate("/dashboard");
+        navigate("/patients");
       } else {
         alert("Invalid login ❌");
       }
