@@ -1,107 +1,90 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
+import { useNavigate } from "react-router-dom";
 
-function Invoice() {
+function Invoice({ setIsLoggedIn }) {
+
+  const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState("");
 
-  const [form, setForm] = useState({
-    procedure: "",
-    qty: "",
-    rate: "",
-    payment1: "",
-    payment2: ""
-  });
+  const BASE_URL = "https://pis-backend-final-1.onrender.com";
+
+  // =========================
+  // AUTH CHECK
+  // =========================
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Login required ❌");
+      navigate("/");
+    } else {
+      loadPatients();
+    }
+  }, [navigate]);
 
   // =========================
   // LOAD PATIENTS
   // =========================
-  useEffect(() => {
-    loadPatients();
-  }, []);
-
   const loadPatients = async () => {
     try {
       const res = await api.get("/patients/");
       setPatients(res.data);
-    } catch {
+    } catch (err) {
+      console.log("PATIENT LOAD ERROR:", err.response?.data || err);
       alert("Failed to load patients ❌");
     }
   };
 
-  // =========================
-  // HANDLE INPUT
-  // =========================
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // =========================
-  // SAVE INVOICE
-  // =========================
-  const saveInvoice = async () => {
-    try {
-      await api.post("/invoice", {
-        patient_name: selected.name,
-        ...form
-      });
-
-      alert("Saved ✅");
-
-    } catch {
-      alert("Error ❌");
-    }
-  };
-
-  // =========================
-  // GENERATE PDF
-  // =========================
-  const generatePDF = () => {
-    window.open(
-      `https://pis-backend-final-1.onrender.com/invoice-pdf/${selected.name}`,
-      "_blank"
-    );
-  };
-
   return (
     <div style={{ padding: 20 }}>
-      <h2>Invoice System 🧾</h2>
 
-      {/* PATIENT LIST */}
-      <h3>Select Patient</h3>
-      {patients.map((p) => (
-        <div key={p._id}>
-          <button onClick={() => setSelected(p)}>
-            {p.name}
-          </button>
-        </div>
-      ))}
+      <h1>Invoice System 🧾</h1>
+
+      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+
+      <button
+        style={{ marginLeft: 10 }}
+        onClick={() => {
+          localStorage.removeItem("token");
+          if (setIsLoggedIn) setIsLoggedIn(false);
+          navigate("/");
+        }}
+      >
+        Logout
+      </button>
 
       <hr />
 
-      {/* FORM */}
+      <h3>Select Patient</h3>
+
+      <select
+        value={selected}
+        onChange={(e) => setSelected(e.target.value)}
+      >
+        <option value="">-- Select Patient --</option>
+
+        {patients.map((p) => (
+          <option key={p._id} value={p.name}>
+            {p.name} ({p.phone})
+          </option>
+        ))}
+      </select>
+
+      <br/><br/>
+
       {selected && (
-        <>
-          <h3>Invoice for: {selected.name}</h3>
-
-          <input name="procedure" placeholder="Procedure" onChange={handleChange}/><br/><br/>
-          <input name="qty" placeholder="Qty" onChange={handleChange}/><br/><br/>
-          <input name="rate" placeholder="Rate" onChange={handleChange}/><br/><br/>
-
-          <h4>Payments</h4>
-          <input name="payment1" placeholder="Payment 1" onChange={handleChange}/><br/><br/>
-          <input name="payment2" placeholder="Payment 2" onChange={handleChange}/><br/><br/>
-
-          <button onClick={saveInvoice}>Save Invoice</button>
-
-          <br/><br/>
-
-          <button onClick={generatePDF}>
-            Generate Invoice PDF
-          </button>
-        </>
+        <a
+          href={`${BASE_URL}/invoice-pdf/${selected}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <button>Generate Invoice PDF 🧾</button>
+        </a>
       )}
+
     </div>
   );
 }
