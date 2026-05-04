@@ -129,7 +129,6 @@ function Checkup() {
   return (
     <div style={{ padding: "20px" }}>
 
-      {/* 🔥 BACK BUTTON ADDED */}
       <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
 
       <h1>Checkup Module</h1>
@@ -150,8 +149,39 @@ function Checkup() {
 
       <br/><br/>
 
-      <img src="/teeth.png" useMap="#teethmap" style={{ width: "700px" }}/>
+      {/* 🔥 YOUR ORIGINAL IMAGE (UNCHANGED) */}
+      <div style={{ position: "relative", width: "700px" }}>
+        <img src="/teeth.png" useMap="#teethmap" style={{ width: "700px" }}/>
 
+        {/* 🔥 ADDED: CLICKABLE GRID OVERLAY */}
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "700px",
+          height: "100%",
+          display: "grid",
+          gridTemplateColumns: "repeat(8, 1fr)",
+          gridTemplateRows: "repeat(4, 1fr)",
+          gap: "4px"
+        }}>
+          {Array.from({ length: 32 }, (_, i) => i + 1).map(t => (
+            <div
+              key={t}
+              onClick={() => selectTooth(t)}
+              style={{
+                cursor: "pointer",
+                background: tasks.find(x => x.tooth === t)
+                  ? "#22c55e88"
+                  : "transparent",
+                borderRadius: "4px"
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 🔥 YOUR ORIGINAL MAP (UNCHANGED) */}
       <map name="teethmap">
         <area coords="10,20,60,80" onClick={()=>selectTooth(1)} />
         <area coords="60,20,110,80" onClick={()=>selectTooth(2)} />
