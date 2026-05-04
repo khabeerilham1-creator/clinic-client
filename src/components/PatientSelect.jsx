@@ -13,7 +13,7 @@ function PatientSelect({ onSelect }) {
 
   const fetchPatients = async () => {
     try {
-      const res = await axios.get(BASE_URL + "/patients");
+      const res = await axios.get(BASE_URL + "/patients/", getAuthHeaders());
 
       // safety check
       if (Array.isArray(res.data)) {

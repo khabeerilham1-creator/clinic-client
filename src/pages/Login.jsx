@@ -1,62 +1,34 @@
 import { useState } from "react";
-import api from "../api";
 import { useNavigate } from "react-router-dom";
+import api from "../api";
 
-function Login({ setIsLoggedIn }) {
-
+export default function Login() {
+  const [form, setForm] = useState({});
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    username: "",
-    password: ""
-  });
+  const handleLogin = async () => {
+    const res = await api.post("/auth/login", form);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const login = async () => {
-    try {
-      const res = await api.post("/auth/login", form);
-
-      console.log("LOGIN RESPONSE:", res.data);
-
-      if (res.data.access_token) {
-        // ✅ SAVE REAL TOKEN
-        localStorage.setItem("token", res.data.access_token);
-
-        setIsLoggedIn(true);
-        navigate("/dashboard");
-      } else {
-        alert("Invalid login ❌");
-      }
-
-    } catch (err) {
-      console.log("LOGIN ERROR:", err.response?.data || err);
-      alert("Login failed ❌");
+    if (res.data.access_token) {
+      localStorage.setItem("token", res.data.access_token);
+      localStorage.setItem("role", res.data.role);  // 🔥 role saved
+      navigate("/dashboard");
+    } else {
+      alert("Login failed");
     }
   };
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Login</h1>
+    <div style={{ padding: 50 }}>
+      <h2>Login</h2>
 
-      <input
-        name="username"
-        placeholder="Username"
-        onChange={handleChange}
-      /><br/><br/>
+      <input placeholder="Username"
+        onChange={(e) => setForm({ ...form, username: e.target.value })} />
 
-      <input
-        name="password"
-        type="password"
-        placeholder="Password"
-        onChange={handleChange}
-      /><br/><br/>
+      <input placeholder="Password" type="password"
+        onChange={(e) => setForm({ ...form, password: e.target.value })} />
 
-      <button onClick={login}>Login</button>
+      <button onClick={handleLogin}>Login</button>
     </div>
   );
 }
-
-export default Login;

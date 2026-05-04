@@ -1,59 +1,69 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Patients from "./pages/Patients";
+import Login from "./pages/Login";
 
-// NEW MODULES
+// 🔥 import all pages
+import Patients from "./pages/Patients";
 import Visits from "./pages/Visits";
+import Checkup from "./pages/Checkup";
 import AFI from "./pages/AFI";
 import FIS from "./pages/FIS";
 import CIS from "./pages/CIS";
-import Checkup from "./pages/Checkup";
 import Reports from "./pages/Reports";
 import Invoice from "./pages/Invoice";
 import LVI from "./pages/LVI";
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  );
+// ✅ EXISTING
+import Prescription from "./pages/Prescription";
 
-  return (
-    <Router>
-      <Routes>
+// 🔥 NEW IMPORTS (ALREADY IN YOUR SYSTEM)
+import PatientFiles from "./pages/PatientFiles";
+import Timeline from "./pages/Timeline";
 
-        <Route
-          path="/"
-          element={
-            isLoggedIn ? <Navigate to="/dashboard" /> : <Login setIsLoggedIn={setIsLoggedIn} />
-          }
-        />
+// 🔥 ADD THIS (VERY IMPORTANT)
+import PatientFileView from "./pages/PatientFileView";
 
-        <Route
-          path="/dashboard"
-          element={isLoggedIn ? <Dashboard /> : <Navigate to="/" />}
-        />
 
-        <Route
-          path="/patients"
-          element={isLoggedIn ? <Patients setIsLoggedIn={setIsLoggedIn} /> : <Navigate to="/" />}
-        />
-
-        {/* NEW MODULE ROUTES */}
-        <Route path="/visits" element={<Visits />} />
-        <Route path="/afi" element={<AFI />} />
-        <Route path="/fis" element={<FIS />} />
-        <Route path="/cis" element={<CIS />} />
-        <Route path="/checkup" element={<Checkup />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/invoice" element={<Invoice />} />
-        <Route path="/lvi" element={<LVI />} />
-
-      </Routes>
-    </Router>
-  );
+function PrivateRoute({ children }) {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/" />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+
+        <Route path="/" element={<Login />} />
+
+        <Route path="/dashboard" element={
+          <PrivateRoute><Dashboard /></PrivateRoute>
+        } />
+
+        <Route path="/patients" element={<PrivateRoute><Patients /></PrivateRoute>} />
+        <Route path="/visits" element={<PrivateRoute><Visits /></PrivateRoute>} />
+        <Route path="/checkup" element={<PrivateRoute><Checkup /></PrivateRoute>} />
+        <Route path="/afi" element={<PrivateRoute><AFI /></PrivateRoute>} />
+        <Route path="/fis" element={<PrivateRoute><FIS /></PrivateRoute>} />
+        <Route path="/cis" element={<PrivateRoute><CIS /></PrivateRoute>} />
+        <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
+        <Route path="/invoice" element={<PrivateRoute><Invoice /></PrivateRoute>} />
+        <Route path="/lvi" element={<PrivateRoute><LVI /></PrivateRoute>} />
+
+        {/* ✅ EXISTING */}
+        <Route path="/prescription" element={<PrivateRoute><Prescription /></PrivateRoute>} />
+
+        {/* 🔥 PATIENT FILE LIST */}
+        <Route path="/patient-files" element={<PrivateRoute><PatientFiles /></PrivateRoute>} />
+
+        {/* 🔥 TIMELINE */}
+        <Route path="/timeline/:id" element={<PrivateRoute><Timeline /></PrivateRoute>} />
+
+        {/* 🔥 VERY IMPORTANT (FIXES YOUR 404 ERROR) */}
+        <Route path="/patient-files/file/:id/:year" element={<PrivateRoute><PatientFileView /></PrivateRoute>} />
+
+      </Routes>
+    </BrowserRouter>
+  );
+}

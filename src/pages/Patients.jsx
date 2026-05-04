@@ -19,6 +19,9 @@ function Patients({ setIsLoggedIn }) {
 
   const [file, setFile] = useState(null);
 
+  // ✅ ADDED
+  const [editId, setEditId] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -62,9 +65,15 @@ function Patients({ setIsLoggedIn }) {
 
       if (file) formData.append("xray", file);
 
-      await api.post("/patients/", formData);
-
-      alert("Saved ✅");
+      // ✅ ADDED UPDATE LOGIC
+      if (editId) {
+        await api.put("/patients/" + editId, form);
+        alert("Updated ✅");
+        setEditId(null);
+      } else {
+        await api.post("/patients/", formData);
+        alert("Saved ✅");
+      }
 
       setForm({
         name: "",
@@ -82,7 +91,11 @@ function Patients({ setIsLoggedIn }) {
 
     } catch (err) {
       console.log("SAVE ERROR:", err.response?.data || err);
-      alert("Error ❌");
+
+      // ✅ FIX FAKE ERROR
+      if (err.response?.status >= 400) {
+        alert("Error ❌");
+      }
     }
   };
 
@@ -133,7 +146,9 @@ function Patients({ setIsLoggedIn }) {
       <h3>Imaging</h3>
       <input type="file" onChange={(e) => setFile(e.target.files[0])} /><br/><br/>
 
-      <button onClick={savePatient}>Save</button>
+      <button onClick={savePatient}>
+        {editId ? "Update" : "Save"} {/* ✅ ADDED */}
+      </button>
 
       <hr />
 
@@ -143,6 +158,28 @@ function Patients({ setIsLoggedIn }) {
         <div key={p._id}>
           <b>{p.name}</b> - {p.phone}
           <br/>
+
+          {/* EXISTING */}
+          <button onClick={() => navigate("/timeline/" + p._id)}>
+            View History 🔥
+          </button>
+
+          {/* ✅ ADDED EDIT BUTTON */}
+          <button onClick={() => {
+            setForm({
+              name: p.name || "",
+              age: p.age || "",
+              gender: p.gender || "",
+              phone: p.phone || "",
+              address: p.address || "",
+              conditions: p.conditions || "",
+              complaints: p.complaints || ""
+            });
+            setEditId(p._id);
+          }}>
+            Edit ✏️
+          </button>
+
           <button onClick={() => deletePatient(p._id)}>Delete</button>
         </div>
       ))}

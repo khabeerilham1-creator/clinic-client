@@ -1,8 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
+import api from "../api";
+import { useNavigate } from "react-router-dom";   // 🔥 ADDED
 
 const conditionsMap = {
   Caries: "Filling",
@@ -22,6 +21,8 @@ const complaintsList = [
 
 function Checkup() {
 
+  const navigate = useNavigate();   // 🔥 ADDED
+
   const [patients, setPatients] = useState([]);
   const [checkups, setCheckups] = useState([]);
 
@@ -31,6 +32,8 @@ function Checkup() {
 
   const [editId, setEditId] = useState(null);
 
+  const [ai, setAi] = useState({});
+
   useEffect(() => {
     loadPatients();
     loadCheckups();
@@ -38,7 +41,7 @@ function Checkup() {
 
   const loadPatients = async () => {
     try {
-      const res = await axios.get(BASE_URL + "/patients");
+      const res = await api.get("/patients/");
       setPatients(res.data);
     } catch (err) {
       console.error(err);
@@ -47,7 +50,7 @@ function Checkup() {
 
   const loadCheckups = async () => {
     try {
-      const res = await axios.get(BASE_URL + "/checkups");
+      const res = await api.get("/checkups/");
       setCheckups(res.data);
     } catch (err) {
       console.error("Checkups load error:", err);
@@ -77,13 +80,18 @@ function Checkup() {
       if (!patientId) return alert("Select patient ❗");
       if (!tasks.length) return alert("Select at least one tooth ❗");
 
-      const payload = { patient: patientId, complaint, tasks };
+      const payload = {
+        patient: patientId,
+        patient_id: patientId,
+        complaint,
+        tasks
+      };
 
       if (editId) {
-        await axios.put(BASE_URL + "/checkups/" + editId, payload);
+        await api.put("/checkups/" + editId, payload);
         setEditId(null);
       } else {
-        await axios.post(BASE_URL + "/checkups", payload);
+        await api.post("/checkups/", payload);
       }
 
       alert("Saved ✅");
@@ -109,7 +117,7 @@ function Checkup() {
 
   const deleteCheckup = async (id) => {
     if (!window.confirm("Delete?")) return;
-    await axios.delete(BASE_URL + "/checkups/" + id);
+    await api.delete("/checkups/" + id);
     loadCheckups();
   };
 
@@ -120,6 +128,10 @@ function Checkup() {
 
   return (
     <div style={{ padding: "20px" }}>
+
+      {/* 🔥 BACK BUTTON ADDED */}
+      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+
       <h1>Checkup Module</h1>
 
       <select value={patientId} onChange={(e)=>setPatientId(e.target.value)}>
@@ -162,9 +174,47 @@ function Checkup() {
         </div>
       ))}
 
+      <button onClick={async () => {
+        try {
+          const res = await api.post("/ai/suggest", {
+            diagnosis: complaint,
+            complaints: complaint
+          });
+          setAi(res.data);
+        } catch (e) {
+          alert("AI Error ❌");
+        }
+      }}>
+        AI Suggest 🤖
+      </button>
+
+      <br/><br/>
+
       <button onClick={saveCheckup}>
         {editId ? "Update" : "Save"}
       </button>
+
+      <h3>AI Suggestions 🤖</h3>
+
+      <h4>Diagnosis</h4>
+      {ai.diagnosis_suggestions?.map((x, i) => (
+        <div key={i}>👉 {x}</div>
+      ))}
+
+      <h4>Medicines</h4>
+      {ai.medications?.map((x, i) => (
+        <div key={i}>💊 {x}</div>
+      ))}
+
+      <h4>Investigations</h4>
+      {ai.investigations?.map((x, i) => (
+        <div key={i}>🧪 {x}</div>
+      ))}
+
+      <h4 style={{ color: "red" }}>Red Flags</h4>
+      {ai.red_flags?.map((x, i) => (
+        <div key={i}>⚠️ {x}</div>
+      ))}
 
       <hr/>
 
