@@ -71,6 +71,16 @@ export default function Dashboard() {
             localStorage.clear();
             navigate("/");
           }}
+          style={{
+            marginTop: "20px",
+            width: "100%",
+            padding: "10px",
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer"
+          }}
         >
           Logout
         </button>
@@ -82,24 +92,23 @@ export default function Dashboard() {
 
         {/* TOP STATS */}
         <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
-          <Card title="Patients" value={stats.total_patients} />
-          <Card title="Revenue" value={`Rs ${stats.total_revenue}`} />
-          <Card title="Checkups" value={stats.total_checkups} />
+          <Card title="Patients" value={stats.patients} />
+          <Card title="Revenue" value={`Rs ${stats.revenue}`} />
+          <Card title="Checkups" value={stats.checkups} />
         </div>
 
         {/* DAILY */}
         <div style={{ display: "flex", gap: 20, marginBottom: 30 }}>
-          <Card title="Today Patients" value={daily.daily_patients} />
-          <Card title="Today Revenue" value={`Rs ${daily.daily_revenue}`} />
+          <Card title="Today Patients" value={stats.today_patients} />
+          <Card title="Today Revenue" value={`Rs ${stats.today_revenue}`} />
         </div>
 
-        {/* 🔥 NEW: REVENUE SPLIT */}
+        {/* 🔥 CORRECT REVENUE SPLIT */}
         <h3>Revenue Split</h3>
         <div style={{ display: "flex", gap: 20, marginBottom: 30 }}>
-          <Card title="Doctor" value={`Rs ${stats.doctor_share}`} />
-          <Card title="Lab" value={`Rs ${stats.lab_share}`} />
-          <Card title="Expenses" value={`Rs ${stats.expense_pool}`} />
-          <Card title="Owner" value={`Rs ${stats.owner_share}`} />
+          <Card title="Doctor (25%)" value={`Rs ${stats.split?.doctor || 0}`} />
+          <Card title="Lab Charges" value={`Rs ${stats.split?.lab || 0}`} />
+          <Card title="Profit" value={`Rs ${stats.split?.owner || 0}`} />
         </div>
 
         {/* MODULE GRID */}
@@ -109,14 +118,15 @@ export default function Dashboard() {
           gap: "20px"
         }}>
           {modules.map((m, i) => (
-            <Link key={i} to={m.path}>
+            <Link key={i} to={m.path} style={{ textDecoration: "none" }}>
               <div style={{
                 background: "white",
                 padding: "20px",
                 borderRadius: "12px",
-                textAlign: "center"
+                textAlign: "center",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
               }}>
-                {m.name}
+                <h3>{m.name}</h3>
               </div>
             </Link>
           ))}
@@ -132,10 +142,11 @@ function Card({ title, value }) {
       background: "white",
       padding: 20,
       borderRadius: 10,
-      width: 160
+      width: 170,
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
     }}>
       <h4>{title}</h4>
-      <p>{value || 0}</p>
+      <p style={{ fontWeight: "bold", fontSize: "18px" }}>{value || 0}</p>
     </div>
   );
 }

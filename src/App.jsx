@@ -1,69 +1,70 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import Dashboard from "./pages/Dashboard";
+// =========================
+// PAGES
+// =========================
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
-// 🔥 import all pages
 import Patients from "./pages/Patients";
 import Visits from "./pages/Visits";
 import Checkup from "./pages/Checkup";
+
 import AFI from "./pages/AFI";
-import FIS from "./pages/FIS";
 import CIS from "./pages/CIS";
-import Reports from "./pages/Reports";
+import Prescription from "./pages/Prescription";
+
+import FIS from "./pages/FIS";
 import Invoice from "./pages/Invoice";
 import LVI from "./pages/LVI";
 
-// ✅ EXISTING
-import Prescription from "./pages/Prescription";
+import Reports from "./pages/Reports";
+import ReportView from "./pages/ReportView";   // 🔥 IMPORTANT
 
-// 🔥 NEW IMPORTS (ALREADY IN YOUR SYSTEM)
 import PatientFiles from "./pages/PatientFiles";
-import Timeline from "./pages/Timeline";
-
-// 🔥 ADD THIS (VERY IMPORTANT)
-import PatientFileView from "./pages/PatientFileView";
+import AI from "./pages/AI";
 
 
-function PrivateRoute({ children }) {
-  const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/" />;
-}
-
+// =========================
+// APP
+// =========================
 export default function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
 
+        {/* AUTH */}
         <Route path="/" element={<Login />} />
 
-        <Route path="/dashboard" element={
-          <PrivateRoute><Dashboard /></PrivateRoute>
-        } />
+        {/* DASHBOARD */}
+        <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route path="/patients" element={<PrivateRoute><Patients /></PrivateRoute>} />
-        <Route path="/visits" element={<PrivateRoute><Visits /></PrivateRoute>} />
-        <Route path="/checkup" element={<PrivateRoute><Checkup /></PrivateRoute>} />
-        <Route path="/afi" element={<PrivateRoute><AFI /></PrivateRoute>} />
-        <Route path="/fis" element={<PrivateRoute><FIS /></PrivateRoute>} />
-        <Route path="/cis" element={<PrivateRoute><CIS /></PrivateRoute>} />
-        <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
-        <Route path="/invoice" element={<PrivateRoute><Invoice /></PrivateRoute>} />
-        <Route path="/lvi" element={<PrivateRoute><LVI /></PrivateRoute>} />
+        {/* CORE */}
+        <Route path="/patients" element={<Patients />} />
+        <Route path="/visits" element={<Visits />} />
+        <Route path="/checkup" element={<Checkup />} />
 
-        {/* ✅ EXISTING */}
-        <Route path="/prescription" element={<PrivateRoute><Prescription /></PrivateRoute>} />
+        {/* CLINICAL */}
+        <Route path="/afi" element={<AFI />} />
+        <Route path="/cis" element={<CIS />} />
+        <Route path="/prescription" element={<Prescription />} />
 
-        {/* 🔥 PATIENT FILE LIST */}
-        <Route path="/patient-files" element={<PrivateRoute><PatientFiles /></PrivateRoute>} />
+        {/* FINANCE */}
+        <Route path="/fis" element={<FIS />} />
+        <Route path="/invoice" element={<Invoice />} />
+        <Route path="/lvi" element={<LVI />} />
 
-        {/* 🔥 TIMELINE */}
-        <Route path="/timeline/:id" element={<PrivateRoute><Timeline /></PrivateRoute>} />
+        {/* 🔥 REPORTS FIX */}
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/reports/:id" element={<ReportView />} />
 
-        {/* 🔥 VERY IMPORTANT (FIXES YOUR 404 ERROR) */}
-        <Route path="/patient-files/file/:id/:year" element={<PrivateRoute><PatientFileView /></PrivateRoute>} />
+        {/* FILES */}
+        <Route path="/patient-files" element={<PatientFiles />} />
+
+        {/* AI */}
+        <Route path="/ai" element={<AI />} />
 
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
