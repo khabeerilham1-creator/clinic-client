@@ -27,22 +27,13 @@ function FIS() {
   const [doctorShare, setDoctorShare] = useState(0);
   const [owner, setOwner] = useState(0);
 
-  // =========================
   // LOAD PATIENTS
-  // =========================
   const loadPatients = async () => {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.get(BASE_URL + "/patients/", {
-      headers: { Authorization: "Bearer " + token }
-    });
-
+    const res = await axios.get(BASE_URL + "/patients/");
     setPatients(res.data);
   };
 
-  // =========================
-  // LOAD RECORDS (FIXED)
-  // =========================
+  // LOAD RECORDS
   const loadData = async () => {
 
     let url = BASE_URL + "/fis/billing";
@@ -52,15 +43,23 @@ function FIS() {
     }
 
     const res = await axios.get(url);
-    setRecords(res.data || []);
+
+    // 🔥 FILTER BAD RECORDS
+    const safe = (res.data || []).filter(r => r && r._id);
+
+    setRecords(safe);
   };
 
-  useEffect(() => { loadPatients(); loadData(); }, []);
-  useEffect(() => { loadData(); }, [form.patient_name]);
+  useEffect(() => {
+    loadPatients();
+    loadData();
+  }, []);
 
-  // =========================
+  useEffect(() => {
+    loadData();
+  }, [form.patient_name]);
+
   // CALCULATION
-  // =========================
   const handleChange = (e) => {
     const newData = { ...form, [e.target.name]: e.target.value };
     setForm(newData);
@@ -85,9 +84,7 @@ function FIS() {
     setOwner(own);
   };
 
-  // =========================
   // SAVE / UPDATE
-  // =========================
   const save = async () => {
 
     const payload = {
@@ -108,25 +105,27 @@ function FIS() {
     loadData();
   };
 
-  // =========================
-  // DELETE (FIXED)
-  // =========================
+  // DELETE
   const handleDelete = async (id) => {
 
-    if (!id) {
+    console.log("DELETE ID:", id);
+
+    if (!id || id === "undefined") {
       alert("Invalid ID ❌");
       return;
     }
 
-    await axios.delete(BASE_URL + "/fis/billing/" + id);
-    loadData();
+    try {
+      await axios.delete(BASE_URL + "/fis/billing/" + id);
+      loadData();
+    } catch (err) {
+      console.log(err.response?.data || err);
+      alert("Delete failed ❌");
+    }
   };
 
-  // =========================
   // EDIT
-  // =========================
   const handleEdit = (r) => {
-
     setForm({
       patient_name: r.patient_name,
       procedure: r.procedure,
@@ -189,7 +188,7 @@ function FIS() {
 
       <h2>Records</h2>
 
-      {records.map(r => (
+      {records.map((r) => (
         <div key={r._id} style={{ background: "#eee", padding: 10, marginBottom: 10 }}>
           <b>{r.patient_name}</b><br/>
           {r.procedure} - {r.doctor}<br/>
