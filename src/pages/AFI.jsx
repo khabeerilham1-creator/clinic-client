@@ -36,35 +36,75 @@ function AFI() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fb" }}>
 
-      <h1>APPOINTMENT & FLOW INTELLIGENCE (AFI)</h1>
+      {/* SIDEBAR */}
+      <div style={{
+        width: "220px",
+        background: "#111827",
+        color: "white",
+        padding: "20px"
+      }}>
+        <h2 style={{ marginBottom: 30 }}>Clinic SaaS</h2>
 
-      <input name="patient_name" value={data.patient_name} placeholder="Patient" onChange={handleChange}/>
+        <div style={{ cursor: "pointer", marginBottom: 15 }} onClick={() => navigate("/dashboard")}>
+          🏠 Dashboard
+        </div>
 
-      <h3>Smart Scheduling</h3>
-      <input name="doctor" value={data.doctor} placeholder="Doctor" onChange={handleChange}/>
-      <input name="chair" value={data.chair} placeholder="Chair" onChange={handleChange}/>
-      <input name="procedure" value={data.procedure} placeholder="Procedure" onChange={handleChange}/>
-      <input type="date" name="appointment_date" value={data.appointment_date} onChange={handleChange}/>
-      <input type="time" name="appointment_time" value={data.appointment_time} onChange={handleChange}/>
+        <div style={{ cursor: "pointer", marginBottom: 15, color: "#60a5fa" }}>
+          📅 AFI Module
+        </div>
+      </div>
 
-      <h3>Patient Flow</h3>
-      <input type="time" name="arrival_time" value={data.arrival_time} onChange={handleChange}/>
-      <input type="time" name="chair_entry" value={data.chair_entry} onChange={handleChange}/>
-      <input type="time" name="exit_time" value={data.exit_time} onChange={handleChange}/>
+      {/* MAIN CONTENT */}
+      <div style={{ flex: 1, padding: "30px" }}>
 
-      <h3>Delay</h3>
-      <input name="doctor_delay" value={data.doctor_delay} placeholder="Doctor Delay" onChange={handleChange}/>
-      <input name="patient_delay" value={data.patient_delay} placeholder="Patient Delay" onChange={handleChange}/>
+        {/* HEADER */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20
+        }}>
+          <h1 style={{ margin: 0 }}>APPOINTMENT & FLOW INTELLIGENCE</h1>
+          <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+        </div>
 
-      <br/><br/>
-      <button onClick={save}>Save</button>
+        {/* CARD */}
+        <div style={{
+          background: "white",
+          padding: "20px",
+          borderRadius: "10px",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
+        }}>
 
-      <hr/>
+          <input name="patient_name" value={data.patient_name} placeholder="Patient" onChange={handleChange}/>
 
-      <PatientList onSelect={(p)=>setData({...data, patient_name:p.name})} />
+          <h3>Smart Scheduling</h3>
+          <input name="doctor" value={data.doctor} placeholder="Doctor" onChange={handleChange}/>
+          <input name="chair" value={data.chair} placeholder="Chair" onChange={handleChange}/>
+          <input name="procedure" value={data.procedure} placeholder="Procedure" onChange={handleChange}/>
+          <input type="date" name="appointment_date" value={data.appointment_date} onChange={handleChange}/>
+          <input type="time" name="appointment_time" value={data.appointment_time} onChange={handleChange}/>
+
+          <h3>Patient Flow</h3>
+          <input type="time" name="arrival_time" value={data.arrival_time} onChange={handleChange}/>
+          <input type="time" name="chair_entry" value={data.chair_entry} onChange={handleChange}/>
+          <input type="time" name="exit_time" value={data.exit_time} onChange={handleChange}/>
+
+          <h3>Delay</h3>
+          <input name="doctor_delay" value={data.doctor_delay} placeholder="Doctor Delay" onChange={handleChange}/>
+          <input name="patient_delay" value={data.patient_delay} placeholder="Patient Delay" onChange={handleChange}/>
+
+          <br/><br/>
+          <button onClick={save}>Save</button>
+
+          <hr/>
+
+          <PatientList onSelect={(p)=>setData({...data, patient_name:p.name})} />
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -1,34 +1,106 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import api from "../api";
+import { useNavigate } from "react-router-dom";
 
-export default function Login() {
-  const [form, setForm] = useState({});
+function Login() {
+
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    const res = await api.post("/auth/login", form);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-    if (res.data.access_token) {
+  const login = async () => {
+    try {
+
+      const res = await api.post("/auth/login", {
+        username,
+        password
+      }, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      // ✅ SAVE TOKEN + ROLE
       localStorage.setItem("token", res.data.access_token);
-      localStorage.setItem("role", res.data.role);  // 🔥 role saved
+      localStorage.setItem("role", res.data.role);
+
+      alert("Login Successful ✅");
+
       navigate("/dashboard");
-    } else {
-      alert("Login failed");
+
+    } catch (err) {
+      console.log("LOGIN ERROR:", err.response?.data);
+
+      alert(err.response?.data?.detail || "Login failed ❌");
     }
   };
 
   return (
-    <div style={{ padding: 50 }}>
-      <h2>Login</h2>
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      background: "#f3f4f6"
+    }}>
 
-      <input placeholder="Username"
-        onChange={(e) => setForm({ ...form, username: e.target.value })} />
+      <div style={{
+        background: "white",
+        padding: 30,
+        borderRadius: 12,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        width: 300
+      }}>
 
-      <input placeholder="Password" type="password"
-        onChange={(e) => setForm({ ...form, password: e.target.value })} />
+        <h2 style={{ marginBottom: 20 }}>Login</h2>
 
-      <button onClick={handleLogin}>Login</button>
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginBottom: 15,
+            borderRadius: 6,
+            border: "1px solid #ccc"
+          }}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginBottom: 15,
+            borderRadius: 6,
+            border: "1px solid #ccc"
+          }}
+        />
+
+        <button
+          onClick={login}
+          style={{
+            width: "100%",
+            padding: 10,
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer"
+          }}
+        >
+          Login
+        </button>
+
+      </div>
+
     </div>
   );
 }
+
+export default Login;

@@ -4,99 +4,121 @@ import { useNavigate } from "react-router-dom";
 
 function Prescription() {
 
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    date: ""
-  });
+const [form, setForm] = useState({
+name: "",
+phone: "",
+date: ""
+});
 
-  const [meds, setMeds] = useState([
-    { name: "", dosage: "", duration: "" }
-  ]);
+const [meds, setMeds] = useState([
+{ name: "", dosage: "", duration: "" }
+]);
 
-  const [notes, setNotes] = useState("");
+const [notes, setNotes] = useState("");
 
-  // 🔥 NEW STATE (LIST)
-  const [list, setList] = useState([]);
+const [list, setList] = useState([]);
 
-  // =========================
-  // LOAD PRESCRIPTIONS
-  // =========================
-  const load = async () => {
-    try {
-      const res = await api.get("/prescription/");
-      setList(res.data || []);
-    } catch {
-      console.log("LOAD ERROR");
-    }
-  };
+const load = async () => {
+try {
+const res = await api.get("/prescription/");
+setList(res.data || []);
+} catch {
+console.log("LOAD ERROR");
+}
+};
 
-  useEffect(() => {
-    load();
-  }, []);
+useEffect(() => {
+load();
+}, []);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+const handleChange = (e) => {
+setForm({ ...form, [e.target.name]: e.target.value });
+};
 
-  const updateMed = (i, field, value) => {
-    const updated = [...meds];
-    updated[i][field] = value;
-    setMeds(updated);
-  };
+const updateMed = (i, field, value) => {
+const updated = [...meds];
+updated[i][field] = value;
+setMeds(updated);
+};
 
-  const addMed = () => {
-    setMeds([...meds, { name: "", dosage: "", duration: "" }]);
-  };
+const addMed = () => {
+setMeds([...meds, { name: "", dosage: "", duration: "" }]);
+};
 
-  const deleteMed = (index) => {
-    const updated = meds.filter((_, i) => i !== index);
-    setMeds(updated);
-  };
+const deleteMed = (index) => {
+const updated = meds.filter((_, i) => i !== index);
+setMeds(updated);
+};
 
-  // =========================
-  // SAVE
-  // =========================
-  const save = async () => {
-    try {
-      await api.post("/prescription/", {
-        ...form,
-        medicines: meds,
-        notes
-      });
+const save = async () => {
+try {
+await api.post("/prescription/", {
+...form,
+medicines: meds,
+notes
+});
 
-      alert("Saved ✅");
-      load(); // 🔥 refresh list
+```
+  alert("Saved ✅");
+  load();
 
-    } catch {
-      alert("Error ❌");
-    }
-  };
+} catch {
+  alert("Error ❌");
+}
+```
 
-  // =========================
-  // DELETE PRESCRIPTION
-  // =========================
-  const deletePrescription = async (id) => {
-    try {
-      await api.delete("/prescription/" + id);
-      load();
-    } catch {
-      alert("Delete failed ❌");
-    }
-  };
+};
 
-  return (
-    <div style={{ padding: 20 }}>
+const deletePrescription = async (id) => {
+try {
+await api.delete("/prescription/" + id);
+load();
+} catch {
+alert("Delete failed ❌");
+}
+};
 
+return (
+<div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fb" }}>
+
+```
+  <div style={{
+    width: "220px",
+    background: "#111827",
+    color: "white",
+    padding: "20px"
+  }}>
+    <h2 style={{ marginBottom: 30 }}>Clinic SaaS</h2>
+
+    <div style={{ cursor: "pointer", marginBottom: 15 }} onClick={() => navigate("/dashboard")}>
+      🏠 Dashboard
+    </div>
+
+    <div style={{ cursor: "pointer", marginBottom: 15, color: "#60a5fa" }}>
+      💊 Prescription
+    </div>
+  </div>
+
+  <div style={{ flex: 1, padding: "30px" }}>
+
+    <div style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20
+    }}>
+      <h1 style={{ margin: 0 }}>Prescription Module 💊</h1>
       <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+    </div>
 
-      <h1>Prescription Module 💊</h1>
-
-      {/* ========================= */}
-      {/* FORM */}
-      {/* ========================= */}
+    <div style={{
+      background: "white",
+      padding: "20px",
+      borderRadius: "10px",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
+    }}>
 
       <h3>Patient Info</h3>
 
@@ -134,17 +156,12 @@ function Prescription() {
 
       <hr />
 
-      {/* ========================= */}
-      {/* 🔥 SAVED LIST */}
-      {/* ========================= */}
-
       <h2>Saved Prescriptions 📄</h2>
 
       {list.map((p) => (
         <div key={p._id} style={{ marginBottom: 10 }}>
           <b>{p.name}</b> - {p.phone}
 
-          {/* VIEW PDF */}
           <a
             href={`https://pis-backend-final-1.onrender.com/prescription/pdf/${encodeURIComponent(p.name)}`}
             target="_blank"
@@ -153,7 +170,6 @@ function Prescription() {
             <button style={{ marginLeft: 5 }}>PDF</button>
           </a>
 
-          {/* DELETE */}
           <button
             onClick={() => deletePrescription(p._id)}
             style={{ marginLeft: 5, background: "red", color: "white" }}
@@ -164,7 +180,11 @@ function Prescription() {
       ))}
 
     </div>
-  );
+  </div>
+</div>
+```
+
+);
 }
 
 export default Prescription;
