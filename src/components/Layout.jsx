@@ -23,7 +23,7 @@ export default function Layout({ children }) {
         borderRight: "1px solid #1e293b"
       }}>
 
-        <h2 style={{ marginBottom: 25 }}>Clinic OS</h2>
+        <h2 style={{ marginBottom: 25 }}>HDC</h2>
 
         <Section title="CORE">
           <Nav icon="🏠" text="Dashboard" path="/dashboard" current={location.pathname} />
@@ -98,7 +98,7 @@ export default function Layout({ children }) {
           alignItems: "center",
           justifyContent: "space-between"
         }}>
-          <h3 style={{ margin: 0 }}>Clinic Management System</h3>
+          <h3 style={{ margin: 0 }}>Holistic Domain of Creativity</h3>
         </div>
 
         {/* CONTENT */}
