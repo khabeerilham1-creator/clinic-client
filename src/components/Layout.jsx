@@ -68,12 +68,13 @@ export default function Layout({ children }) {
           }}
           style={{
             marginTop: "auto",
-            padding: 10,
+            padding: 12,
             background: "#ef4444",
             border: "none",
-            borderRadius: 6,
+            borderRadius: 8,
             color: "white",
-            cursor: "pointer"
+            cursor: "pointer",
+            fontWeight: "bold"
           }}
         >
           Logout
@@ -91,10 +92,13 @@ export default function Layout({ children }) {
         {/* HEADER */}
         <div style={{
           background: "white",
-          padding: 15,
-          borderBottom: "1px solid #e5e7eb"
+          padding: "14px 20px",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between"
         }}>
-          <h3>Clinic Management System</h3>
+          <h3 style={{ margin: 0 }}>Clinic Management System</h3>
         </div>
 
         {/* CONTENT */}
@@ -118,11 +122,12 @@ export default function Layout({ children }) {
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: 15 }}>
+    <div style={{ marginBottom: 18 }}>
       <p style={{
-        fontSize: 12,
+        fontSize: 11,
         color: "#64748b",
-        marginBottom: 6
+        marginBottom: 8,
+        letterSpacing: "1px"
       }}>
         {title}
       </p>
@@ -133,19 +138,21 @@ function Section({ title, children }) {
 
 function Nav({ icon, text, path, current }) {
 
-  const active = current === path;
+  // 🔥 FIX: SUPPORT SUB ROUTES (/reports/123 etc)
+  const active = current.startsWith(path);
 
   return (
     <Link to={path} style={{
       display: "flex",
       alignItems: "center",
       gap: 10,
-      padding: "8px 10px",
-      marginBottom: 5,
-      borderRadius: 6,
+      padding: "10px 12px",
+      marginBottom: 6,
+      borderRadius: 8,
       background: active ? "#1e293b" : "transparent",
       color: active ? "white" : "#9ca3af",
       textDecoration: "none",
+      fontSize: 14,
       transition: "0.2s"
     }}>
       <span>{icon}</span>

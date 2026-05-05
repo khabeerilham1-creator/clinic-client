@@ -1,40 +1,78 @@
-import React, { useState } from "react";
-import axios from "axios";
-
-const BASE_URL = "https://pis-backend-final-1.onrender.com";
+import React, { useState, useEffect } from "react";
+import api from "../api";
+import { useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
 
 function CIS() {
+
+  const navigate = useNavigate();
+
+  const [patients, setPatients] = useState([]);
 
   const [form, setForm] = useState({
     patient_id: "",
     diagnosis: "",
     treatment: "",
-    notes: ""
+    notes: "",
+
+    phase1: "",
+    phase2: "",
+    total_cost: "",
+    start_date: "",
+
+    chair_notes: "",
+    materials: "",
+    anesthesia: "",
+
+    next_visit: "",
+    healing_notes: ""
   });
 
+  const [file, setFile] = useState(null);
+
+  // =========================
+  // LOAD PATIENTS
+  // =========================
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const loadPatients = async () => {
+    try {
+      const res = await api.get("/patients/");
+      setPatients(res.data || []);
+    } catch {
+      console.log("PATIENT LOAD ERROR");
+    }
+  };
+
+  // =========================
+  // HANDLE CHANGE
+  // =========================
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // =========================
+  // SAVE
+  // =========================
   const save = async () => {
     try {
-      const token = localStorage.getItem("token");
 
-      await axios.post(
-        BASE_URL + "/cis/",
-        {
-          patient_id: form.patient_id,
-          diagnosis: form.diagnosis,
-          treatment: form.treatment,
-          notes: form.notes
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
+      if (!form.patient_id) {
+        alert("Select patient ❗");
+        return;
+      }
+
+      const formData = new FormData();
+
+      Object.keys(form).forEach((key) => {
+        formData.append(key, form[key]);
+      });
+
+      if (file) formData.append("image", file);
+
+      await api.post("/cis/", formData);
 
       alert("CIS Saved ✅");
 
@@ -42,8 +80,19 @@ function CIS() {
         patient_id: "",
         diagnosis: "",
         treatment: "",
-        notes: ""
+        notes: "",
+        phase1: "",
+        phase2: "",
+        total_cost: "",
+        start_date: "",
+        chair_notes: "",
+        materials: "",
+        anesthesia: "",
+        next_visit: "",
+        healing_notes: ""
       });
+
+      setFile(null);
 
     } catch (err) {
       console.log("CIS ERROR:", err.response?.data || err);
@@ -52,121 +101,90 @@ function CIS() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fb" }}>
+    <Layout>
 
-      {/* SIDEBAR */}
+      {/* HEADER */}
       <div style={{
-        width: "220px",
-        background: "#111827",
-        color: "white",
-        padding: "20px"
+        display: "flex",
+        justifyContent: "space-between",
+        marginBottom: 20
       }}>
-        <h2 style={{ marginBottom: 30 }}>Clinic SaaS</h2>
-
-        <div style={{ cursor: "pointer", marginBottom: 15 }}>
-          🏠 Dashboard
-        </div>
-
-        <div style={{ cursor: "pointer", marginBottom: 15, color: "#60a5fa" }}>
-          🧠 CIS Module
-        </div>
+        <h1>CLINICAL INTELLIGENCE SYSTEM (CIS)</h1>
+        <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
       </div>
 
-      {/* MAIN */}
-      <div style={{ flex: 1, padding: "30px" }}>
+      {/* CARD */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
+      }}>
 
-        {/* HEADER */}
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20
-        }}>
-          <h1 style={{ margin: 0 }}>
-            CLINICAL INTELLIGENCE SYSTEM (CIS)
-          </h1>
-        </div>
+        {/* ========================= */}
+        {/* PATIENT SELECT */}
+        {/* ========================= */}
+        <h3>Patient</h3>
 
-        {/* CARD */}
-        <div style={{
-          background: "white",
-          padding: "20px",
-          borderRadius: "10px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
-        }}>
+        <select name="patient_id" value={form.patient_id} onChange={handleChange}>
+          <option value="">Select Patient</option>
+          {patients.map(p => (
+            <option key={p._id} value={p._id}>
+              {p.name} ({p.phone})
+            </option>
+          ))}
+        </select>
 
-          {/* PATIENT CORE */}
-          <h3>Patient Clinical Data</h3>
+        <br/><br/>
 
-          <input
-            name="patient_id"
-            placeholder="Patient ID"
-            value={form.patient_id}
-            onChange={handleChange}
-          /><br/><br/>
+        {/* ========================= */}
+        {/* CORE DATA */}
+        {/* ========================= */}
+        <h3>Clinical Data</h3>
 
-          <input
-            name="diagnosis"
-            placeholder="Diagnosis"
-            value={form.diagnosis}
-            onChange={handleChange}
-          /><br/><br/>
+        <input name="diagnosis" value={form.diagnosis} placeholder="Diagnosis" onChange={handleChange}/><br/><br/>
+        <input name="treatment" value={form.treatment} placeholder="Treatment" onChange={handleChange}/><br/><br/>
+        <textarea name="notes" value={form.notes} placeholder="Notes" onChange={handleChange}/><br/><br/>
 
-          <input
-            name="treatment"
-            placeholder="Treatment"
-            value={form.treatment}
-            onChange={handleChange}
-          /><br/><br/>
+        {/* ========================= */}
+        {/* TREATMENT PLAN */}
+        {/* ========================= */}
+        <h3>🧾 Treatment Planning</h3>
 
-          <input
-            name="notes"
-            placeholder="Notes"
-            value={form.notes}
-            onChange={handleChange}
-          /><br/><br/>
+        <input name="phase1" value={form.phase1} placeholder="Phase 1" onChange={handleChange}/><br/><br/>
+        <input name="phase2" value={form.phase2} placeholder="Phase 2" onChange={handleChange}/><br/><br/>
+        <input name="total_cost" value={form.total_cost} placeholder="Total Cost" onChange={handleChange}/><br/><br/>
+        <input type="date" name="start_date" value={form.start_date} onChange={handleChange}/><br/><br/>
 
-          {/* ---------------------- */}
-          {/* 1. TREATMENT PLANNING */}
-          {/* ---------------------- */}
-          <h3>🧾 Treatment Planning</h3>
+        {/* ========================= */}
+        {/* PROCEDURE NOTES */}
+        {/* ========================= */}
+        <h3>🪥 Procedure Notes</h3>
 
-          <input placeholder="Phase 1 (e.g Scaling)" /><br/><br/>
-          <input placeholder="Phase 2 (e.g RCT)" /><br/><br/>
-          <input placeholder="Total Cost" /><br/><br/>
-          <input type="date" placeholder="Start Date" /><br/><br/>
+        <input name="chair_notes" value={form.chair_notes} placeholder="Chairside Notes" onChange={handleChange}/><br/><br/>
+        <input name="materials" value={form.materials} placeholder="Materials Used" onChange={handleChange}/><br/><br/>
+        <input name="anesthesia" value={form.anesthesia} placeholder="Anesthesia" onChange={handleChange}/><br/><br/>
 
-          {/* ---------------------- */}
-          {/* 2. PROCEDURE NOTES */}
-          {/* ---------------------- */}
-          <h3>🪥 Procedure Notes</h3>
+        {/* ========================= */}
+        {/* IMAGE UPLOAD */}
+        {/* ========================= */}
+        <h3>📸 Case Image</h3>
 
-          <input placeholder="Chairside Notes" /><br/><br/>
-          <input placeholder="Materials Used" /><br/><br/>
-          <input placeholder="Anesthesia Details" /><br/><br/>
+        <input type="file" onChange={(e) => setFile(e.target.files[0])}/><br/><br/>
 
-          {/* ---------------------- */}
-          {/* 3. CASE PHOTOGRAPHY */}
-          {/* ---------------------- */}
-          <h3>📸 Case Photography</h3>
+        {/* ========================= */}
+        {/* FOLLOW UP */}
+        {/* ========================= */}
+        <h3>🔁 Follow-up</h3>
 
-          <input type="file" /><br/><br/>
-          <small>Before / During / After</small><br/><br/>
+        <input type="date" name="next_visit" value={form.next_visit} onChange={handleChange}/><br/><br/>
+        <input name="healing_notes" value={form.healing_notes} placeholder="Healing Notes" onChange={handleChange}/><br/><br/>
 
-          {/* ---------------------- */}
-          {/* 4. FOLLOW-UP */}
-          {/* ---------------------- */}
-          <h3>🔁 Follow-up Protocols</h3>
+        <button onClick={save}>Save CIS</button>
 
-          <input type="date" placeholder="Next Visit" /><br/><br/>
-          <input placeholder="Healing Notes" /><br/><br/>
-
-          <br/>
-          <button onClick={save}>Save</button>
-
-        </div>
       </div>
-    </div>
+
+    </Layout>
   );
 }
 
