@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 
+// 🔥 ADDED
+import Layout from "../components/Layout";
+
 export default function Reports() {
 
   const [patients, setPatients] = useState([]);
@@ -24,35 +27,81 @@ export default function Reports() {
   );
 
   return (
-    <div style={{ padding: 20 }}>
 
-      <h1>Clinical Reports Module 📊</h1>
-      <p>This module allows you to search patients and generate detailed clinical reports.</p>
+    <Layout>
 
-      <input
-        placeholder="Search patient by name or phone..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ padding: 10, width: 300 }}
-      />
+      <h1 style={{ marginBottom: 10 }}>Clinical Reports Module 📊</h1>
+      <p style={{ marginBottom: 20 }}>
+        Search patients and generate detailed clinical reports.
+      </p>
 
-      <br /><br />
+      {/* SEARCH BOX */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+      }}>
+        <input
+          placeholder="Search patient by name or phone..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            padding: 10,
+            width: "100%",
+            borderRadius: 6,
+            border: "1px solid #ccc"
+          }}
+        />
+      </div>
 
-      {filtered.map(p => (
-        <div key={p._id} style={{ marginBottom: 10 }}>
+      {/* RESULTS */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+      }}>
 
-          {p.name} - {p.phone}
+        <h3>Patient Results</h3>
 
-          <button
-            style={{ marginLeft: 10 }}
-            onClick={() => navigate("/reports/" + p._id)}  // ✅ FIXED
-          >
-            View Report
-          </button>
+        {filtered.length === 0 && (
+          <p style={{ color: "#888" }}>No patients found</p>
+        )}
 
-        </div>
-      ))}
+        {filtered.map(p => (
+          <div key={p._id} style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderBottom: "1px solid #eee",
+            padding: "10px 0"
+          }}>
 
-    </div>
+            <div>
+              <b>{p.name}</b><br/>
+              <span style={{ color: "#666" }}>{p.phone}</span>
+            </div>
+
+            <button
+              onClick={() => navigate("/reports/" + p._id)}
+              style={{
+                padding: "6px 12px",
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: 6
+              }}
+            >
+              View Report
+            </button>
+
+          </div>
+        ))}
+
+      </div>
+
+    </Layout>
   );
 }

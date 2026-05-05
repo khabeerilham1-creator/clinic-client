@@ -8,176 +8,214 @@ export default function ReportView() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    api.get("/reports/report/" + id)
-      .then(res => setData(res.data))
-      .catch(err => console.log(err));
+    api.get("/reports/" + id)
+      .then(res => {
+        console.log("REPORT DATA:", res.data);
+        setData(res.data);
+      })
+      .catch(err => {
+        console.log("REPORT ERROR:", err.response?.data || err);
+        alert("Failed to load report ❌");
+      });
   }, [id]);
 
   const printReport = () => window.print();
 
   if (!data) return <div style={{ padding: 20 }}>Loading...</div>;
 
-  const tasks = data.checkups?.flatMap(c => c.tasks || []);
+  const tasks = data.checkups?.flatMap(c => c.tasks || []) || [];
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ background: "#f3f4f6", minHeight: "100vh", padding: 20 }}>
 
-      <button onClick={printReport} className="no-print">
-        🖨️ Download PDF
-      </button>
+      {/* ACTION */}
+      <div className="no-print" style={{ marginBottom: 15 }}>
+        <button onClick={printReport} style={btn}>
+          🖨️ Download PDF
+        </button>
+      </div>
 
-      <div id="report" style={{ fontFamily: "Arial", padding: 20 }}>
+      {/* REPORT CARD */}
+      <div id="report" style={{
+        background: "white",
+        padding: 30,
+        borderRadius: 10,
+        maxWidth: "900px",
+        margin: "auto",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.08)"
+      }}>
 
         {/* HEADER */}
-        <h1 style={{ textAlign: "center", color: "#2b4c7e" }}>
+        <h1 style={{ textAlign: "center", color: "#1e3a8a" }}>
           HDC Holistic Domain of Creativity
         </h1>
 
-        <p>
-          <b>Date:</b> {new Date().toLocaleDateString()} |{" "}
-          <b>Time:</b> {new Date().toLocaleTimeString()}
-        </p>
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 20,
+          fontSize: 14
+        }}>
+          <div><b>Date:</b> {new Date().toLocaleDateString()}</div>
+          <div><b>Time:</b> {new Date().toLocaleTimeString()}</div>
+        </div>
 
         {/* PATIENT INFO */}
-        <div className="section">
-          <div className="title">PATIENT INFORMATION</div>
-
-          <div className="info">
-            Name: {data.patient.name}<br />
-            Phone: {data.patient.phone}<br />
-          </div>
-        </div>
+        <Section title="PATIENT INFORMATION">
+          <InfoRow label="Name" value={data.patient?.name} />
+          <InfoRow label="Phone" value={data.patient?.phone} />
+        </Section>
 
         {/* CHECKUP */}
-        <div className="section">
-          <div className="title">DENTAL CHECKUP REPORT</div>
+        <Section title="DENTAL CHECKUP REPORT">
 
-          <table>
-            <thead>
-              <tr>
-                <th>Tooth</th>
-                <th>Condition</th>
-                <th>Treatment</th>
-              </tr>
-            </thead>
+          <Table
+            headers={["Tooth", "Condition", "Treatment"]}
+            rows={tasks.length
+              ? tasks.map(t => [t.tooth, t.condition, t.treatment])
+              : [["-", "No data", "-"]]
+            }
+          />
 
-            <tbody>
-              {tasks.length ? tasks.map((t, i) => (
-                <tr key={i}>
-                  <td>{t.tooth}</td>
-                  <td>{t.condition}</td>
-                  <td>{t.treatment}</td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="3">No checkup data</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <p style={{ marginTop: 10 }}>
+            <b>Chief Complaint:</b> {data.checkups?.[0]?.complaint || ""}
+          </p>
 
-          <br />
-          <b>Chief Complaint:</b> {data.checkups[0]?.complaint || ""}
-        </div>
+        </Section>
 
-        {/* TREATMENT */}
-        <div className="section">
-          <div className="title">TREATMENT SUMMARY</div>
+        {/* TREATMENT SUMMARY */}
+        <Section title="TREATMENT SUMMARY">
 
-          <table>
-            <thead>
-              <tr>
-                <th>Tooth</th>
-                <th>Treatment</th>
-              </tr>
-            </thead>
+          <Table
+            headers={["Tooth", "Treatment"]}
+            rows={tasks.length
+              ? tasks.map(t => [t.tooth, t.treatment])
+              : [["-", "No data"]]
+            }
+          />
 
-            <tbody>
-              {tasks.length ? tasks.map((t, i) => (
-                <tr key={i}>
-                  <td>{t.tooth}</td>
-                  <td>{t.treatment}</td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="2">No treatment data</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        </Section>
 
         {/* TIMELINE */}
-        <div className="section">
-          <div className="title">CLINICAL TIMELINE</div>
+        <Section title="CLINICAL TIMELINE">
 
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Diagnosis</th>
-                <th>Treatment</th>
-                <th>Medicines</th>
-                <th>Fee</th>
-              </tr>
-            </thead>
+          <Table
+            headers={["Date", "Diagnosis", "Treatment", "Medicines", "Fee"]}
+            rows={data.visits?.length
+              ? data.visits.map(v => [
+                  v.date || "",
+                  v.diagnosis || "",
+                  v.treatment || "",
+                  v.medicines || "",
+                  v.fee || ""
+                ])
+              : [["-", "No data", "-", "-", "-"]]
+            }
+          />
 
-            <tbody>
-              {data.visits.length ? data.visits.map((v, i) => (
-                <tr key={i}>
-                  <td>{v.date || ""}</td>
-                  <td>{v.diagnosis || ""}</td>
-                  <td>{v.treatment || ""}</td>
-                  <td>{v.medicines || ""}</td>
-                  <td>{v.fee || ""}</td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="5">No visit data</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        </Section>
 
-        {/* DENTAL CHART */}
-        <div className="section">
-          <div className="title">DENTAL CHART</div>
-
-          <div className="chart">
-            <img src="/teeth.png" alt="chart" />
+        {/* CHART */}
+        <Section title="DENTAL CHART">
+          <div style={{ textAlign: "center" }}>
+            <img src="/teeth.png" style={{ width: 350 }} />
           </div>
-        </div>
+        </Section>
 
       </div>
 
-      {/* EXACT SAME CSS */}
-      <style>
-        {`
-          body { font-family: Arial; }
+      {/* STYLE */}
+      <style>{`
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
 
-          h1 { text-align:center; color:#2b4c7e; }
+        th {
+          background: #f1f5f9;
+          padding: 8px;
+          border: 1px solid #ddd;
+        }
 
-          .section { margin-top:20px; }
+        td {
+          padding: 8px;
+          border: 1px solid #ddd;
+          text-align: center;
+        }
 
-          .title { background:#eef4ff; padding:8px; font-weight:bold; }
-
-          table { width:100%; border-collapse:collapse; }
-
-          th, td { border:1px solid #ccc; padding:6px; text-align:center; }
-
-          .info { border:1px solid #ccc; padding:10px; }
-
-          .chart { text-align:center; margin-top:10px; }
-
-          .chart img { width:300px; }
-
-          @media print {
-            .no-print { display:none; }
+        @media print {
+          body {
+            background: white;
           }
-        `}
-      </style>
+
+          .no-print {
+            display: none;
+          }
+
+          #report {
+            box-shadow: none;
+            border-radius: 0;
+            padding: 10px;
+          }
+        }
+      `}</style>
 
     </div>
   );
 }
+
+/* 🔥 COMPONENTS */
+
+function Section({ title, children }) {
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{
+        background: "#e0ecff",
+        padding: 8,
+        fontWeight: "bold",
+        borderRadius: 4
+      }}>
+        {title}
+      </div>
+      <div style={{ marginTop: 10 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div style={{ marginBottom: 5 }}>
+      <b>{label}:</b> {value || "N/A"}
+    </div>
+  );
+}
+
+function Table({ headers, rows }) {
+  return (
+    <table>
+      <thead>
+        <tr>
+          {headers.map((h, i) => <th key={i}>{h}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i}>
+            {r.map((c, j) => <td key={j}>{c}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+const btn = {
+  padding: "10px 20px",
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: 6
+};

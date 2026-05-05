@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useParams, useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
 
 function PatientFileView() {
 
   const { id } = useParams();
-const year = new Date().getFullYear();
+  const year = new Date().getFullYear();
   const navigate = useNavigate();
 
   const [file, setFile] = useState(null);
@@ -24,60 +25,47 @@ const year = new Date().getFullYear();
     load();
   }, []);
 
-  if (!file) return <div style={{ padding: 20 }}>Loading...</div>;
+  if (!file) return <Layout><div style={{ padding: 20 }}>Loading...</div></Layout>;
 
   const info = file.patient_info || {};
 
   return (
-    <div style={{ padding: 20 }}>
+    <Layout>
 
-      <button onClick={() => navigate("/patient-files")}>⬅ Back</button>
+      {/* HEADER */}
+      <div style={header}>
+        <div>
+          <button onClick={() => navigate("/patient-files")}>⬅ Back</button>
+          <h1 style={{ marginTop: 10 }}>Patient File ({year}) 📁</h1>
+        </div>
 
-      {/* 🔥 PRINT BUTTON (ONLY ADDED) */}
-      <a
-        href={`http://localhost:8000/patient-file-pdf/${id}/${year}`}
-        target="_blank"
-        rel="noreferrer"
-      >
-        <button style={{ marginLeft: 10 }}>
-          Print Full File 🧾
-        </button>
-      </a>
+        <a
+          href={`http://localhost:8000/patient-file-pdf/${id}/${year}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <button style={printBtn}>🧾 Print File</button>
+        </a>
+      </div>
 
-      <h1>Patient File ({year}) 📁</h1>
-
-      {/* ========================= */}
-      {/* PATIENT HEADER */}
-      {/* ========================= */}
-      <div style={{
-        background: "white",
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 20,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
-      }}>
+      {/* PATIENT CARD */}
+      <div style={card}>
         <h2>{info.name}</h2>
         <p>📞 {info.phone}</p>
         <p>🧬 {info.gender} | 🎂 {info.age}</p>
         <p>📍 {info.address}</p>
       </div>
 
-      {/* ========================= */}
       {/* TABS */}
-      {/* ========================= */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={tabs}>
         {["overview", "clinical", "financial", "timeline"].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              marginRight: 10,
-              padding: "8px 12px",
-              background: tab === t ? "#0f172a" : "#e2e8f0",
-              color: tab === t ? "white" : "black",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer"
+              ...tabBtn,
+              background: tab === t ? "#0f172a" : "#e5e7eb",
+              color: tab === t ? "white" : "#111"
             }}
           >
             {t.toUpperCase()}
@@ -85,8 +73,9 @@ const year = new Date().getFullYear();
         ))}
       </div>
 
+      {/* CONTENT */}
       {tab === "overview" && (
-        <div>
+        <div style={grid}>
           <Card title="Conditions" data={info.conditions} />
           <Card title="Complaints" data={info.complaints} />
         </div>
@@ -109,33 +98,26 @@ const year = new Date().getFullYear();
       {tab === "timeline" && (
         <div>
           {file.timeline?.map((t, i) => (
-            <div key={i} style={{
-              background: "white",
-              padding: 10,
-              marginBottom: 10,
-              borderRadius: 8,
-              borderLeft: "4px solid #0f172a"
-            }}>
-              <b>{t.event_type}</b>
-              <br/>
-              <small>{new Date(t.created_at).toLocaleString()}</small>
+            <div key={i} style={timelineCard}>
+              <div>
+                <b>{t.event_type}</b>
+                <br />
+                <small>{new Date(t.created_at).toLocaleString()}</small>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-    </div>
+    </Layout>
   );
 }
 
+/* ========================= COMPONENTS ========================= */
+
 function Card({ title, data }) {
   return (
-    <div style={{
-      background: "white",
-      padding: 15,
-      marginBottom: 15,
-      borderRadius: 10
-    }}>
+    <div style={card}>
       <h3>{title}</h3>
       <p>{data || "No data"}</p>
     </div>
@@ -144,16 +126,11 @@ function Card({ title, data }) {
 
 function Section({ title, items }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <h3>{title}</h3>
+    <div style={{ marginBottom: 25 }}>
+      <h3 style={{ marginBottom: 10 }}>{title}</h3>
 
       {items?.length ? items.map((item, i) => (
-        <div key={i} style={{
-          background: "white",
-          padding: 10,
-          marginBottom: 10,
-          borderRadius: 8
-        }}>
+        <div key={i} style={card}>
           {Object.entries(item).map(([k, v]) => (
             <div key={k}>
               <b>{k}:</b> {String(v)}
@@ -161,10 +138,63 @@ function Section({ title, items }) {
           ))}
         </div>
       )) : (
-        <p>No data</p>
+        <p style={{ color: "#64748b" }}>No data</p>
       )}
     </div>
   );
 }
+
+/* ========================= STYLES ========================= */
+
+const header = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 20
+};
+
+const printBtn = {
+  padding: "10px 15px",
+  background: "#16a34a",
+  color: "white",
+  border: "none",
+  borderRadius: 6,
+  cursor: "pointer"
+};
+
+const tabs = {
+  display: "flex",
+  gap: 10,
+  marginBottom: 20
+};
+
+const tabBtn = {
+  padding: "8px 14px",
+  border: "none",
+  borderRadius: 6,
+  cursor: "pointer"
+};
+
+const card = {
+  background: "white",
+  padding: 15,
+  borderRadius: 10,
+  marginBottom: 15,
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+};
+
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(250px,1fr))",
+  gap: 15
+};
+
+const timelineCard = {
+  background: "white",
+  padding: 12,
+  borderRadius: 8,
+  marginBottom: 10,
+  borderLeft: "4px solid #0f172a"
+};
 
 export default PatientFileView;

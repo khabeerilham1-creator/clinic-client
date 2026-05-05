@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 
+// 🔥 ADDED
+import Layout from "../components/Layout";
+
 function Patients({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
@@ -19,7 +22,6 @@ function Patients({ setIsLoggedIn }) {
 
   const [file, setFile] = useState(null);
 
-  // ✅ ADDED
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
@@ -32,9 +34,6 @@ function Patients({ setIsLoggedIn }) {
     }
   }, [navigate]);
 
-  // =========================
-  // LOAD PATIENTS
-  // =========================
   const loadPatients = async () => {
     try {
       const res = await api.get("/patients/");
@@ -45,16 +44,10 @@ function Patients({ setIsLoggedIn }) {
     }
   };
 
-  // =========================
-  // HANDLE INPUT
-  // =========================
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // =========================
-  // SAVE PATIENT
-  // =========================
   const savePatient = async () => {
     try {
       const formData = new FormData();
@@ -65,7 +58,6 @@ function Patients({ setIsLoggedIn }) {
 
       if (file) formData.append("xray", file);
 
-      // ✅ ADDED UPDATE LOGIC
       if (editId) {
         await api.put("/patients/" + editId, form);
         alert("Updated ✅");
@@ -92,16 +84,12 @@ function Patients({ setIsLoggedIn }) {
     } catch (err) {
       console.log("SAVE ERROR:", err.response?.data || err);
 
-      // ✅ FIX FAKE ERROR
       if (err.response?.status >= 400) {
         alert("Error ❌");
       }
     }
   };
 
-  // =========================
-  // DELETE
-  // =========================
   const deletePatient = async (id) => {
     try {
       await api.delete("/patients/" + id);
@@ -112,77 +100,129 @@ function Patients({ setIsLoggedIn }) {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Patients Module</h1>
 
-      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+    // 🔥 WRAPPED IN LAYOUT
+    <Layout>
 
-      <button
-        style={{ marginLeft: 10 }}
-        onClick={() => {
-          localStorage.removeItem("token");
-          if (setIsLoggedIn) setIsLoggedIn(false);
-          navigate("/");
-        }}
-      >
-        Logout
-      </button>
+      <h1 style={{ marginBottom: 20 }}>Patients Module</h1>
 
-      <hr />
+      {/* FORM */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+      }}>
 
-      <h3>Demographics</h3>
-      <input name="name" value={form.name} onChange={handleChange} placeholder="Name" /><br/><br/>
-      <input name="age" value={form.age} onChange={handleChange} placeholder="Age" /><br/><br/>
-      <input name="gender" value={form.gender} onChange={handleChange} placeholder="Gender" /><br/><br/>
-      <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" /><br/><br/>
-      <input name="address" value={form.address} onChange={handleChange} placeholder="Address" /><br/><br/>
+        <h3>Demographics</h3>
 
-      <h3>Medical</h3>
-      <input name="conditions" value={form.conditions} onChange={handleChange} placeholder="Conditions" /><br/><br/>
+        <Grid>
+          <input name="name" value={form.name} onChange={handleChange} placeholder="Name" />
+          <input name="age" value={form.age} onChange={handleChange} placeholder="Age" />
+          <input name="gender" value={form.gender} onChange={handleChange} placeholder="Gender" />
+          <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" />
+          <input name="address" value={form.address} onChange={handleChange} placeholder="Address" />
+        </Grid>
 
-      <h3>Dental</h3>
-      <input name="complaints" value={form.complaints} onChange={handleChange} placeholder="Complaints" /><br/><br/>
+        <h3>Medical</h3>
+        <input style={{ width: "100%" }} name="conditions" value={form.conditions} onChange={handleChange} placeholder="Conditions" />
 
-      <h3>Imaging</h3>
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} /><br/><br/>
+        <h3 style={{ marginTop: 15 }}>Dental</h3>
+        <input style={{ width: "100%" }} name="complaints" value={form.complaints} onChange={handleChange} placeholder="Complaints" />
 
-      <button onClick={savePatient}>
-        {editId ? "Update" : "Save"} {/* ✅ ADDED */}
-      </button>
+        <h3 style={{ marginTop: 15 }}>Imaging</h3>
+        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
 
-      <hr />
+        <button
+          onClick={savePatient}
+          style={{
+            marginTop: 15,
+            padding: "10px 20px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: 6
+          }}
+        >
+          {editId ? "Update" : "Save"}
+        </button>
 
-      <h2>Patients List</h2>
+      </div>
 
-      {patients.map((p) => (
-        <div key={p._id}>
-          <b>{p.name}</b> - {p.phone}
-          <br/>
+      {/* LIST */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+      }}>
 
-          {/* EXISTING */}
-          <button onClick={() => navigate("/timeline/" + p._id)}>
-            View History 🔥
-          </button>
+        <h2>Patients List</h2>
 
-          {/* ✅ ADDED EDIT BUTTON */}
-          <button onClick={() => {
-            setForm({
-              name: p.name || "",
-              age: p.age || "",
-              gender: p.gender || "",
-              phone: p.phone || "",
-              address: p.address || "",
-              conditions: p.conditions || "",
-              complaints: p.complaints || ""
-            });
-            setEditId(p._id);
-          }}>
-            Edit ✏️
-          </button>
+        <table style={{ width: "100%", marginTop: 10 }}>
+          <thead>
+            <tr>
+              <th align="left">Name</th>
+              <th align="left">Phone</th>
+              <th align="right">Actions</th>
+            </tr>
+          </thead>
 
-          <button onClick={() => deletePatient(p._id)}>Delete</button>
-        </div>
-      ))}
+          <tbody>
+            {patients.map((p) => (
+              <tr key={p._id} style={{ borderTop: "1px solid #eee" }}>
+                <td>{p.name}</td>
+                <td>{p.phone}</td>
+
+                <td align="right">
+
+                  <button onClick={() => navigate("/timeline/" + p._id)}>
+                    History
+                  </button>
+
+                  <button onClick={() => {
+                    setForm({
+                      name: p.name || "",
+                      age: p.age || "",
+                      gender: p.gender || "",
+                      phone: p.phone || "",
+                      address: p.address || "",
+                      conditions: p.conditions || "",
+                      complaints: p.complaints || ""
+                    });
+                    setEditId(p._id);
+                  }}>
+                    Edit
+                  </button>
+
+                  <button onClick={() => deletePatient(p._id)}>
+                    Delete
+                  </button>
+
+                </td>
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </Layout>
+  );
+}
+
+/* SMALL GRID HELPER */
+function Grid({ children }) {
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(2,1fr)",
+      gap: 10,
+      marginBottom: 10
+    }}>
+      {children}
     </div>
   );
 }

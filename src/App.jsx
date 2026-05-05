@@ -19,10 +19,18 @@ import Invoice from "./pages/Invoice";
 import LVI from "./pages/LVI";
 
 import Reports from "./pages/Reports";
-import ReportView from "./pages/ReportView";   // 🔥 IMPORTANT
+import ReportView from "./pages/ReportView";
 
 import PatientFiles from "./pages/PatientFiles";
 import AI from "./pages/AI";
+
+// 🔥 NEW MODULES
+import ACC from "./pages/ACC";
+import HAI from "./pages/HAI";
+import Debtors from "./pages/Debtors";
+import Creditors from "./pages/Creditors";
+import Bills from "./pages/Bills";
+import Salary from "./pages/Salary";   // optional if created
 
 
 // =========================
@@ -54,7 +62,7 @@ export default function App() {
         <Route path="/invoice" element={<Invoice />} />
         <Route path="/lvi" element={<LVI />} />
 
-        {/* 🔥 REPORTS FIX */}
+        {/* REPORTS */}
         <Route path="/reports" element={<Reports />} />
         <Route path="/reports/:id" element={<ReportView />} />
 
@@ -63,6 +71,14 @@ export default function App() {
 
         {/* AI */}
         <Route path="/ai" element={<AI />} />
+
+        {/* 🔥 NEW SYSTEMS */}
+        <Route path="/acc" element={<ACC />} />
+        <Route path="/hai" element={<HAI />} />
+        <Route path="/debtors" element={<Debtors />} />
+        <Route path="/creditors" element={<Creditors />} />
+        <Route path="/bills" element={<Bills />} />
+        <Route path="/salary" element={<Salary />} />
 
       </Routes>
     </Router>

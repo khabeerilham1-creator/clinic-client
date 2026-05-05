@@ -1,152 +1,129 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../api";
+import Layout from "../components/Layout";
 
 export default function Dashboard() {
+
   const navigate = useNavigate();
-
   const [stats, setStats] = useState({});
-  const [daily, setDaily] = useState({});
-
-  const role = localStorage.getItem("role");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) navigate("/");
 
-    api.get("/dashboard/").then(res => setStats(res.data));
-    api.get("/dashboard/daily").then(res => setDaily(res.data));
+    api.get("/dashboard/")
+      .then(res => setStats(res.data))
+      .catch(() => setStats({}));
 
   }, [navigate]);
 
-  let modules = [
-    { name: "Patients", path: "/patients" },
-    { name: "Visits", path: "/visits" },
-    { name: "Checkup", path: "/checkup" },
-    { name: "AFI", path: "/afi" },
-    { name: "Prescription", path: "/prescription" },
+  const modules = [
+    { name: "Patients", path: "/patients", icon: "👤" },
+    { name: "Visits", path: "/visits", icon: "🩺" },
+    { name: "Checkup", path: "/checkup", icon: "🦷" },
+    { name: "AFI", path: "/afi", icon: "📋" },
+    { name: "Prescription", path: "/prescription", icon: "💊" },
+    { name: "FIS", path: "/fis", icon: "💰" },
+    { name: "Invoice", path: "/invoice", icon: "🧾" },
+    { name: "LVI", path: "/lvi", icon: "🏭" },
+    { name: "Reports", path: "/reports", icon: "📄" },
+    { name: "Patient Files", path: "/patient-files", icon: "📁" },
+    { name: "ACC", path: "/acc", icon: "📊" },
+    { name: "HAI", path: "/hai", icon: "👨‍⚕️" },
+    { name: "Debtors", path: "/debtors", icon: "📉" },
+    { name: "Creditors", path: "/creditors", icon: "📈" },
+    { name: "Bills", path: "/bills", icon: "💸" }
   ];
 
-  if (role === "doctor") {
-    modules.push(
-      { name: "AI Assistant", path: "/ai" },
-      { name: "CIS", path: "/cis" }
-    );
-  }
-
-  if (role === "admin") {
-    modules.push(
-      { name: "FIS", path: "/fis" },
-      { name: "Reports", path: "/reports" },
-      { name: "Invoice", path: "/invoice" },
-      { name: "LVI", path: "/lvi" },
-      { name: "Patient Files", path: "/patient-files" }
-    );
-  }
-
-  if (role === "staff") {
-    modules.push({ name: "CIS", path: "/cis" });
-  }
-
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Arial" }}>
+    <Layout>
 
-      {/* SIDEBAR */}
+      {/* HEADER */}
+      <div style={{ marginBottom: 30 }}>
+        <h1 style={{ fontSize: 28 }}>Dashboard</h1>
+        <p style={{ color: "#64748b" }}>
+          Welcome back — your clinic performance overview
+        </p>
+      </div>
+
+      {/* KPI CARDS */}
       <div style={{
-        width: "230px",
-        background: "#0f172a",
-        color: "white",
-        padding: "20px"
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
+        gap: 20,
+        marginBottom: 30
       }}>
-        <h2>🏥 Clinic</h2>
+        <KPI title="Patients" value={stats.patients} color="#6366f1" />
+        <KPI title="Revenue" value={`Rs ${stats.revenue || 0}`} color="#22c55e" />
+        <KPI title="Checkups" value={stats.checkups} color="#f59e0b" />
+        <KPI title="Today Revenue" value={`Rs ${stats.today_revenue || 0}`} color="#ef4444" />
+      </div>
 
+      {/* HIGHLIGHT CARD */}
+      <div style={{
+        background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+        color: "white",
+        padding: 25,
+        borderRadius: 16,
+        marginBottom: 30,
+        boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
+      }}>
+        <h2 style={{ marginBottom: 10 }}>Clinic Performance</h2>
+        <p>Total Revenue: Rs {stats.revenue || 0}</p>
+        <p>Today's Patients: {stats.today_patients || 0}</p>
+      </div>
+
+      {/* MODULE GRID */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))",
+        gap: 20
+      }}>
         {modules.map((m, i) => (
-          <Link key={i} to={m.path} style={{ color: "white", display: "block", margin: "10px 0" }}>
-            {m.name}
+          <Link key={i} to={m.path} style={{ textDecoration: "none" }}>
+            <div style={{
+              background: "white",
+              padding: 20,
+              borderRadius: 14,
+              textAlign: "center",
+              transition: "all 0.25s ease",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+              e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
+            }}
+            >
+              <div style={{ fontSize: 30 }}>{m.icon}</div>
+              <h4 style={{ marginTop: 10 }}>{m.name}</h4>
+            </div>
           </Link>
         ))}
-
-        <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/");
-          }}
-          style={{
-            marginTop: "20px",
-            width: "100%",
-            padding: "10px",
-            background: "#ef4444",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
-        >
-          Logout
-        </button>
       </div>
 
-      {/* MAIN */}
-      <div style={{ flex: 1, padding: "30px", background: "#f8fafc" }}>
-        <h1>Dashboard ({role})</h1>
-
-        {/* TOP STATS */}
-        <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
-          <Card title="Patients" value={stats.patients} />
-          <Card title="Revenue" value={`Rs ${stats.revenue}`} />
-          <Card title="Checkups" value={stats.checkups} />
-        </div>
-
-        {/* DAILY */}
-        <div style={{ display: "flex", gap: 20, marginBottom: 30 }}>
-          <Card title="Today Patients" value={stats.today_patients} />
-          <Card title="Today Revenue" value={`Rs ${stats.today_revenue}`} />
-        </div>
-
-        {/* 🔥 CORRECT REVENUE SPLIT */}
-        <h3>Revenue Split</h3>
-        <div style={{ display: "flex", gap: 20, marginBottom: 30 }}>
-          <Card title="Doctor (25%)" value={`Rs ${stats.split?.doctor || 0}`} />
-          <Card title="Lab Charges" value={`Rs ${stats.split?.lab || 0}`} />
-          <Card title="Profit" value={`Rs ${stats.split?.owner || 0}`} />
-        </div>
-
-        {/* MODULE GRID */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: "20px"
-        }}>
-          {modules.map((m, i) => (
-            <Link key={i} to={m.path} style={{ textDecoration: "none" }}>
-              <div style={{
-                background: "white",
-                padding: "20px",
-                borderRadius: "12px",
-                textAlign: "center",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
-              }}>
-                <h3>{m.name}</h3>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
+    </Layout>
   );
 }
 
-function Card({ title, value }) {
+/* KPI CARD */
+
+function KPI({ title, value, color }) {
   return (
     <div style={{
       background: "white",
       padding: 20,
-      borderRadius: 10,
-      width: 170,
-      boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
+      borderRadius: 14,
+      borderLeft: `6px solid ${color}`,
+      boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
     }}>
-      <h4>{title}</h4>
-      <p style={{ fontWeight: "bold", fontSize: "18px" }}>{value || 0}</p>
+      <p style={{ color: "#64748b" }}>{title}</p>
+      <h2 style={{ marginTop: 5 }}>{value || 0}</h2>
     </div>
   );
 }

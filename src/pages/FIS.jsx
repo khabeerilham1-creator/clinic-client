@@ -1,218 +1,258 @@
 import React, { useState, useEffect } from "react";
-import api from "../api"; // ✅ USE THIS
+import api from "../api";
 import { useNavigate } from "react-router-dom";
+
+// 🔥 ADDED
+import Layout from "../components/Layout";
 
 function FIS() {
 
   const navigate = useNavigate();
 
-  const [records, setRecords] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [records, setRecords] = useState([]);
 
-  const [form, setForm] = useState({
-    patient_name: "",
-    procedure: "",
-    doctor: "",
-    qty: "",
-    rate: "",
-    discount: "",
-    lab_charge: ""
-  });
+  const [patient, setPatient] = useState("");
+  const [labCharge, setLabCharge] = useState("");
+  const [discount, setDiscount] = useState("");
 
-  const [editId, setEditId] = useState(null);
+  const [rows, setRows] = useState([
+    { treatment: "", doctor: "", qty: "", rate: "" }
+  ]);
 
   const [total, setTotal] = useState(0);
   const [final, setFinal] = useState(0);
   const [doctorShare, setDoctorShare] = useState(0);
   const [owner, setOwner] = useState(0);
 
-  // =========================
-  // LOAD PATIENTS (AUTH FIX)
-  // =========================
-  const loadPatients = async () => {
-    try {
-      const res = await api.get("/patients/");
-      setPatients(res.data);
-    } catch (err) {
-      console.log("Auth error:", err.response?.data || err);
-    }
-  };
-
-  // =========================
-  // LOAD RECORDS (AUTH FIX)
-  // =========================
-  const loadData = async () => {
-    try {
-      let url = "/fis/billing";
-
-      if (form.patient_name) {
-        url += "/" + form.patient_name;
-      }
-
-      const res = await api.get(url);
-
-      console.log("DATA:", res.data);
-
-      setRecords(res.data || []);
-
-    } catch (err) {
-      console.log("LOAD ERROR:", err.response?.data || err);
-    }
-  };
-
   useEffect(() => {
     loadPatients();
     loadData();
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [form.patient_name]);
+  const loadPatients = async () => {
+    const res = await api.get("/patients/");
+    setPatients(res.data);
+  };
 
-  // =========================
-  // CALCULATION
-  // =========================
-  const handleChange = (e) => {
-    const data = { ...form, [e.target.name]: e.target.value };
-    setForm(data);
+  const loadData = async () => {
+    const res = await api.get("/fis/billing");
+    setRecords(res.data || []);
+  };
 
-    const qty = Number(data.qty) || 0;
-    const rate = Number(data.rate) || 0;
-    const discount = Number(data.discount) || 0;
+  const handleRowChange = (index, field, value) => {
+    const updated = [...rows];
+    updated[index][field] = value;
+    setRows(updated);
+    calculate(updated);
+  };
 
-    const t = qty * rate;
-    const disc = (t * discount) / 100;
+  const addRow = () => {
+    setRows([...rows, { treatment: "", doctor: "", qty: "", rate: "" }]);
+  };
+
+  const removeRow = (i) => {
+    const updated = rows.filter((_, idx) => idx !== i);
+    setRows(updated);
+    calculate(updated);
+  };
+
+  const calculate = (data = rows) => {
+
+    let t = 0;
+
+    data.forEach(r => {
+      const rate = Number(r.rate) || 0;
+      t += rate;
+    });
+
+    const disc = Number(discount) || 0;
     const f = t - disc;
 
     setTotal(t);
     setFinal(f);
 
-    const lab = Number(data.lab_charge) || 0;
-    const doc = f * 0.25;
-    const own = f - doc - lab;
+    const lab = Number(labCharge) || 0;
+    const doc = (f - lab) * 0.25;
 
     setDoctorShare(doc);
-    setOwner(own);
+    setOwner(f - doc - lab);
   };
 
-  // =========================
-  // SAVE / UPDATE (AUTH FIX)
-  // =========================
+  useEffect(() => {
+    calculate();
+  }, [discount, labCharge]);
+
   const save = async () => {
     try {
+
+      if (!patient) return alert("Select patient ❗");
+
       const payload = {
-        patient_name: form.patient_name,
-        procedure: form.procedure,
-        doctor: form.doctor,
-        amount: final,
-        lab_charge: form.lab_charge
+        patient_name: patient,
+        procedure: rows.map(r => r.treatment).join(", "),
+        doctor: rows.map(r => r.doctor).join(", "),
+        amount: Number(final) || 0,
+        lab_charge: Number(labCharge) || 0
       };
 
-      if (editId) {
-        await api.put("/fis/billing/" + editId, payload);
-      } else {
-        await api.post("/fis/billing", payload);
-      }
+      await api.post("/fis/billing", payload);
 
-      resetForm();
+      alert("Saved ✅");
+
+      setRows([{ treatment: "", doctor: "", qty: "", rate: "" }]);
+      setLabCharge("");
+      setDiscount("");
+      setPatient("");
+
       loadData();
 
     } catch (err) {
-      console.log("SAVE ERROR:", err.response?.data || err);
+      console.log(err);
+      alert("Error ❌");
     }
   };
 
-  // =========================
-  // DELETE (AUTH FIX)
-  // =========================
-  const handleDelete = async (id) => {
-    try {
-      if (!id) return alert("Invalid ID");
-
-      await api.delete("/fis/billing/" + id);
-      loadData();
-
-    } catch (err) {
-      console.log("DELETE ERROR:", err.response?.data || err);
-    }
-  };
-
-  // =========================
-  // EDIT
-  // =========================
-  const handleEdit = (r) => {
-    setForm({
-      patient_name: r.patient_name,
-      procedure: r.procedure,
-      doctor: r.doctor,
-      qty: "",
-      rate: "",
-      discount: "",
-      lab_charge: r.lab_charge
-    });
-
-    setEditId(r._id);
-  };
-
-  const resetForm = () => {
-    setForm({
-      patient_name: "",
-      procedure: "",
-      doctor: "",
-      qty: "",
-      rate: "",
-      discount: "",
-      lab_charge: ""
-    });
-    setEditId(null);
+  const deleteRecord = async (id) => {
+    if (!window.confirm("Delete?")) return;
+    await api.delete("/fis/billing/" + id);
+    loadData();
   };
 
   return (
-    <div style={{ padding: 20 }}>
 
-      <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
+    <Layout>
 
-      <h1>FIS</h1>
+      <h1 style={{ marginBottom: 20 }}>FIS — Financial System</h1>
 
-      <select name="patient_name" onChange={handleChange}>
-        <option value="">All Patients</option>
-        {patients.map(p => (
-          <option key={p._id} value={p.name}>{p.name}</option>
-        ))}
-      </select>
+      {/* PATIENT */}
+      <div style={{
+        background: "white",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20
+      }}>
+        <select
+          onChange={(e) => setPatient(e.target.value)}
+          value={patient}
+          style={{ padding: 8 }}
+        >
+          <option value="">Select Patient</option>
+          {patients.map(p => (
+            <option key={p._id} value={p.name}>{p.name}</option>
+          ))}
+        </select>
+      </div>
 
-      <br /><br />
+      {/* TABLE */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20
+      }}>
 
-      <input name="procedure" placeholder="Procedure" onChange={handleChange}/>
-      <input name="doctor" placeholder="Doctor" onChange={handleChange}/>
-      <input name="qty" placeholder="Qty" onChange={handleChange}/>
-      <input name="rate" placeholder="Rate" onChange={handleChange}/>
-      <input name="discount" placeholder="Discount %" onChange={handleChange}/>
-      <input name="lab_charge" placeholder="Lab Charges" onChange={handleChange}/>
+        <table style={{ width: "100%" }}>
+          <thead>
+            <tr>
+              <th>Treatment</th>
+              <th>Doctor</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th></th>
+            </tr>
+          </thead>
 
-      <h3>Total: {total}</h3>
-      <h3>Final: {final}</h3>
-      <h3>Doctor Share: {doctorShare}</h3>
-      <h3>Owner: {owner}</h3>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i}>
+                <td><input value={r.treatment} onChange={(e) => handleRowChange(i, "treatment", e.target.value)} /></td>
+                <td><input value={r.doctor} onChange={(e) => handleRowChange(i, "doctor", e.target.value)} /></td>
+                <td><input value={r.qty} onChange={(e) => handleRowChange(i, "qty", e.target.value)} /></td>
+                <td><input value={r.rate} onChange={(e) => handleRowChange(i, "rate", e.target.value)} /></td>
+                <td><button onClick={() => removeRow(i)}>X</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <button onClick={save}>{editId ? "Update" : "Save"}</button>
+        <button onClick={addRow} style={{ marginTop: 10 }}>
+          ➕ Add Row
+        </button>
 
-      <hr />
+      </div>
 
-      <h2>Records</h2>
+      {/* FINANCIAL SUMMARY */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20
+      }}>
 
-      {records.map(r => (
-        <div key={r._id}>
-          <b>{r.patient_name}</b><br/>
-          {r.procedure} - {r.doctor}<br/>
-          Amount: {r.amount}<br/>
+        <input
+          placeholder="Discount Amount"
+          value={discount}
+          onChange={(e) => setDiscount(e.target.value)}
+          style={{ marginRight: 10 }}
+        />
 
-          <button onClick={() => handleEdit(r)}>Edit</button>
-          <button onClick={() => handleDelete(r._id)}>Delete</button>
+        <input
+          placeholder="Lab Charges"
+          value={labCharge}
+          onChange={(e) => setLabCharge(e.target.value)}
+        />
+
+        <div style={{ marginTop: 20 }}>
+          <b>Total:</b> Rs {total} <br/>
+          <b>Discount:</b> Rs {discount || 0} <br/>
+          <b>Final:</b> Rs {final} <br/>
+          <b>Doctor Share:</b> Rs {doctorShare} <br/>
+          <b>Owner:</b> Rs {owner}
         </div>
-      ))}
 
-    </div>
+        <button
+          onClick={save}
+          style={{
+            marginTop: 15,
+            padding: "10px 20px",
+            background: "#16a34a",
+            color: "white",
+            border: "none",
+            borderRadius: 6
+          }}
+        >
+          Save Billing
+        </button>
+
+      </div>
+
+      {/* RECORDS */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 10
+      }}>
+
+        <h2>Records</h2>
+
+        {records.map(r => (
+          <div key={r._id} style={{
+            borderBottom: "1px solid #eee",
+            padding: 10
+          }}>
+            <b>{r.patient_name}</b><br/>
+            {r.procedure}<br/>
+            Amount: Rs {r.amount}
+
+            <br/>
+            <button onClick={() => deleteRecord(r._id)}>Delete</button>
+          </div>
+        ))}
+
+      </div>
+
+    </Layout>
   );
 }
 
