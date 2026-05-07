@@ -26,13 +26,16 @@ import Timeline from "./pages/Timeline";
 
 import AI from "./pages/AI";
 
-// 🔥 NEW MODULES
+// NEW MODULES
 import ACC from "./pages/ACC";
 import HAI from "./pages/HAI";
 import Debtors from "./pages/Debtors";
 import Creditors from "./pages/Creditors";
 import Bills from "./pages/Bills";
 import Salary from "./pages/Salary";
+
+// 🔥 PERMISSIONS
+import Permissions from "./pages/Permissions";
 
 
 // =========================
@@ -41,51 +44,137 @@ import Salary from "./pages/Salary";
 export default function App() {
 
   return (
+
     <Router>
 
       <Routes>
 
         {/* AUTH */}
-        <Route path="/" element={<Login />} />
+        <Route
+          path="/"
+          element={<Login />}
+        />
 
         {/* DASHBOARD */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
         {/* CORE */}
-        <Route path="/patients" element={<Patients />} />
-        <Route path="/visits" element={<Visits />} />
-        <Route path="/checkup" element={<Checkup />} />
+        <Route
+          path="/patients"
+          element={<Patients />}
+        />
 
-        {/* 🔥 TIMELINE */}
-        <Route path="/timeline/:id" element={<Timeline />} />
+        <Route
+          path="/visits"
+          element={<Visits />}
+        />
+
+        <Route
+          path="/checkup"
+          element={<Checkup />}
+        />
+
+        {/* TIMELINE */}
+        <Route
+          path="/timeline/:id"
+          element={<Timeline />}
+        />
 
         {/* CLINICAL */}
-        <Route path="/afi" element={<AFI />} />
-        <Route path="/cis" element={<CIS />} />
-        <Route path="/prescription" element={<Prescription />} />
+        <Route
+          path="/afi"
+          element={<AFI />}
+        />
+
+        <Route
+          path="/cis"
+          element={<CIS />}
+        />
+
+        <Route
+          path="/prescription"
+          element={<Prescription />}
+        />
 
         {/* FINANCE */}
-        <Route path="/fis" element={<FIS />} />
-        <Route path="/invoice" element={<Invoice />} />
-        <Route path="/lvi" element={<LVI />} />
+        <Route
+          path="/fis"
+          element={<FIS />}
+        />
+
+        <Route
+          path="/invoice"
+          element={<Invoice />}
+        />
+
+        <Route
+          path="/lvi"
+          element={<LVI />}
+        />
 
         {/* REPORTS */}
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/reports/:id" element={<ReportView />} />
+        <Route
+          path="/reports"
+          element={<Reports />}
+        />
+
+        <Route
+          path="/reports/:id"
+          element={<ReportView />}
+        />
 
         {/* FILES */}
-        <Route path="/patient-files" element={<PatientFiles />} />
+        <Route
+          path="/patient-files"
+          element={<PatientFiles />}
+        />
 
         {/* AI */}
-        <Route path="/ai" element={<AI />} />
+        <Route
+          path="/ai"
+          element={<AI />}
+        />
 
-        {/* 🔥 NEW SYSTEMS */}
-        <Route path="/acc" element={<ACC />} />
-        <Route path="/hai" element={<HAI />} />
-        <Route path="/debtors" element={<Debtors />} />
-        <Route path="/creditors" element={<Creditors />} />
-        <Route path="/bills" element={<Bills />} />
-        <Route path="/salary" element={<Salary />} />
+        {/* INTELLIGENCE */}
+        <Route
+          path="/acc"
+          element={<ACC />}
+        />
+
+        <Route
+          path="/hai"
+          element={<HAI />}
+        />
+
+        {/* CONTROL */}
+        <Route
+          path="/debtors"
+          element={<Debtors />}
+        />
+
+        <Route
+          path="/creditors"
+          element={<Creditors />}
+        />
+
+        <Route
+          path="/bills"
+          element={<Bills />}
+        />
+
+        <Route
+          path="/salary"
+          element={<Salary />}
+        />
+
+        {/* 🔥 PERMISSIONS */}
+        <Route
+          path="/permissions"
+          element={<Permissions />}
+        />
 
       </Routes>
 
