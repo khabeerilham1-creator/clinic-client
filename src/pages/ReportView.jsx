@@ -5,217 +5,389 @@ import api from "../api";
 export default function ReportView() {
 
   const { id } = useParams();
+
   const [data, setData] = useState(null);
 
   useEffect(() => {
+
     api.get("/reports/" + id)
+
       .then(res => {
-        console.log("REPORT DATA:", res.data);
         setData(res.data);
       })
+
       .catch(err => {
-        console.log("REPORT ERROR:", err.response?.data || err);
+        console.log(err);
         alert("Failed to load report ❌");
       });
+
   }, [id]);
 
-  const printReport = () => window.print();
+  if (!data) {
+    return <div style={{ padding: 20 }}>Loading...</div>;
+  }
 
-  if (!data) return <div style={{ padding: 20 }}>Loading...</div>;
+  const patient = data.patient || {};
 
-  const tasks = data.checkups?.flatMap(c => c.tasks || []) || [];
+  // =========================
+  // DYNAMIC COLOUR
+  // =========================
+  let primary = "#16a34a";
+  let light = "#dcfce7";
+
+  if (patient.colour_code === "yellow") {
+    primary = "#ca8a04";
+    light = "#fef9c3";
+  }
+
+  if (patient.colour_code === "orange") {
+    primary = "#ea580c";
+    light = "#fed7aa";
+  }
+
+  if (patient.colour_code === "red") {
+    primary = "#dc2626";
+    light = "#fecaca";
+  }
+
+  const tasks =
+    data.checkups?.flatMap(c => c.tasks || []) || [];
 
   return (
-    <div style={{ background: "#f3f4f6", minHeight: "100vh", padding: 20 }}>
 
-      {/* ACTION */}
-      <div className="no-print" style={{ marginBottom: 15 }}>
-        <button onClick={printReport} style={btn}>
+    <div style={{
+      background: "#f3f4f6",
+      minHeight: "100vh",
+      padding: 20
+    }}>
+
+      {/* BUTTON */}
+      <div style={{ marginBottom: 15 }}>
+
+        <button
+          onClick={() =>
+            window.open(
+              `${api.defaults.baseURL}/reports/pdf/${id}`
+            )
+          }
+          style={{
+            padding: "10px 20px",
+            background: primary,
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontWeight: "bold"
+          }}
+        >
           🖨️ Download PDF
         </button>
+
       </div>
 
-      {/* REPORT CARD */}
-      <div id="report" style={{
+      {/* REPORT */}
+      <div style={{
         background: "white",
-        padding: 30,
-        borderRadius: 10,
-        maxWidth: "900px",
+        maxWidth: 900,
         margin: "auto",
+        borderRadius: 14,
+        padding: 25,
         boxShadow: "0 4px 10px rgba(0,0,0,0.08)"
       }}>
 
         {/* HEADER */}
-        <h1 style={{ textAlign: "center", color: "#1e3a8a" }}>
+        <div style={{
+          background: primary,
+          color: "white",
+          padding: 20,
+          borderRadius: 10,
+          textAlign: "center",
+          fontSize: 34,
+          fontWeight: "bold"
+        }}>
           HDC Holistic Domain of Creativity
-        </h1>
+        </div>
 
+        {/* DATE */}
         <div style={{
           display: "flex",
           justifyContent: "space-between",
-          marginBottom: 20,
-          fontSize: 14
+          marginTop: 15,
+          marginBottom: 15
         }}>
-          <div><b>Date:</b> {new Date().toLocaleDateString()}</div>
-          <div><b>Time:</b> {new Date().toLocaleTimeString()}</div>
+
+          <div>
+            <b>Date:</b> {new Date().toLocaleDateString()}
+          </div>
+
+          <div style={{
+            background: primary,
+            color: "white",
+            padding: "5px 14px",
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: "bold"
+          }}>
+            {(patient.colour_code || "green").toUpperCase()} CATEGORY
+          </div>
+
         </div>
 
         {/* PATIENT INFO */}
-        <Section title="PATIENT INFORMATION">
-          <InfoRow label="Name" value={data.patient?.name} />
-          <InfoRow label="Phone" value={data.patient?.phone} />
+        <Section
+          title="PATIENT INFORMATION"
+          primary={primary}
+          light={light}
+        >
+
+          <Grid>
+
+            <Info label="Reg No" value={patient.reg_no} />
+            <Info label="Name" value={`${patient.title || ""} ${patient.name || ""}`} />
+
+            <Info label="Age" value={patient.age} />
+            <Info label="Gender" value={patient.gender} />
+
+            <Info label="Mobile" value={patient.mobile_number} />
+            <Info label="Address" value={patient.address} />
+
+            <Info label="Occupation" value={patient.occupation} />
+            <Info label="Category" value={patient.category} />
+
+            <Info label="Purpose" value={patient.purpose_of_visit} />
+            <Info label="Fee Status" value={patient.consultation_fee_paid} />
+
+          </Grid>
+
         </Section>
 
         {/* CHECKUP */}
-        <Section title="DENTAL CHECKUP REPORT">
+        <Section
+          title="CHECKUP REPORT"
+          primary={primary}
+          light={light}
+        >
 
           <Table
-            headers={["Tooth", "Condition", "Treatment"]}
-            rows={tasks.length
-              ? tasks.map(t => [t.tooth, t.condition, t.treatment])
-              : [["-", "No data", "-"]]
-            }
-          />
-
-          <p style={{ marginTop: 10 }}>
-            <b>Chief Complaint:</b> {data.checkups?.[0]?.complaint || ""}
-          </p>
-
-        </Section>
-
-        {/* TREATMENT SUMMARY */}
-        <Section title="TREATMENT SUMMARY">
-
-          <Table
-            headers={["Tooth", "Treatment"]}
-            rows={tasks.length
-              ? tasks.map(t => [t.tooth, t.treatment])
-              : [["-", "No data"]]
+            headers={[
+              "Tooth",
+              "Condition",
+              "Treatment"
+            ]}
+            rows={
+              tasks.length
+                ? tasks.map(t => [
+                    t.tooth,
+                    t.condition,
+                    t.treatment
+                  ])
+                : [["-", "No checkup data", "-"]]
             }
           />
 
         </Section>
 
-        {/* TIMELINE */}
-        <Section title="CLINICAL TIMELINE">
+        {/* VISITS */}
+        <Section
+          title="VISITS HISTORY"
+          primary={primary}
+          light={light}
+        >
 
           <Table
-            headers={["Date", "Diagnosis", "Treatment", "Medicines", "Fee"]}
-            rows={data.visits?.length
-              ? data.visits.map(v => [
-                  v.date || "",
-                  v.diagnosis || "",
-                  v.treatment || "",
-                  v.medicines || "",
-                  v.fee || ""
-                ])
-              : [["-", "No data", "-", "-", "-"]]
+            headers={[
+              "Date",
+              "Diagnosis",
+              "Treatment",
+              "Medicines",
+              "Fee"
+            ]}
+            rows={
+              data.visits?.length
+                ? data.visits.map(v => [
+                    v.date || "",
+                    v.diagnosis || "",
+                    v.treatment || "",
+                    v.medicines || "",
+                    v.fee || ""
+                  ])
+                : [["-", "-", "No visit data", "-", "-"]]
+            }
+          />
+
+        </Section>
+
+        {/* INVOICES */}
+        <Section
+          title="INVOICE SUMMARY"
+          primary={primary}
+          light={light}
+        >
+
+          <Table
+            headers={[
+              "Procedure",
+              "Amount",
+              "Paid",
+              "Balance"
+            ]}
+            rows={
+              data.invoices?.length
+                ? data.invoices.map(inv => [
+                    inv.rows?.map(r => r.treatment).join(", "),
+                    inv.amount,
+                    inv.paid,
+                    inv.balance
+                  ])
+                : [["-", "-", "-", "No invoice data"]]
             }
           />
 
         </Section>
 
         {/* CHART */}
-        <Section title="DENTAL CHART">
-          <div style={{ textAlign: "center" }}>
-            <img src="/teeth.png" style={{ width: 350 }} />
+        <Section
+          title="DENTAL CHART"
+          primary={primary}
+          light={light}
+        >
+
+          <div style={{
+            textAlign: "center",
+            padding: 15
+          }}>
+            <img
+              src="/teeth.png"
+              style={{
+                width: 300
+              }}
+            />
           </div>
+
         </Section>
 
       </div>
 
-      {/* STYLE */}
-      <style>{`
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-
-        th {
-          background: #f1f5f9;
-          padding: 8px;
-          border: 1px solid #ddd;
-        }
-
-        td {
-          padding: 8px;
-          border: 1px solid #ddd;
-          text-align: center;
-        }
-
-        @media print {
-          body {
-            background: white;
-          }
-
-          .no-print {
-            display: none;
-          }
-
-          #report {
-            box-shadow: none;
-            border-radius: 0;
-            padding: 10px;
-          }
-        }
-      `}</style>
-
     </div>
   );
 }
 
-/* 🔥 COMPONENTS */
+/* ========================= */
 
-function Section({ title, children }) {
+function Section({
+  title,
+  children,
+  primary,
+  light
+}) {
+
   return (
-    <div style={{ marginTop: 20 }}>
+
+    <div style={{
+      border: `2px solid ${primary}`,
+      borderRadius: 10,
+      marginTop: 20,
+      overflow: "hidden"
+    }}>
+
       <div style={{
-        background: "#e0ecff",
-        padding: 8,
-        fontWeight: "bold",
-        borderRadius: 4
+        background: light,
+        color: primary,
+        padding: 10,
+        fontWeight: "bold"
       }}>
         {title}
       </div>
-      <div style={{ marginTop: 10 }}>
+
+      <div style={{ padding: 10 }}>
         {children}
       </div>
+
     </div>
   );
 }
 
-function InfoRow({ label, value }) {
+function Grid({ children }) {
+
   return (
-    <div style={{ marginBottom: 5 }}>
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(2,1fr)",
+      gap: 10
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function Info({ label, value }) {
+
+  return (
+    <div style={{
+      borderBottom: "1px solid #eee",
+      paddingBottom: 6
+    }}>
       <b>{label}:</b> {value || "N/A"}
     </div>
   );
 }
 
 function Table({ headers, rows }) {
+
   return (
-    <table>
+    <table style={{
+      width: "100%",
+      borderCollapse: "collapse"
+    }}>
+
       <thead>
+
         <tr>
-          {headers.map((h, i) => <th key={i}>{h}</th>)}
+          {headers.map((h, i) => (
+            <th
+              key={i}
+              style={th}
+            >
+              {h}
+            </th>
+          ))}
         </tr>
+
       </thead>
+
       <tbody>
+
         {rows.map((r, i) => (
+
           <tr key={i}>
-            {r.map((c, j) => <td key={j}>{c}</td>)}
+
+            {r.map((c, j) => (
+              <td
+                key={j}
+                style={td}
+              >
+                {c}
+              </td>
+            ))}
+
           </tr>
+
         ))}
+
       </tbody>
+
     </table>
   );
 }
 
-const btn = {
-  padding: "10px 20px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: 6
+const th = {
+  border: "1px solid #ddd",
+  padding: 8,
+  background: "#f8fafc"
+};
+
+const td = {
+  border: "1px solid #ddd",
+  padding: 8,
+  textAlign: "center"
 };
