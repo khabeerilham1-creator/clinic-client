@@ -9,6 +9,8 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const login = async () => {
     try {
 
@@ -21,7 +23,6 @@ function Login() {
         }
       });
 
-      // ✅ SAVE TOKEN + ROLE
       localStorage.setItem("token", res.data.access_token);
       localStorage.setItem("role", res.data.role);
 
@@ -30,6 +31,7 @@ function Login() {
       navigate("/dashboard");
 
     } catch (err) {
+
       console.log("LOGIN ERROR:", err.response?.data);
 
       alert(err.response?.data?.detail || "Login failed ❌");
@@ -39,63 +41,129 @@ function Login() {
   return (
     <div style={{
       display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "100vh",
-      background: "#f3f4f6"
+      minHeight: "100vh",
+      background: "#f8fafc"
     }}>
 
+      {/* LEFT SIDEBAR STYLE */}
       <div style={{
-        background: "white",
+        width: 260,
+        background: "#0f172a",
+        color: "white",
         padding: 30,
-        borderRadius: 12,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        width: 300
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        borderRight: "1px solid #1e293b"
       }}>
 
-        <h2 style={{ marginBottom: 20 }}>Login</h2>
+        <h1 style={{
+          fontSize: 40,
+          marginBottom: 10
+        }}>
+          HDC
+        </h1>
 
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginBottom: 15,
-            borderRadius: 6,
-            border: "1px solid #ccc"
-          }}
-        />
+        <p style={{
+          color: "#94a3b8",
+          lineHeight: 1.7
+        }}>
+          Holistic Domain of Creativity
+        </p>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginBottom: 15,
-            borderRadius: 6,
-            border: "1px solid #ccc"
-          }}
-        />
+      </div>
 
-        <button
-          onClick={login}
-          style={{
-            width: "100%",
-            padding: 10,
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer"
-          }}
-        >
-          Login
-        </button>
+      {/* RIGHT LOGIN AREA */}
+      <div style={{
+        flex: 1,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }}>
+
+        <div style={{
+          background: "white",
+          padding: 35,
+          borderRadius: 14,
+          width: 360,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)"
+        }}>
+
+          <h2 style={{
+            marginBottom: 25,
+            color: "#0f172a"
+          }}>
+            Login
+          </h2>
+
+          <input
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 12,
+              marginBottom: 18,
+              borderRadius: 10,
+              border: "1px solid #cbd5e1",
+              outline: "none",
+              boxSizing: "border-box"
+            }}
+          />
+
+          <div style={{ position: "relative" }}>
+
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 12,
+                marginBottom: 20,
+                borderRadius: 10,
+                border: "1px solid #cbd5e1",
+                outline: "none",
+                boxSizing: "border-box"
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: 10,
+                top: 8,
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                fontSize: 18
+              }}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+
+          </div>
+
+          <button
+            onClick={login}
+            style={{
+              width: "100%",
+              padding: 12,
+              background: "#0f172a",
+              color: "white",
+              border: "none",
+              borderRadius: 10,
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            Login
+          </button>
+
+        </div>
 
       </div>
 

@@ -43,7 +43,7 @@ export default function Dashboard() {
       <div style={{ marginBottom: 30 }}>
         <h1 style={{ fontSize: 28 }}>Dashboard</h1>
         <p style={{ color: "#64748b" }}>
-          Welcome back — your clinic performance overview
+          Welcome to Holistic Domain of Creativity
         </p>
       </div>
 
@@ -62,16 +62,20 @@ export default function Dashboard() {
 
       {/* HIGHLIGHT CARD */}
       <div style={{
-        background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+        background: "linear-gradient(135deg, #06b6d4, #2563eb)",
         color: "white",
         padding: 25,
         borderRadius: 16,
         marginBottom: 30,
-        boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
+        boxShadow: "0 10px 25px rgba(0,0,0,0.15)"
       }}>
-        <h2 style={{ marginBottom: 10 }}>Clinic Performance</h2>
+        <h2 style={{ marginBottom: 10 }}>Clinic Overview</h2>
+
         <p>Total Revenue: Rs {stats.revenue || 0}</p>
+
         <p>Today's Patients: {stats.today_patients || 0}</p>
+
+        <p>Logged Role: {localStorage.getItem("role")}</p>
       </div>
 
       {/* MODULE GRID */}

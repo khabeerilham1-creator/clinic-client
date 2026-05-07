@@ -22,6 +22,8 @@ import Reports from "./pages/Reports";
 import ReportView from "./pages/ReportView";
 
 import PatientFiles from "./pages/PatientFiles";
+import Timeline from "./pages/Timeline";
+
 import AI from "./pages/AI";
 
 // 🔥 NEW MODULES
@@ -30,15 +32,17 @@ import HAI from "./pages/HAI";
 import Debtors from "./pages/Debtors";
 import Creditors from "./pages/Creditors";
 import Bills from "./pages/Bills";
-import Salary from "./pages/Salary";   // optional if created
+import Salary from "./pages/Salary";
 
 
 // =========================
 // APP
 // =========================
 export default function App() {
+
   return (
     <Router>
+
       <Routes>
 
         {/* AUTH */}
@@ -51,6 +55,9 @@ export default function App() {
         <Route path="/patients" element={<Patients />} />
         <Route path="/visits" element={<Visits />} />
         <Route path="/checkup" element={<Checkup />} />
+
+        {/* 🔥 TIMELINE */}
+        <Route path="/timeline/:id" element={<Timeline />} />
 
         {/* CLINICAL */}
         <Route path="/afi" element={<AFI />} />
@@ -81,6 +88,7 @@ export default function App() {
         <Route path="/salary" element={<Salary />} />
 
       </Routes>
+
     </Router>
   );
 }

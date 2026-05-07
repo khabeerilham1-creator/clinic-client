@@ -18,7 +18,7 @@ function Timeline() {
       const t = await api.get("/timeline/" + id);
       setTimeline(t.data);
 
-      const f = await api.get(`/patient-files/file/${id}/2026`);
+      const f = await api.get(`/patient-files/${id}`);
       setFile(f.data);
 
     } catch (err) {

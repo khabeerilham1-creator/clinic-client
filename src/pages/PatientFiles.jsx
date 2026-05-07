@@ -23,7 +23,13 @@ function PatientFiles() {
   const loadFile = async (id) => {
     try {
       const res = await api.get(`/patient-files/${id}`);
-      setFile(res.data);
+      setFile({
+  patient: res.data.patient || {},
+  checkups: res.data.checkups || [],
+  visits: res.data.visits || [],
+  invoices: res.data.invoices || [],
+  timeline: res.data.timeline || []
+});
     } catch {
       setFile(null);
     }
