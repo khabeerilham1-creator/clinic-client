@@ -57,7 +57,7 @@ export default function Creditors() {
       {/* HEADER */}
       <div style={{ marginBottom: 20 }}>
         <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
-        <h1>Creditors 💳</h1>
+        <h1>ACCOUNT PAYABLE 💸</h1>
       </div>
 
       {/* FORM */}
