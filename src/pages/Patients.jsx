@@ -216,9 +216,21 @@ function Patients() {
 
     } catch (err) {
 
-      console.log("SAVE ERROR:", err.response?.data || err);
+      console.log(
+  JSON.stringify(
+    err.response?.data,
+    null,
+    2
+  )
+);
 
-      alert(err.response?.data?.detail || "Error ❌");
+      console.log(err.response?.data);
+
+if (typeof err.response?.data?.detail === "string") {
+  alert(err.response.data.detail);
+} else {
+  alert("Backend save error ❌");
+}
     }
   };
 
