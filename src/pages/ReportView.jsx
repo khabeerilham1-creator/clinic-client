@@ -34,20 +34,24 @@ export default function ReportView() {
   // =========================
   let primary = "#16a34a";
   let light = "#dcfce7";
+  let bg = "#f0fdf4";
 
   if (patient.colour_code === "yellow") {
     primary = "#ca8a04";
     light = "#fef9c3";
+    bg = "#fefce8";
   }
 
   if (patient.colour_code === "orange") {
     primary = "#ea580c";
     light = "#fed7aa";
+    bg = "#fff7ed";
   }
 
   if (patient.colour_code === "red") {
     primary = "#dc2626";
     light = "#fecaca";
+    bg = "#fef2f2";
   }
 
   const tasks =
@@ -56,7 +60,7 @@ export default function ReportView() {
   return (
 
     <div style={{
-      background: "#f3f4f6",
+      background: bg,
       minHeight: "100vh",
       padding: 20
     }}>
@@ -88,19 +92,19 @@ export default function ReportView() {
       {/* REPORT */}
       <div style={{
         background: "white",
-        maxWidth: 900,
+        maxWidth: 1100,
         margin: "auto",
-        borderRadius: 14,
+        borderRadius: 16,
         padding: 25,
-        boxShadow: "0 4px 10px rgba(0,0,0,0.08)"
+        boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
       }}>
 
         {/* HEADER */}
         <div style={{
           background: primary,
           color: "white",
-          padding: 20,
-          borderRadius: 10,
+          padding: 22,
+          borderRadius: 14,
           textAlign: "center",
           fontSize: 34,
           fontWeight: "bold"
@@ -108,12 +112,13 @@ export default function ReportView() {
           HDC Holistic Domain of Creativity
         </div>
 
-        {/* DATE */}
+        {/* TOP BAR */}
         <div style={{
           display: "flex",
           justifyContent: "space-between",
-          marginTop: 15,
-          marginBottom: 15
+          alignItems: "center",
+          marginTop: 20,
+          marginBottom: 20
         }}>
 
           <div>
@@ -123,9 +128,9 @@ export default function ReportView() {
           <div style={{
             background: primary,
             color: "white",
-            padding: "5px 14px",
+            padding: "6px 16px",
             borderRadius: 20,
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: "bold"
           }}>
             {(patient.colour_code || "green").toUpperCase()} CATEGORY
@@ -149,13 +154,16 @@ export default function ReportView() {
             <Info label="Gender" value={patient.gender} />
 
             <Info label="Mobile" value={patient.mobile_number} />
-            <Info label="Address" value={patient.address} />
+            <Info label="Emergency" value={patient.emergency_number} />
 
             <Info label="Occupation" value={patient.occupation} />
-            <Info label="Category" value={patient.category} />
+            <Info label="Address" value={patient.address} />
 
+            <Info label="Category" value={patient.category} />
             <Info label="Purpose" value={patient.purpose_of_visit} />
+
             <Info label="Fee Status" value={patient.consultation_fee_paid} />
+            <Info label="Referred By" value={patient.referred_by} />
 
           </Grid>
 
@@ -217,7 +225,7 @@ export default function ReportView() {
 
         </Section>
 
-        {/* INVOICES */}
+        {/* INVOICE */}
         <Section
           title="INVOICE SUMMARY"
           primary={primary}
@@ -254,12 +262,12 @@ export default function ReportView() {
 
           <div style={{
             textAlign: "center",
-            padding: 15
+            padding: 20
           }}>
             <img
               src="/teeth.png"
               style={{
-                width: 300
+                width: 350
               }}
             />
           </div>
@@ -285,21 +293,23 @@ function Section({
 
     <div style={{
       border: `2px solid ${primary}`,
-      borderRadius: 10,
-      marginTop: 20,
-      overflow: "hidden"
+      borderRadius: 12,
+      marginTop: 22,
+      overflow: "hidden",
+      background: "white"
     }}>
 
       <div style={{
         background: light,
         color: primary,
-        padding: 10,
-        fontWeight: "bold"
+        padding: 12,
+        fontWeight: "bold",
+        fontSize: 15
       }}>
         {title}
       </div>
 
-      <div style={{ padding: 10 }}>
+      <div style={{ padding: 14 }}>
         {children}
       </div>
 
@@ -313,7 +323,7 @@ function Grid({ children }) {
     <div style={{
       display: "grid",
       gridTemplateColumns: "repeat(2,1fr)",
-      gap: 10
+      gap: 14
     }}>
       {children}
     </div>
@@ -324,10 +334,24 @@ function Info({ label, value }) {
 
   return (
     <div style={{
-      borderBottom: "1px solid #eee",
-      paddingBottom: 6
+      border: "1px solid #e5e7eb",
+      borderRadius: 10,
+      padding: 10,
+      background: "#fafafa"
     }}>
-      <b>{label}:</b> {value || "N/A"}
+      <div style={{
+        fontSize: 12,
+        color: "#6b7280",
+        marginBottom: 5
+      }}>
+        {label}
+      </div>
+
+      <div style={{
+        fontWeight: "600"
+      }}>
+        {value || "N/A"}
+      </div>
     </div>
   );
 }
@@ -343,14 +367,18 @@ function Table({ headers, rows }) {
       <thead>
 
         <tr>
+
           {headers.map((h, i) => (
+
             <th
               key={i}
               style={th}
             >
               {h}
             </th>
+
           ))}
+
         </tr>
 
       </thead>
@@ -362,12 +390,14 @@ function Table({ headers, rows }) {
           <tr key={i}>
 
             {r.map((c, j) => (
+
               <td
                 key={j}
                 style={td}
               >
                 {c}
               </td>
+
             ))}
 
           </tr>
@@ -381,13 +411,14 @@ function Table({ headers, rows }) {
 }
 
 const th = {
-  border: "1px solid #ddd",
-  padding: 8,
-  background: "#f8fafc"
+  border: "1px solid #d1d5db",
+  padding: 10,
+  background: "#dcfce7",
+  fontWeight: "bold"
 };
 
 const td = {
-  border: "1px solid #ddd",
-  padding: 8,
+  border: "1px solid #d1d5db",
+  padding: 10,
   textAlign: "center"
 };
