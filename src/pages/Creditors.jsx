@@ -108,7 +108,7 @@ export default function Creditors() {
 
       {/* TABLE */}
       <div style={box}>
-        <h3>Creditors List</h3>
+        <h3>ACCOUNT PAYABLE LIST</h3>
 
         {data.length === 0 ? (
           <p>No records</p>

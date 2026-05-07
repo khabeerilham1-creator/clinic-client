@@ -108,7 +108,7 @@ export default function Debtors() {
 
       {/* TABLE */}
       <div style={box}>
-        <h3>Debtors List</h3>
+        <h3>ACCOUNT RECEIVABLE LIST</h3>
 
         {data.length === 0 ? (
           <p>No records</p>

@@ -31,8 +31,8 @@ export default function Dashboard() {
     { name: "Patient Files", path: "/patient-files", icon: "📁" },
     { name: "ACC", path: "/acc", icon: "📊" },
     { name: "HAI", path: "/hai", icon: "👨‍⚕️" },
-    { name: "Debtors", path: "/debtors", icon: "📉" },
-    { name: "Creditors", path: "/creditors", icon: "📈" },
+    { name: "<h1>ACCOUNT RECEIVABLE</h1>", path: "/<h1>ACCOUNT RECEIVABLE</h1>", icon: "📉" },
+    { name: "<h1>ACCOUNT PAYABLE</h1>", path: "/<h1>ACCOUNT PAYABLE</h1>", icon: "📈" },
     { name: "Bills", path: "/bills", icon: "💸" }
   ];
 
