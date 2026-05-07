@@ -50,8 +50,8 @@ export default function Layout({ children }) {
         </Section>
 
         <Section title="CONTROL">
-          <Nav icon="📉" text="Debtors" path="/debtors" current={location.pathname} />
-          <Nav icon="📈" text="Creditors" path="/creditors" current={location.pathname} />
+          <Nav icon="📉" text="ACCOUNT RECEIVABLE" path="/debtors" current={location.pathname} />
+          <Nav icon="📈" text="ACCOUNT PAYABLE" path="/creditors" current={location.pathname} />
           <Nav icon="💸" text="Bills" path="/bills" current={location.pathname} />
         </Section>
 
