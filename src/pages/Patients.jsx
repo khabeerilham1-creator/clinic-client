@@ -38,7 +38,7 @@ function Patients() {
 
     category: "",
 
-    colour_code: "green",
+    colour_code: "friends",
 
     purpose_of_visit: "",
 
@@ -203,7 +203,7 @@ function Patients() {
 
         category: "",
 
-        colour_code: "green",
+        colour_code: "friends",
 
         purpose_of_visit: "",
 
@@ -217,20 +217,14 @@ function Patients() {
     } catch (err) {
 
       console.log(
-  JSON.stringify(
-    err.response?.data,
-    null,
-    2
-  )
-);
+        JSON.stringify(
+          err.response?.data,
+          null,
+          2
+        )
+      );
 
-      console.log(err.response?.data);
-
-if (typeof err.response?.data?.detail === "string") {
-  alert(err.response.data.detail);
-} else {
-  alert("Backend save error ❌");
-}
+      alert("Backend save error ❌");
     }
   };
 
@@ -251,6 +245,42 @@ if (typeof err.response?.data?.detail === "string") {
 
       console.log("DELETE ERROR:", err.response?.data || err);
     }
+  };
+
+  // =========================
+  // GET COLOR
+  // =========================
+  const getPatientColor = (type) => {
+
+    if (type === "friends") return "#16a34a";
+
+    if (type === "relatives") return "#2563eb";
+
+    if (type === "neighbours") return "#ca8a04";
+
+    if (type === "non_affording") return "#ea580c";
+
+    if (type === "compassionate") return "#dc2626";
+
+    return "#16a34a";
+  };
+
+  // =========================
+  // GET LABEL
+  // =========================
+  const getPatientLabel = (type) => {
+
+    if (type === "friends") return "Friends";
+
+    if (type === "relatives") return "Relatives";
+
+    if (type === "neighbours") return "Neighbours";
+
+    if (type === "non_affording") return "Non Affording";
+
+    if (type === "compassionate") return "Compassionate";
+
+    return "General";
   };
 
   return (
@@ -282,7 +312,6 @@ if (typeof err.response?.data?.detail === "string") {
 
         <Grid>
 
-          {/* ENTRY DATE */}
           <div>
             <label style={label}>
               Entry Date
@@ -297,7 +326,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* REG */}
           <div>
             <label style={label}>
               Registration Number
@@ -311,7 +339,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* TITLE */}
           <div>
             <label style={label}>
               Title
@@ -330,7 +357,6 @@ if (typeof err.response?.data?.detail === "string") {
             </select>
           </div>
 
-          {/* NAME */}
           <div>
             <label style={label}>
               Patient Name
@@ -345,7 +371,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* BIRTH DATE */}
           <div>
             <label style={label}>
               Birth Date
@@ -360,7 +385,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* AGE */}
           <div>
             <label style={label}>
               Age (Auto Generated)
@@ -370,12 +394,10 @@ if (typeof err.response?.data?.detail === "string") {
               name="age"
               value={form.age}
               readOnly
-              placeholder="Age"
               style={input}
             />
           </div>
 
-          {/* OCCUPATION */}
           <div>
             <label style={label}>
               Occupation
@@ -390,7 +412,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* ADDRESS */}
           <div>
             <label style={label}>
               Address
@@ -405,7 +426,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* EMAIL */}
           <div>
             <label style={label}>
               Email
@@ -420,7 +440,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* PTCL */}
           <div>
             <label style={label}>
               PTCL Number
@@ -435,7 +454,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* MOBILE */}
           <div>
             <label style={label}>
               Mobile Number
@@ -450,7 +468,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* EMERGENCY */}
           <div>
             <label style={label}>
               Emergency Number
@@ -465,7 +482,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* REFERRED */}
           <div>
             <label style={label}>
               Referred By
@@ -480,7 +496,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* CATEGORY */}
           <div>
             <label style={label}>
               Category
@@ -495,10 +510,10 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* COLOUR CODE */}
+          {/* PATIENT TYPE */}
           <div>
             <label style={label}>
-              Colour Code
+              Patient Type
             </label>
 
             <select
@@ -507,25 +522,30 @@ if (typeof err.response?.data?.detail === "string") {
               onChange={handleChange}
               style={input}
             >
-              <option value="green">
-                🟢 Green (Regular Patient)
+
+              <option value="friends">
+                🟢 Friends
               </option>
 
-              <option value="yellow">
-                🟡 Yellow (Observation Required)
+              <option value="relatives">
+                🔵 Relatives
               </option>
 
-              <option value="orange">
-                🟠 Orange (Priority Case)
+              <option value="neighbours">
+                🟡 Neighbours
               </option>
 
-              <option value="red">
-                🔴 Red (Critical / Emergency)
+              <option value="non_affording">
+                🟠 Non Affording
               </option>
+
+              <option value="compassionate">
+                🔴 Compassionate
+              </option>
+
             </select>
           </div>
 
-          {/* PURPOSE */}
           <div>
             <label style={label}>
               Purpose of Visit
@@ -540,7 +560,6 @@ if (typeof err.response?.data?.detail === "string") {
             />
           </div>
 
-          {/* FEE */}
           <div>
             <label style={label}>
               Consultation Fee
@@ -564,7 +583,6 @@ if (typeof err.response?.data?.detail === "string") {
 
         </Grid>
 
-        {/* CONDITIONS */}
         <h3 style={{
           marginTop: 25,
           marginBottom: 10
@@ -580,7 +598,6 @@ if (typeof err.response?.data?.detail === "string") {
           placeholder="Conditions"
         />
 
-        {/* DENTAL */}
         <h3 style={{
           marginTop: 25,
           marginBottom: 10
@@ -603,7 +620,6 @@ if (typeof err.response?.data?.detail === "string") {
           </option>
         </select>
 
-        {/* SAVE */}
         <button
           onClick={savePatient}
           style={{
@@ -643,7 +659,7 @@ if (typeof err.response?.data?.detail === "string") {
               <th align="left">Reg No</th>
               <th align="left">Name</th>
               <th align="left">Mobile</th>
-              <th align="left">Category</th>
+              <th align="left">Patient Type</th>
               <th align="right">Actions</th>
             </tr>
 
@@ -670,13 +686,13 @@ if (typeof err.response?.data?.detail === "string") {
 
                 <td>
                   <span style={{
-                    background: p.colour_code || "green",
+                    background: getPatientColor(p.colour_code),
                     color: "white",
                     padding: "4px 10px",
                     borderRadius: 20,
                     fontSize: 12
                   }}>
-                    {p.category || "General"}
+                    {getPatientLabel(p.colour_code)}
                   </span>
                 </td>
 
