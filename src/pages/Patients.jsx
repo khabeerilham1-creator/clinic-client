@@ -134,103 +134,130 @@ function Patients() {
     });
   };
 
-  // =========================
-  // SAVE
-  // =========================
-  const savePatient = async () => {
+// =========================
+// SAVE
+// =========================
+const savePatient = async () => {
 
-    try {
+  try {
 
-      let res;
+    // 🔥 CHECK DUPLICATE PATIENT
+    const existingPatient = patients.find((p) => {
 
-      if (editId) {
+      const sameMobile =
+        p.mobile_number &&
+        form.mobile_number &&
+        p.mobile_number.trim() ===
+        form.mobile_number.trim();
 
-        res = await api.put(
-          "/patients/" + editId,
-          form
-        );
+      const sameNameDob =
+        p.name?.toLowerCase().trim() ===
+        form.name?.toLowerCase().trim()
+        &&
+        p.birth_date === form.birth_date;
 
-        alert("Updated ✅");
+      return sameMobile || sameNameDob;
+    });
 
-        setPatients(prev =>
-          prev.map(p =>
-            p._id === editId ? res.data : p
-          )
-        );
+    // 🔥 ALERT IF PATIENT EXISTS
+    if (existingPatient && !editId) {
 
-        setEditId(null);
+      alert("Patient already exists");
 
-      } else {
+      navigate("/timeline/" + existingPatient._id);
 
-        res = await api.post(
-          "/patients/",
-          form
-        );
+      return;
+    }
 
-        alert("Saved ✅");
+    let res;
 
-        setPatients(prev => [
-          res.data,
-          ...prev
-        ]);
-      }
+    if (editId) {
 
-      // RESET
-      setForm({
-        reg_no: String((patients.length || 0) + 1)
-          .padStart(5, "0"),
+      res = await api.put(
+        "/patients/" + editId,
+        form
+      );
 
-        date: new Date().toISOString().split("T")[0],
+      alert("Updated ✅");
 
-        title: "Mr.",
-
-        name: "",
-        birth_date: "",
-        age: "",
-
-        gender: "",
-
-        occupation: "",
-
-        address: "",
-
-        email: "",
-
-        ptcl_number: "",
-
-        mobile_number: "",
-
-        emergency_number: "",
-
-        referred_by: "",
-
-        category: "",
-
-        colour_code: "friends",
-
-        purpose_of_visit: "",
-
-        consultation_fee_paid: "No",
-
-        conditions: "",
-
-        complaints: "segmental"
-      });
-
-    } catch (err) {
-
-      console.log(
-        JSON.stringify(
-          err.response?.data,
-          null,
-          2
+      setPatients(prev =>
+        prev.map(p =>
+          p._id === editId ? res.data : p
         )
       );
 
-      alert("Backend save error ❌");
-    }
-  };
+      setEditId(null);
 
+    } else {
+
+      res = await api.post(
+        "/patients/",
+        form
+      );
+
+      alert("Saved ✅");
+
+      setPatients(prev => [
+        res.data,
+        ...prev
+      ]);
+    }
+
+    // RESET
+    setForm({
+      reg_no: String((patients.length || 0) + 1)
+        .padStart(5, "0"),
+
+      date: new Date().toISOString().split("T")[0],
+
+      title: "Mr.",
+
+      name: "",
+      birth_date: "",
+      age: "",
+
+      gender: "",
+
+      occupation: "",
+
+      address: "",
+
+      email: "",
+
+      ptcl_number: "",
+
+      mobile_number: "",
+
+      emergency_number: "",
+
+      referred_by: "",
+
+      category: "",
+
+      colour_code: "friends",
+
+      purpose_of_visit: "",
+
+      consultation_fee_paid: "No",
+
+      conditions: "",
+
+      complaints: "segmental"
+    });
+
+  } catch (err) {
+
+    console.log(
+      JSON.stringify(
+        err.response?.data,
+        null,
+        2
+      )
+    );
+
+    alert("Backend save error ❌");
+  }
+};
   // =========================
   // DELETE
   // =========================
