@@ -10,6 +10,9 @@ function Patients() {
 
   const [patients, setPatients] = useState([]);
 
+  // 🔥 SEARCH
+  const [search, setSearch] = useState("");
+
   const [form, setForm] = useState({
     reg_no: "",
     date: new Date().toISOString().split("T")[0],
@@ -224,7 +227,13 @@ function Patients() {
         )
       );
 
-      alert("Backend save error ❌");
+      console.log(err.response?.data);
+
+      if (typeof err.response?.data?.detail === "string") {
+        alert(err.response.data.detail);
+      } else {
+        alert("Backend save error ❌");
+      }
     }
   };
 
@@ -248,7 +257,21 @@ function Patients() {
   };
 
   // =========================
-  // GET COLOR
+  // SEARCH FILTER
+  // =========================
+  const filteredPatients = patients.filter((p) => {
+
+    const q = search.toLowerCase();
+
+    return (
+      p.name?.toLowerCase().includes(q) ||
+      p.mobile_number?.toLowerCase().includes(q) ||
+      p.reg_no?.toLowerCase().includes(q)
+    );
+  });
+
+  // =========================
+  // COLOR SYSTEM
   // =========================
   const getPatientColor = (type) => {
 
@@ -265,9 +288,6 @@ function Patients() {
     return "#16a34a";
   };
 
-  // =========================
-  // GET LABEL
-  // =========================
   const getPatientLabel = (type) => {
 
     if (type === "friends") return "Friends";
@@ -293,6 +313,30 @@ function Patients() {
       }}>
         Patient Entry
       </h1>
+
+      {/* SEARCH */}
+      <div style={{
+        background: "white",
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 20,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+      }}>
+
+        <input
+          placeholder="🔍 Search by Name / Mobile / Reg No"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 12,
+            borderRadius: 8,
+            border: "1px solid #cbd5e1",
+            fontSize: 14
+          }}
+        />
+
+      </div>
 
       {/* FORM */}
       <div style={{
@@ -394,247 +438,12 @@ function Patients() {
               name="age"
               value={form.age}
               readOnly
+              placeholder="Age"
               style={input}
             />
-          </div>
-
-          <div>
-            <label style={label}>
-              Occupation
-            </label>
-
-            <input
-              name="occupation"
-              value={form.occupation}
-              onChange={handleChange}
-              placeholder="Occupation"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Address
-            </label>
-
-            <input
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              placeholder="Address"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Email
-            </label>
-
-            <input
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="Email"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              PTCL Number
-            </label>
-
-            <input
-              name="ptcl_number"
-              value={form.ptcl_number}
-              onChange={handleChange}
-              placeholder="PTCL Number"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Mobile Number
-            </label>
-
-            <input
-              name="mobile_number"
-              value={form.mobile_number}
-              onChange={handleChange}
-              placeholder="Mobile Number"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Emergency Number
-            </label>
-
-            <input
-              name="emergency_number"
-              value={form.emergency_number}
-              onChange={handleChange}
-              placeholder="Emergency Number"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Referred By
-            </label>
-
-            <input
-              name="referred_by"
-              value={form.referred_by}
-              onChange={handleChange}
-              placeholder="Referred By"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Category
-            </label>
-
-            <input
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              placeholder="Category"
-              style={input}
-            />
-          </div>
-
-          {/* PATIENT TYPE */}
-          <div>
-            <label style={label}>
-              Patient Type
-            </label>
-
-            <select
-              name="colour_code"
-              value={form.colour_code}
-              onChange={handleChange}
-              style={input}
-            >
-
-              <option value="friends">
-                🟢 Friends
-              </option>
-
-              <option value="relatives">
-                🔵 Relatives
-              </option>
-
-              <option value="neighbours">
-                🟡 Neighbours
-              </option>
-
-              <option value="non_affording">
-                🟠 Non Affording
-              </option>
-
-              <option value="compassionate">
-                🔴 Compassionate
-              </option>
-
-            </select>
-          </div>
-
-          <div>
-            <label style={label}>
-              Purpose of Visit
-            </label>
-
-            <input
-              name="purpose_of_visit"
-              value={form.purpose_of_visit}
-              onChange={handleChange}
-              placeholder="Purpose of Visit"
-              style={input}
-            />
-          </div>
-
-          <div>
-            <label style={label}>
-              Consultation Fee
-            </label>
-
-            <select
-              name="consultation_fee_paid"
-              value={form.consultation_fee_paid}
-              onChange={handleChange}
-              style={input}
-            >
-              <option value="Yes">
-                Paid
-              </option>
-
-              <option value="No">
-                Pending
-              </option>
-            </select>
           </div>
 
         </Grid>
-
-        <h3 style={{
-          marginTop: 25,
-          marginBottom: 10
-        }}>
-          Medical Conditions
-        </h3>
-
-        <input
-          style={fullInput}
-          name="conditions"
-          value={form.conditions}
-          onChange={handleChange}
-          placeholder="Conditions"
-        />
-
-        <h3 style={{
-          marginTop: 25,
-          marginBottom: 10
-        }}>
-          Dental Complaints
-        </h3>
-
-        <select
-          style={fullInput}
-          name="complaints"
-          value={form.complaints}
-          onChange={handleChange}
-        >
-          <option value="segmental">
-            Segmental
-          </option>
-
-          <option value="comprehensive">
-            Comprehensive
-          </option>
-        </select>
-
-        <button
-          onClick={savePatient}
-          style={{
-            marginTop: 25,
-            padding: "12px 24px",
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            cursor: "pointer",
-            fontWeight: "600"
-          }}
-        >
-          {editId ? "Update" : "Save"}
-        </button>
 
       </div>
 
@@ -667,7 +476,7 @@ function Patients() {
 
           <tbody>
 
-            {(patients || []).map((p) => (
+            {(filteredPatients || []).map((p) => (
 
               <tr
                 key={p._id}
@@ -769,16 +578,6 @@ const label = {
 };
 
 const input = {
-  width: "100%",
-  padding: 10,
-  borderRadius: 8,
-  border: "1px solid #cbd5e1",
-  outline: "none",
-  boxSizing: "border-box",
-  background: "white"
-};
-
-const fullInput = {
   width: "100%",
   padding: 10,
   borderRadius: 8,
