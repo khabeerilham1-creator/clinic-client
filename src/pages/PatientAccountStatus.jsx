@@ -11,6 +11,8 @@ function PatientAccountStatus() {
 
   const [records, setRecords] = useState([]);
 
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
 
     loadData();
@@ -28,83 +30,264 @@ function PatientAccountStatus() {
     );
   };
 
+  const filtered = records.filter(r =>
+
+    r.patient_name
+      ?.toLowerCase()
+      .includes(
+        search.toLowerCase()
+      )
+  );
+
   return (
 
     <Layout>
 
-      <h1 style={{
-        marginBottom: 20
-      }}>
-        Patient Account Status 💳
-      </h1>
-
+      {/* HEADER */}
       <div style={{
-        display: "grid",
-        gap: 20
+        marginBottom: 25
       }}>
 
-        {records.map((r, i) => (
+        <h1 style={{
+          marginBottom: 5
+        }}>
+          Patient Account Status 💳
+        </h1>
 
-          <div
-            key={i}
-            style={{
-              background: "white",
-              padding: 20,
-              borderRadius: 12,
-              boxShadow:
-                "0 2px 6px rgba(0,0,0,0.05)"
-            }}
-          >
+        <p style={{
+          color: "#64748b"
+        }}>
+          Professional Financial Ledger
+        </p>
 
-            <h2>
-              {r.patient_name}
-            </h2>
+      </div>
 
-            <div style={{
-              marginTop: 15,
-              lineHeight: 2
+      {/* SEARCH */}
+      <div style={{
+        background: "white",
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 20,
+        boxShadow:
+          "0 2px 6px rgba(0,0,0,0.05)"
+      }}>
+
+        <input
+          placeholder="Search Patient..."
+          value={search}
+          onChange={(e)=>
+            setSearch(
+              e.target.value
+            )
+          }
+          style={{
+            width: "100%",
+            padding: 12,
+            borderRadius: 8,
+            border:
+              "1px solid #cbd5e1",
+            outline: "none"
+          }}
+        />
+
+      </div>
+
+      {/* TABLE */}
+      <div style={{
+        background: "white",
+        borderRadius: 14,
+        overflow: "hidden",
+        boxShadow:
+          "0 4px 12px rgba(0,0,0,0.05)"
+      }}>
+
+        <table style={{
+          width: "100%",
+          borderCollapse: "collapse"
+        }}>
+
+          <thead>
+
+            <tr style={{
+              background: "#0f172a",
+              color: "white"
             }}>
 
-              <div>
-                <b>Total:</b>
-                {" "}Rs {r.total}
-              </div>
+              <th style={th}>
+                Date
+              </th>
 
-              <div>
-                <b>Paid:</b>
-                {" "}Rs {r.paid}
-              </div>
+              <th style={th}>
+                Patient
+              </th>
 
-              <div>
-                <b>Balance:</b>
-                {" "}Rs {r.balance}
-              </div>
+              <th style={th}>
+                Total
+              </th>
 
-              <div>
-                <b>Discount:</b>
-                {" "}Rs {r.discount}
-              </div>
+              <th style={th}>
+                Discount
+              </th>
 
-              <div>
-                <b>Doctor Share:</b>
-                {" "}Rs {r.doctor_share}
-              </div>
+              <th style={th}>
+                Lab Charges
+              </th>
 
-              <div>
-                <b>Owner Profit:</b>
-                {" "}Rs {r.owner_profit}
-              </div>
+              <th style={th}>
+                Paid
+              </th>
 
-            </div>
+              <th style={th}>
+                Balance
+              </th>
 
-          </div>
+              <th style={th}>
+                Doctor Share
+              </th>
 
-        ))}
+              <th style={th}>
+                Owner Profit
+              </th>
+
+              <th style={th}>
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {filtered.map((r, i) => {
+
+              const balance =
+                Number(r.balance || 0);
+
+              return (
+
+                <tr
+                  key={i}
+                  style={{
+                    borderBottom:
+                      "1px solid #e2e8f0"
+                  }}
+                >
+
+                  <td style={td}>
+                    {
+                      new Date()
+                      .toLocaleDateString()
+                    }
+                  </td>
+
+                  <td style={tdBold}>
+                    {r.patient_name}
+                  </td>
+
+                  <td style={td}>
+                    Rs {r.total}
+                  </td>
+
+                  <td style={td}>
+                    Rs {r.discount || 0}
+                  </td>
+
+                  <td style={td}>
+                    Rs {r.lab_charge || 0}
+                  </td>
+
+                  <td style={td}>
+                    Rs {r.paid}
+                  </td>
+
+                  <td style={{
+                    ...td,
+                    color:
+                      balance > 0
+                        ? "#dc2626"
+                        : "#16a34a",
+                    fontWeight: "bold"
+                  }}>
+                    Rs {balance}
+                  </td>
+
+                  <td style={td}>
+                    Rs {r.doctor_share}
+                  </td>
+
+                  <td style={td}>
+                    Rs {r.owner_profit}
+                  </td>
+
+                  <td style={td}>
+
+                    <span style={{
+                      background:
+                        balance > 0
+                          ? "#fee2e2"
+                          : "#dcfce7",
+
+                      color:
+                        balance > 0
+                          ? "#dc2626"
+                          : "#16a34a",
+
+                      padding:
+                        "5px 12px",
+
+                      borderRadius: 20,
+
+                      fontSize: 12,
+
+                      fontWeight: "600"
+                    }}>
+
+                      {balance > 0
+                        ? "Pending"
+                        : "Paid"}
+
+                    </span>
+
+                  </td>
+
+                </tr>
+              );
+            })}
+
+          </tbody>
+
+        </table>
 
       </div>
 
     </Layout>
   );
 }
+
+const th = {
+
+  padding: 14,
+
+  textAlign: "left",
+
+  fontSize: 13
+};
+
+const td = {
+
+  padding: 14,
+
+  fontSize: 14
+};
+
+const tdBold = {
+
+  padding: 14,
+
+  fontWeight: "600",
+
+  fontSize: 14
+};
 
 export default PatientAccountStatus;
