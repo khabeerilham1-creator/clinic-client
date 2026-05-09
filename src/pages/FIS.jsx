@@ -41,19 +41,37 @@ function FIS() {
   };
 
   const handleRowChange = (index, field, value) => {
+
     const updated = [...rows];
+
     updated[index][field] = value;
+
     setRows(updated);
+
     calculate(updated);
   };
 
   const addRow = () => {
-    setRows([...rows, { treatment: "", doctor: "", qty: "", rate: "" }]);
+
+    setRows([
+      ...rows,
+      {
+        treatment: "",
+        doctor: "",
+        qty: "",
+        rate: ""
+      }
+    ]);
   };
 
   const removeRow = (i) => {
-    const updated = rows.filter((_, idx) => idx !== i);
+
+    const updated = rows.filter(
+      (_, idx) => idx !== i
+    );
+
     setRows(updated);
+
     calculate(updated);
   };
 
@@ -62,73 +80,106 @@ function FIS() {
     let t = 0;
 
     data.forEach(r => {
+
       const rate = Number(r.rate) || 0;
+
       t += rate;
     });
 
     const disc = Number(discount) || 0;
+
     const f = t - disc;
 
     setTotal(t);
+
     setFinal(f);
 
     const lab = Number(labCharge) || 0;
+
     const doc = (f - lab) * 0.25;
 
     setDoctorShare(doc);
+
     setOwner(f - doc - lab);
   };
 
   useEffect(() => {
+
     calculate();
+
   }, [discount, labCharge]);
 
   const save = async () => {
+
     try {
 
-      if (!patient) return alert("Select patient ❗");
+      if (!patient)
+        return alert("Select patient ❗");
 
       const payload = {
 
-  patient_name: patient,
+        patient_name: patient,
 
-  procedure: rows.map(r => ({
-    treatment: r.treatment,
-    doctor: r.doctor,
-    qty: r.qty,
-    rate: r.rate
-  })),
+        rows: rows.map(r => ({
 
-  doctor: rows.map(
-    r => r.doctor
-  ).join(", "),
+          treatment: r.treatment,
 
-  amount: Number(final) || 0,
+          doctor: r.doctor,
 
-  lab_charge:
-    Number(labCharge) || 0
-};
+          qty: r.qty,
 
-      await api.post("/fis/billing", payload);
+          rate: r.rate
+
+        })),
+
+        amount:
+          Number(final) || 0,
+
+        lab_charge:
+          Number(labCharge) || 0
+      };
+
+      await api.post(
+        "/fis/billing",
+        payload
+      );
 
       alert("Saved ✅");
 
-      setRows([{ treatment: "", doctor: "", qty: "", rate: "" }]);
+      setRows([
+        {
+          treatment: "",
+          doctor: "",
+          qty: "",
+          rate: ""
+        }
+      ]);
+
       setLabCharge("");
+
       setDiscount("");
+
       setPatient("");
 
       loadData();
 
     } catch (err) {
+
       console.log(err);
+
       alert("Error ❌");
     }
   };
 
   const deleteRecord = async (id) => {
-    if (!window.confirm("Delete?")) return;
-    await api.delete("/fis/billing/" + id);
+
+    if (!window.confirm("Delete?"))
+      return;
+
+    await api.delete(
+      "/fis/billing/" + id
+    );
+
     loadData();
   };
 
@@ -136,7 +187,11 @@ function FIS() {
 
     <Layout>
 
-      <h1 style={{ marginBottom: 20 }}>FIS — Financial System</h1>
+      <h1 style={{
+        marginBottom: 20
+      }}>
+        FIS — Financial System
+      </h1>
 
       {/* PATIENT */}
       <div style={{
@@ -145,16 +200,34 @@ function FIS() {
         borderRadius: 10,
         marginBottom: 20
       }}>
+
         <select
-          onChange={(e) => setPatient(e.target.value)}
+          onChange={(e)=>
+            setPatient(e.target.value)
+          }
           value={patient}
-          style={{ padding: 8 }}
+          style={{
+            padding: 8
+          }}
         >
-          <option value="">Select Patient</option>
+
+          <option value="">
+            Select Patient
+          </option>
+
           {patients.map(p => (
-            <option key={p._id} value={p.name}>{p.name}</option>
+
+            <option
+              key={p._id}
+              value={p.name}
+            >
+              {p.name}
+            </option>
+
           ))}
+
         </select>
+
       </div>
 
       {/* TABLE */}
@@ -165,8 +238,12 @@ function FIS() {
         marginBottom: 20
       }}>
 
-        <table style={{ width: "100%" }}>
+        <table style={{
+          width: "100%"
+        }}>
+
           <thead>
+
             <tr>
               <th>Treatment</th>
               <th>Doctor</th>
@@ -174,22 +251,91 @@ function FIS() {
               <th>Rate</th>
               <th></th>
             </tr>
+
           </thead>
 
           <tbody>
+
             {rows.map((r, i) => (
+
               <tr key={i}>
-                <td><input value={r.treatment} onChange={(e) => handleRowChange(i, "treatment", e.target.value)} /></td>
-                <td><input value={r.doctor} onChange={(e) => handleRowChange(i, "doctor", e.target.value)} /></td>
-                <td><input value={r.qty} onChange={(e) => handleRowChange(i, "qty", e.target.value)} /></td>
-                <td><input value={r.rate} onChange={(e) => handleRowChange(i, "rate", e.target.value)} /></td>
-                <td><button onClick={() => removeRow(i)}>X</button></td>
+
+                <td>
+                  <input
+                    value={r.treatment}
+                    onChange={(e)=>
+                      handleRowChange(
+                        i,
+                        "treatment",
+                        e.target.value
+                      )
+                    }
+                  />
+                </td>
+
+                <td>
+                  <input
+                    value={r.doctor}
+                    onChange={(e)=>
+                      handleRowChange(
+                        i,
+                        "doctor",
+                        e.target.value
+                      )
+                    }
+                  />
+                </td>
+
+                <td>
+                  <input
+                    value={r.qty}
+                    onChange={(e)=>
+                      handleRowChange(
+                        i,
+                        "qty",
+                        e.target.value
+                      )
+                    }
+                  />
+                </td>
+
+                <td>
+                  <input
+                    value={r.rate}
+                    onChange={(e)=>
+                      handleRowChange(
+                        i,
+                        "rate",
+                        e.target.value
+                      )
+                    }
+                  />
+                </td>
+
+                <td>
+                  <button
+                    onClick={() =>
+                      removeRow(i)
+                    }
+                  >
+                    X
+                  </button>
+                </td>
+
               </tr>
+
             ))}
+
           </tbody>
+
         </table>
 
-        <button onClick={addRow} style={{ marginTop: 10 }}>
+        <button
+          onClick={addRow}
+          style={{
+            marginTop: 10
+          }}
+        >
           ➕ Add Row
         </button>
 
@@ -206,22 +352,49 @@ function FIS() {
         <input
           placeholder="Discount Amount"
           value={discount}
-          onChange={(e) => setDiscount(e.target.value)}
-          style={{ marginRight: 10 }}
+          onChange={(e)=>
+            setDiscount(e.target.value)
+          }
+          style={{
+            marginRight: 10
+          }}
         />
 
         <input
           placeholder="Lab Charges"
           value={labCharge}
-          onChange={(e) => setLabCharge(e.target.value)}
+          onChange={(e)=>
+            setLabCharge(e.target.value)
+          }
         />
 
-        <div style={{ marginTop: 20 }}>
-          <b>Total:</b> Rs {total} <br/>
-          <b>Discount:</b> Rs {discount || 0} <br/>
-          <b>Final:</b> Rs {final} <br/>
-          <b>Doctor Share:</b> Rs {doctorShare} <br/>
-          <b>Owner:</b> Rs {owner}
+        <div style={{
+          marginTop: 20
+        }}>
+
+          <b>Total:</b>
+          {" "}Rs {total}
+
+          <br/>
+
+          <b>Discount:</b>
+          {" "}Rs {discount || 0}
+
+          <br/>
+
+          <b>Final:</b>
+          {" "}Rs {final}
+
+          <br/>
+
+          <b>Doctor Share:</b>
+          {" "}Rs {doctorShare}
+
+          <br/>
+
+          <b>Owner:</b>
+          {" "}Rs {owner}
+
         </div>
 
         <button
@@ -250,17 +423,49 @@ function FIS() {
         <h2>Records</h2>
 
         {records.map(r => (
-          <div key={r._id} style={{
-            borderBottom: "1px solid #eee",
-            padding: 10
-          }}>
-            <b>{r.patient_name}</b><br/>
-            {r.procedure}<br/>
-            Amount: Rs {r.amount}
+
+          <div
+            key={r._id}
+            style={{
+              borderBottom:
+                "1px solid #eee",
+              padding: 10
+            }}
+          >
+
+            <b>
+              {r.patient_name}
+            </b>
 
             <br/>
-            <button onClick={() => deleteRecord(r._id)}>Delete</button>
+
+            {(r.rows || []).map(
+              (row, idx) => (
+                <div key={idx}>
+                  • {row.treatment}
+                  {" — "}
+                  Rs {row.rate}
+                </div>
+              )
+            )}
+
+            <br/>
+
+            Amount:
+            {" "}Rs {r.amount}
+
+            <br/>
+
+            <button
+              onClick={() =>
+                deleteRecord(r._id)
+              }
+            >
+              Delete
+            </button>
+
           </div>
+
         ))}
 
       </div>
