@@ -37,6 +37,9 @@ import Salary from "./pages/Salary";
 // 🔥 ACCOUNT STATUS
 import PatientAccountStatus from "./pages/PatientAccountStatus";
 
+// 🌍 CITY PATIENTS
+import CityPatients from "./pages/CityPatients";
+
 // 🔥 PERMISSIONS
 import Permissions from "./pages/Permissions";
 
@@ -122,6 +125,12 @@ export default function App() {
         <Route
           path="/patient-account-status"
           element={<PatientAccountStatus />}
+        />
+
+        {/* 🌍 CITY PATIENTS */}
+        <Route
+          path="/city-patients"
+          element={<CityPatients />}
         />
 
         {/* REPORTS */}

@@ -1,6 +1,12 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useLocation
+} from "react-router-dom";
 
-export default function Layout({ children }) {
+export default function Layout({
+  children
+}) {
 
   const navigate = useNavigate();
 
@@ -26,7 +32,8 @@ export default function Layout({ children }) {
         top: 0,
         height: "100vh",
         overflowY: "auto",
-        borderRight: "1px solid #1e293b"
+        borderRight:
+          "1px solid #1e293b"
       }}>
 
         {/* LOGO */}
@@ -207,6 +214,13 @@ export default function Layout({ children }) {
           />
 
           <Nav
+            icon="🌍"
+            text="City Patients"
+            path="/city-patients"
+            current={location.pathname}
+          />
+
+          <Nav
             icon="🔐"
             text="Permissions"
             path="/permissions"
@@ -252,10 +266,12 @@ export default function Layout({ children }) {
         <div style={{
           background: "white",
           padding: "16px 24px",
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom:
+            "1px solid #e5e7eb",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between"
+          justifyContent:
+            "space-between"
         }}>
 
           <h3 style={{
@@ -288,7 +304,10 @@ export default function Layout({ children }) {
 SECTION
 ========================= */
 
-function Section({ title, children }) {
+function Section({
+  title,
+  children
+}) {
 
   return (
 
@@ -323,7 +342,8 @@ function Nav({
   current
 }) {
 
-  const active = current.startsWith(path);
+  const active =
+    current.startsWith(path);
 
   return (
 
@@ -345,7 +365,8 @@ function Nav({
         textDecoration: "none",
         fontSize: 14,
         transition: "0.2s",
-        fontWeight: active ? "600" : "400"
+        fontWeight:
+          active ? "600" : "400"
       }}
     >
 

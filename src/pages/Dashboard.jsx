@@ -1,25 +1,45 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import {
+  Link,
+  useNavigate
+} from "react-router-dom";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
 import api from "../api";
+
 import Layout from "../components/Layout";
 
 export default function Dashboard() {
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [stats, setStats] = useState({});
+  const [stats, setStats] =
+    useState({});
 
   useEffect(() => {
 
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem(
+        "token"
+      );
 
     if (!token) {
+
       navigate("/");
+
     }
 
     api.get("/dashboard/")
-      .then(res => setStats(res.data))
-      .catch(() => setStats({}));
+      .then(res =>
+        setStats(res.data)
+      )
+      .catch(() =>
+        setStats({})
+      );
 
   }, [navigate]);
 
@@ -86,9 +106,24 @@ export default function Dashboard() {
     },
 
     {
-      name: "Patient Account Status",
-      path: "/patient-account-status",
+      name:
+        "Patient Account Status",
+
+      path:
+        "/patient-account-status",
+
       icon: "💳"
+    },
+
+    // 🌍 CITY PATIENTS
+    {
+      name:
+        "City Patients",
+
+      path:
+        "/city-patients",
+
+      icon: "🌍"
     },
 
     // INTELLIGENCE
@@ -106,14 +141,21 @@ export default function Dashboard() {
 
     // CONTROL
     {
-      name: "ACCOUNT RECEIVABLE",
+      name:
+        "ACCOUNT RECEIVABLE",
+
       path: "/debtors",
+
       icon: "📉"
     },
 
     {
-      name: "ACCOUNT PAYABLE",
-      path: "/creditors",
+      name:
+        "ACCOUNT PAYABLE",
+
+      path:
+        "/creditors",
+
       icon: "📈"
     },
 
@@ -131,14 +173,22 @@ export default function Dashboard() {
     },
 
     {
-      name: "Patient Files",
-      path: "/patient-files",
+      name:
+        "Patient Files",
+
+      path:
+        "/patient-files",
+
       icon: "📁"
     },
 
     {
-      name: "Permissions",
-      path: "/permissions",
+      name:
+        "Permissions",
+
+      path:
+        "/permissions",
+
       icon: "🔐"
     }
 
@@ -207,10 +257,15 @@ export default function Dashboard() {
       <div style={{
         background:
           "linear-gradient(135deg, #06b6d4, #2563eb)",
+
         color: "white",
+
         padding: 25,
+
         borderRadius: 16,
+
         marginBottom: 30,
+
         boxShadow:
           "0 10px 25px rgba(0,0,0,0.15)"
       }}>
@@ -243,6 +298,7 @@ export default function Dashboard() {
         display: "grid",
         gridTemplateColumns:
           "repeat(auto-fill, minmax(180px,1fr))",
+
         gap: 20
       }}>
 
@@ -259,33 +315,38 @@ export default function Dashboard() {
             <div
               style={{
                 background: "white",
+
                 padding: 20,
+
                 borderRadius: 14,
+
                 textAlign: "center",
-                transition: "all 0.25s ease",
+
+                transition:
+                  "all 0.25s ease",
+
                 boxShadow:
                   "0 2px 8px rgba(0,0,0,0.05)",
+
                 cursor: "pointer"
               }}
 
-              onMouseEnter={(e) => {
+              onMouseEnter={(e)=>{
 
                 e.currentTarget.style.transform =
                   "translateY(-5px)";
 
                 e.currentTarget.style.boxShadow =
                   "0 10px 20px rgba(0,0,0,0.1)";
-
               }}
 
-              onMouseLeave={(e) => {
+              onMouseLeave={(e)=>{
 
                 e.currentTarget.style.transform =
                   "translateY(0)";
 
                 e.currentTarget.style.boxShadow =
                   "0 2px 8px rgba(0,0,0,0.05)";
-
               }}
             >
 
@@ -325,9 +386,14 @@ function KPI({
 
     <div style={{
       background: "white",
+
       padding: 20,
+
       borderRadius: 14,
-      borderLeft: `6px solid ${color}`,
+
+      borderLeft:
+        `6px solid ${color}`,
+
       boxShadow:
         "0 4px 10px rgba(0,0,0,0.05)"
     }}>
