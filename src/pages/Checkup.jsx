@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 
-// 🔥 ADDED
 import Layout from "../components/Layout";
 
 const conditionsMap = {
@@ -43,22 +42,31 @@ function Checkup() {
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
+
     loadPatients();
+
     loadCheckups();
+
   }, []);
 
   const loadPatients = async () => {
+
     const res = await api.get("/patients/");
+
     setPatients(res.data);
   };
 
   const loadCheckups = async () => {
+
     const res = await api.get("/checkups/");
+
     setCheckups(res.data);
   };
 
   const selectTooth = (tooth) => {
+
     if (!tasks.find(t => t.tooth === tooth)) {
+
       setTasks([
         ...tasks,
         {
@@ -71,29 +79,37 @@ function Checkup() {
   };
 
   const removeTooth = (index) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+
+    setTasks(
+      tasks.filter((_, i) => i !== index)
+    );
   };
 
-  // 🔥 CONDITION UPDATE
-  const updateCondition = (index, condition) => {
+  const updateCondition = (
+    index,
+    condition
+  ) => {
 
     const updated = [...tasks];
 
-    updated[index].condition = condition;
+    updated[index].condition =
+      condition;
 
-    // 🔥 AUTO SUGGEST TREATMENT
     updated[index].treatment =
       conditionsMap[condition] || "";
 
     setTasks(updated);
   };
 
-  // 🔥 MANUAL TREATMENT UPDATE
-  const updateTreatment = (index, treatment) => {
+  const updateTreatment = (
+    index,
+    treatment
+  ) => {
 
     const updated = [...tasks];
 
-    updated[index].treatment = treatment;
+    updated[index].treatment =
+      treatment;
 
     setTasks(updated);
   };
@@ -101,15 +117,23 @@ function Checkup() {
   const saveCheckup = async () => {
 
     if (!patientId)
-      return alert("Select patient ❗");
+      return alert(
+        "Select patient ❗"
+      );
 
     if (!tasks.length)
-      return alert("Select at least one tooth ❗");
+      return alert(
+        "Select at least one tooth ❗"
+      );
 
     const payload = {
+
       patient: patientId,
+
       patient_id: patientId,
+
       complaint,
+
       tasks
     };
 
@@ -133,7 +157,9 @@ function Checkup() {
     alert("Saved ✅");
 
     setTasks([]);
+
     setComplaint("");
+
     setPatientId("");
 
     loadCheckups();
@@ -155,9 +181,36 @@ function Checkup() {
     if (!window.confirm("Delete?"))
       return;
 
-    await api.delete("/checkups/" + id);
+    await api.delete(
+      "/checkups/" + id
+    );
 
     loadCheckups();
+  };
+
+  const completePatient = async (
+    patientId
+  ) => {
+
+    try {
+
+      await api.post(
+        "/completed-cases/manual",
+        {
+          patient_id: patientId
+        }
+      );
+
+      alert(
+        "Patient marked completed ✅"
+      );
+
+    } catch (err) {
+
+      alert(
+        "Failed to complete patient ❌"
+      );
+    }
   };
 
   const getPatientName = (id) => {
@@ -166,7 +219,9 @@ function Checkup() {
       p => p._id === id
     );
 
-    return p ? p.name : "Unknown";
+    return p
+      ? p.name
+      : "Unknown";
   };
 
   return (
@@ -194,38 +249,50 @@ function Checkup() {
           <select
             value={patientId}
             onChange={(e)=>
-              setPatientId(e.target.value)
+              setPatientId(
+                e.target.value
+              )
             }
           >
+
             <option value="">
               Select Patient
             </option>
 
             {patients.map(p => (
+
               <option
                 key={p._id}
                 value={p._id}
               >
                 {p.name}
               </option>
+
             ))}
+
           </select>
 
           <select
             value={complaint}
             onChange={(e)=>
-              setComplaint(e.target.value)
+              setComplaint(
+                e.target.value
+              )
             }
           >
+
             <option value="">
               Chief Complaint
             </option>
 
             {complaintsList.map(c => (
+
               <option key={c}>
                 {c}
               </option>
+
             ))}
+
           </select>
 
         </Grid>
@@ -234,7 +301,9 @@ function Checkup() {
           placeholder="Write detailed complaint..."
           value={complaint}
           onChange={(e)=>
-            setComplaint(e.target.value)
+            setComplaint(
+              e.target.value
+            )
           }
           style={{
             width: "100%",
@@ -255,7 +324,9 @@ function Checkup() {
           "0 2px 6px rgba(0,0,0,0.05)"
       }}>
 
-        <h3>Dental Chart</h3>
+        <h3>
+          Dental Chart
+        </h3>
 
         <div style={{
           position: "relative",
@@ -264,10 +335,13 @@ function Checkup() {
 
           <img
             src="/teeth.png"
-            style={{ width: "700px" }}
+            style={{
+              width: "700px"
+            }}
           />
 
           {[...Array(16)].map((_, i) => (
+
             <div
               key={i}
               onClick={() =>
@@ -276,21 +350,25 @@ function Checkup() {
               style={{
                 position: "absolute",
                 top: "20px",
-                left: `${30 + i * 40}px`,
+                left:
+                  `${30 + i * 40}px`,
                 width: "30px",
                 height: "60px",
                 cursor: "pointer",
                 background:
                   tasks.find(
-                    t => t.tooth === i + 1
+                    t =>
+                      t.tooth === i + 1
                   )
                     ? "#22c55e88"
                     : "transparent"
               }}
             />
+
           ))}
 
           {[...Array(16)].map((_, i) => (
+
             <div
               key={i + 16}
               onClick={() =>
@@ -299,25 +377,28 @@ function Checkup() {
               style={{
                 position: "absolute",
                 top: "140px",
-                left: `${30 + i * 40}px`,
+                left:
+                  `${30 + i * 40}px`,
                 width: "30px",
                 height: "60px",
                 cursor: "pointer",
                 background:
                   tasks.find(
-                    t => t.tooth === 32 - i
+                    t =>
+                      t.tooth === 32 - i
                   )
                     ? "#22c55e88"
                     : "transparent"
               }}
             />
+
           ))}
 
         </div>
 
       </div>
 
-      {/* SELECTED TEETH */}
+      {/* SELECTED */}
       <div style={{
         background: "white",
         padding: 20,
@@ -325,7 +406,9 @@ function Checkup() {
         marginBottom: 20
       }}>
 
-        <h3>Selected Teeth</h3>
+        <h3>
+          Selected Teeth
+        </h3>
 
         {tasks.map((t, i) => (
 
@@ -334,7 +417,8 @@ function Checkup() {
             style={{
               marginBottom: 15,
               paddingBottom: 10,
-              borderBottom: "1px solid #eee"
+              borderBottom:
+                "1px solid #eee"
             }}
           >
 
@@ -342,8 +426,9 @@ function Checkup() {
               Tooth {t.tooth}
             </strong>
 
-            {/* CONDITION */}
-            <div style={{ marginTop: 10 }}>
+            <div style={{
+              marginTop: 10
+            }}>
 
               <select
                 value={t.condition}
@@ -358,6 +443,7 @@ function Checkup() {
                   marginRight: 10
                 }}
               >
+
                 <option value="">
                   Select Condition
                 </option>
@@ -365,16 +451,18 @@ function Checkup() {
                 {Object.keys(
                   conditionsMap
                 ).map(c => (
+
                   <option key={c}>
                     {c}
                   </option>
+
                 ))}
+
               </select>
 
-              {/* 🔥 MANUAL CONDITION */}
               <input
                 type="text"
-                placeholder="Or write condition manually"
+                placeholder="Manual condition"
                 value={t.condition}
                 onChange={(e)=>
                   updateCondition(
@@ -390,8 +478,9 @@ function Checkup() {
 
             </div>
 
-            {/* TREATMENT */}
-            <div style={{ marginTop: 10 }}>
+            <div style={{
+              marginTop: 10
+            }}>
 
               <input
                 value={t.treatment}
@@ -401,7 +490,7 @@ function Checkup() {
                     e.target.value
                   )
                 }
-                placeholder="Suggested / Manual Treatment"
+                placeholder="Treatment"
                 style={{
                   padding: 8,
                   width: "300px"
@@ -441,7 +530,9 @@ function Checkup() {
             borderRadius: 6
           }}
         >
-          {editId ? "Update" : "Save"}
+          {editId
+            ? "Update"
+            : "Save"}
         </button>
 
       </div>
@@ -453,7 +544,9 @@ function Checkup() {
         borderRadius: 10
       }}>
 
-        <h2>Checkup List</h2>
+        <h2>
+          Checkup List
+        </h2>
 
         {checkups.map(c => (
 
@@ -467,25 +560,41 @@ function Checkup() {
           >
 
             <h3>
-              {getPatientName(c.patient)}
+              {
+                getPatientName(
+                  c.patient
+                )
+              }
             </h3>
 
             <p>
+
               <strong>
                 Complaint:
               </strong>
+
               {" "}
+
               {c.complaint}
+
             </p>
 
             {c.tasks?.map((t, i) => (
+
               <p key={i}>
+
                 Tooth {t.tooth}
+
                 {" — "}
+
                 {t.condition}
+
                 {" → "}
+
                 {t.treatment}
+
               </p>
+
             ))}
 
             <button
@@ -494,6 +603,24 @@ function Checkup() {
               }
             >
               Edit
+            </button>
+
+            <button
+              onClick={() =>
+                completePatient(
+                  c.patient
+                )
+              }
+              style={{
+                marginLeft: 10,
+                background: "#16a34a",
+                color: "white",
+                border: "none",
+                padding: "6px 12px",
+                borderRadius: 6
+              }}
+            >
+              Complete
             </button>
 
             <button
@@ -517,17 +644,21 @@ function Checkup() {
   );
 }
 
-/* GRID */
-function Grid({ children }) {
+function Grid({
+  children
+}) {
 
   return (
+
     <div style={{
       display: "grid",
       gridTemplateColumns:
         "repeat(2,1fr)",
       gap: 10
     }}>
+
       {children}
+
     </div>
   );
 }

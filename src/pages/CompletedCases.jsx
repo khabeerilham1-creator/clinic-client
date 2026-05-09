@@ -3,11 +3,18 @@ import {
   useState
 } from "react";
 
+import {
+  useNavigate
+} from "react-router-dom";
+
 import api from "../api";
 
 import Layout from "../components/Layout";
 
 export default function CompletedCases() {
+
+  const navigate =
+    useNavigate();
 
   const [data, setData] =
     useState([]);
@@ -28,6 +35,23 @@ export default function CompletedCases() {
     );
 
     setData(res.data || []);
+  };
+
+  const reopenCase = async (
+    id
+  ) => {
+
+    if (
+      !window.confirm(
+        "Reopen this case?"
+      )
+    ) return;
+
+    await api.delete(
+      "/completed-cases/" + id
+    );
+
+    loadData();
   };
 
   const filtered = data.filter(
@@ -69,6 +93,24 @@ export default function CompletedCases() {
       }}>
         Completed Cases
       </h1>
+
+      <button
+        onClick={() =>
+          navigate("/patients")
+        }
+        style={{
+          marginBottom: 20,
+          background: "#2563eb",
+          color: "white",
+          border: "none",
+          padding: "12px 18px",
+          borderRadius: 8,
+          cursor: "pointer",
+          fontWeight: "600"
+        }}
+      >
+        + Complete Patient Manually
+      </button>
 
       {/* SEARCH */}
       <div style={{
@@ -129,11 +171,27 @@ export default function CompletedCases() {
               </th>
 
               <th align="left">
+                Paid
+              </th>
+
+              <th align="left">
+                Balance
+              </th>
+
+              <th align="left">
                 Lab
               </th>
 
               <th align="left">
+                Mode
+              </th>
+
+              <th align="left">
                 Status
+              </th>
+
+              <th align="left">
+                Action
               </th>
 
             </tr>
@@ -178,8 +236,51 @@ export default function CompletedCases() {
 
                 <td>
                   Rs {
+                    item.paid
+                  }
+                </td>
+
+                <td>
+                  Rs {
+                    item.balance
+                  }
+                </td>
+
+                <td>
+                  Rs {
                     item.lab_charge
                   }
+                </td>
+
+                <td>
+
+                  <span style={{
+                    background:
+                      item.completed_mode === "AUTO"
+                        ? "#dbeafe"
+                        : "#fef3c7",
+
+                    color:
+                      item.completed_mode === "AUTO"
+                        ? "#2563eb"
+                        : "#ca8a04",
+
+                    padding:
+                      "5px 12px",
+
+                    borderRadius: 20,
+
+                    fontSize: 12,
+
+                    fontWeight: "600"
+                  }}>
+
+                    {
+                      item.completed_mode
+                    }
+
+                  </span>
+
                 </td>
 
                 <td>
@@ -201,6 +302,35 @@ export default function CompletedCases() {
                   }}>
                     Completed
                   </span>
+
+                </td>
+
+                <td>
+
+                  <button
+                    onClick={() =>
+                      reopenCase(
+                        item._id
+                      )
+                    }
+                    style={{
+                      background:
+                        "#dc2626",
+
+                      color: "white",
+
+                      border: "none",
+
+                      padding:
+                        "6px 12px",
+
+                      borderRadius: 6,
+
+                      cursor: "pointer"
+                    }}
+                  >
+                    Reopen
+                  </button>
 
                 </td>
 
