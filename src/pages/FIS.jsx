@@ -89,12 +89,25 @@ function FIS() {
       if (!patient) return alert("Select patient ❗");
 
       const payload = {
-        patient_name: patient,
-        procedure: rows.map(r => r.treatment).join(", "),
-        doctor: rows.map(r => r.doctor).join(", "),
-        amount: Number(final) || 0,
-        lab_charge: Number(labCharge) || 0
-      };
+
+  patient_name: patient,
+
+  procedure: rows.map(r => ({
+    treatment: r.treatment,
+    doctor: r.doctor,
+    qty: r.qty,
+    rate: r.rate
+  })),
+
+  doctor: rows.map(
+    r => r.doctor
+  ).join(", "),
+
+  amount: Number(final) || 0,
+
+  lab_charge:
+    Number(labCharge) || 0
+};
 
       await api.post("/fis/billing", payload);
 

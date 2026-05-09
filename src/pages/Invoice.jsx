@@ -14,11 +14,19 @@ function Invoice() {
   const [patient, setPatient] = useState("");
 
   const [rows, setRows] = useState([
-    { treatment: "", doctor: "", qty: "", rate: "" }
+    {
+      treatment: "",
+      doctor: "",
+      qty: "",
+      rate: ""
+    }
   ]);
 
   const [payments, setPayments] = useState([
-    { amount: "", method: "" }
+    {
+      amount: "",
+      method: ""
+    }
   ]);
 
   const [discount, setDiscount] = useState("");
@@ -26,24 +34,35 @@ function Invoice() {
   const [total, setTotal] = useState(0);
   const [final, setFinal] = useState(0);
 
+  const [search, setSearch] = useState("");
+
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
+
     loadPatients();
+
     loadInvoices();
+
   }, []);
 
   const loadPatients = async () => {
+
     const res = await api.get("/patients/");
+
     setPatients(res.data);
   };
 
   const loadInvoices = async () => {
+
     const res = await api.get("/invoice/");
+
     setRecords(res.data);
   };
 
-  // 🔥 AUTO LOAD FIS DATA
+  // =========================
+  // AUTO LOAD FIS
+  // =========================
   const handlePatientChange = async (value) => {
 
     setPatient(value);
@@ -72,19 +91,50 @@ function Invoice() {
         return;
       }
 
-      const loadedRows = fis.map(f => ({
+      let loadedRows = [];
 
-        treatment:
-          f.procedure || "",
+      fis.forEach(f => {
 
-        doctor:
-          f.doctor || "",
+        // 🔥 MULTIPLE PROCEDURES
+        if (Array.isArray(f.procedure)) {
 
-        qty: 1,
+          f.procedure.forEach(p => {
 
-        rate:
-          f.amount || 0
-      }));
+            loadedRows.push({
+
+              treatment:
+                p.treatment || "",
+
+              doctor:
+                p.doctor || "",
+
+              qty:
+                p.qty || 1,
+
+              rate:
+                p.rate || 0
+            });
+
+          });
+
+        } else {
+
+          loadedRows.push({
+
+            treatment:
+              f.procedure || "",
+
+            doctor:
+              f.doctor || "",
+
+            qty: 1,
+
+            rate:
+              f.amount || 0
+          });
+        }
+
+      });
 
       setRows(loadedRows);
 
@@ -93,10 +143,19 @@ function Invoice() {
     } catch (err) {
 
       console.log(err);
+
     }
+
   };
 
-  const handleRowChange = (i, field, value) => {
+  // =========================
+  // ROW CHANGE
+  // =========================
+  const handleRowChange = (
+    i,
+    field,
+    value
+  ) => {
 
     const updated = [...rows];
 
@@ -107,6 +166,9 @@ function Invoice() {
     calculate(updated);
   };
 
+  // =========================
+  // ADD ROW
+  // =========================
   const addRow = () => {
 
     setRows([
@@ -120,6 +182,9 @@ function Invoice() {
     ]);
   };
 
+  // =========================
+  // REMOVE ROW
+  // =========================
   const removeRow = (i) => {
 
     const updated = rows.filter(
@@ -131,6 +196,9 @@ function Invoice() {
     calculate(updated);
   };
 
+  // =========================
+  // PAYMENT
+  // =========================
   const handlePaymentChange = (
     i,
     field,
@@ -155,6 +223,9 @@ function Invoice() {
     ]);
   };
 
+  // =========================
+  // CALCULATE
+  // =========================
   const calculate = (data = rows) => {
 
     let t = 0;
@@ -165,7 +236,8 @@ function Invoice() {
 
     });
 
-    const disc = Number(discount) || 0;
+    const disc =
+      Number(discount) || 0;
 
     setTotal(t);
 
@@ -180,6 +252,9 @@ function Invoice() {
 
   }, [discount]);
 
+  // =========================
+  // EDIT
+  // =========================
   const handleEdit = (r) => {
 
     setPatient(r.patient_name);
@@ -204,25 +279,34 @@ function Invoice() {
       ]
     );
 
-    setDiscount(r.discount || "");
+    setDiscount(
+      r.discount || ""
+    );
 
     setEditId(r._id);
   };
 
+  // =========================
+  // SAVE
+  // =========================
   const saveInvoice = async () => {
 
     try {
 
       if (!patient) {
 
-        alert("Select patient ❌");
+        alert(
+          "Select patient ❌"
+        );
 
         return;
       }
 
       if (!rows.length) {
 
-        alert("Add treatment ❌");
+        alert(
+          "Add treatment ❌"
+        );
 
         return;
       }
@@ -290,6 +374,9 @@ function Invoice() {
     }
   };
 
+  // =========================
+  // DELETE
+  // =========================
   const deleteInvoice = async (id) => {
 
     await api.delete(
@@ -298,6 +385,17 @@ function Invoice() {
 
     loadInvoices();
   };
+
+  // =========================
+  // SEARCH
+  // =========================
+  const filtered = records.filter(r =>
+    r.patient_name
+      ?.toLowerCase()
+      .includes(
+        search.toLowerCase()
+      )
+  );
 
   return (
 
@@ -308,6 +406,25 @@ function Invoice() {
       }}>
         Invoice System 🧾
       </h1>
+
+      {/* SEARCH */}
+      <div style={card}>
+
+        <input
+          placeholder="Search Invoice..."
+          value={search}
+          onChange={(e)=>
+            setSearch(
+              e.target.value
+            )
+          }
+          style={{
+            width: "100%",
+            padding: 10
+          }}
+        />
+
+      </div>
 
       {/* PATIENT */}
       <div style={card}>
@@ -340,7 +457,7 @@ function Invoice() {
 
       </div>
 
-      {/* BILLING TABLE */}
+      {/* BILLING */}
       <div style={card}>
 
         <h3>Billing</h3>
@@ -420,6 +537,7 @@ function Invoice() {
                 </td>
 
                 <td>
+
                   <button
                     onClick={() =>
                       removeRow(i)
@@ -427,6 +545,7 @@ function Invoice() {
                   >
                     X
                   </button>
+
                 </td>
 
               </tr>
@@ -455,7 +574,9 @@ function Invoice() {
           placeholder="Discount Amount"
           value={discount}
           onChange={(e)=>
-            setDiscount(e.target.value)
+            setDiscount(
+              e.target.value
+            )
           }
         />
 
@@ -538,7 +659,9 @@ function Invoice() {
 
         ))}
 
-        <button onClick={addPayment}>
+        <button
+          onClick={addPayment}
+        >
           ➕ Add Payment
         </button>
 
@@ -564,9 +687,11 @@ function Invoice() {
       {/* LIST */}
       <div style={card}>
 
-        <h2>Saved Invoices</h2>
+        <h2>
+          Saved Invoices
+        </h2>
 
-        {records.map(r => (
+        {filtered.map(r => (
 
           <div
             key={r._id}
@@ -618,7 +743,9 @@ function Invoice() {
 
             <button
               onClick={() =>
-                deleteInvoice(r._id)
+                deleteInvoice(
+                  r._id
+                )
               }
             >
               Delete ❌
