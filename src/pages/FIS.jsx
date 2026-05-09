@@ -34,7 +34,6 @@ function FIS() {
   const [editId, setEditId] =
     useState(null);
 
-  // 🔥 VIEW MODAL
   const [viewData, setViewData] =
     useState(null);
 
@@ -244,7 +243,6 @@ function FIS() {
     loadData();
   };
 
-  // 🔥 SEARCH
   const filtered =
     records.filter(r =>
       r.patient_name
@@ -440,7 +438,7 @@ function FIS() {
 
       </div>
 
-      {/* FINANCIAL SUMMARY */}
+      {/* SUMMARY */}
       <div style={{
         background: "white",
         padding: 20,
@@ -565,7 +563,6 @@ function FIS() {
 
             <br/><br/>
 
-            {/* EDIT */}
             <button
               onClick={() => {
 
@@ -598,7 +595,6 @@ function FIS() {
               Edit
             </button>
 
-            {/* VIEW */}
             <button
               onClick={() =>
                 setViewData(r)
@@ -610,7 +606,6 @@ function FIS() {
               View
             </button>
 
-            {/* DELETE */}
             <button
               onClick={() =>
                 deleteRecord(
@@ -627,7 +622,7 @@ function FIS() {
 
       </div>
 
-      {/* 🔥 VIEW MODAL */}
+      {/* MODAL */}
       {viewData && (
 
         <div style={{
@@ -650,9 +645,7 @@ function FIS() {
             maxHeight: "85vh",
             overflowY: "auto",
             borderRadius: 12,
-            padding: 25,
-            boxShadow:
-              "0 10px 30px rgba(0,0,0,0.2)"
+            padding: 25
           }}>
 
             <div style={{
@@ -671,43 +664,23 @@ function FIS() {
                 onClick={() =>
                   setViewData(null)
                 }
-                style={{
-                  background: "red",
-                  color: "white",
-                  border: "none",
-                  padding:
-                    "8px 14px",
-                  borderRadius: 6
-                }}
               >
                 Close
               </button>
 
             </div>
 
-            <div style={{
-              marginBottom: 20
-            }}>
+            <b>Patient:</b>
+            {" "}
+            {viewData.patient_name}
 
-              <b>Patient:</b>
-              {" "}
-              {viewData.patient_name}
+            <br/><br/>
 
-              <br/><br/>
+            <b>Total:</b>
+            {" "}
+            Rs {viewData.amount}
 
-              <b>Total:</b>
-              {" "}
-              Rs {viewData.amount}
-
-              <br/><br/>
-
-              <b>Lab Charges:</b>
-              {" "}
-              Rs {
-                viewData.lab_charge || 0
-              }
-
-            </div>
+            <br/><br/>
 
             <table style={{
               width: "100%",
@@ -717,12 +690,7 @@ function FIS() {
 
               <thead>
 
-                <tr
-                  style={{
-                    background:
-                      "#f1f5f9"
-                  }}
-                >
+                <tr>
                   <th style={th}>
                     Treatment
                   </th>
@@ -744,8 +712,24 @@ function FIS() {
 
               <tbody>
 
-                {(viewData.rows || [])
-                  .map((row, i) => (
+                {(
+                  viewData.rows?.length
+                    ? viewData.rows
+                    : [
+                        {
+                          treatment:
+                            viewData.procedure || "",
+
+                          doctor:
+                            viewData.doctor || "",
+
+                          qty: 1,
+
+                          rate:
+                            viewData.amount || 0
+                        }
+                      ]
+                ).map((row, i) => (
 
                   <tr key={i}>
 
@@ -784,15 +768,13 @@ function FIS() {
 }
 
 const th = {
-  border:
-    "1px solid #ddd",
+  border: "1px solid #ddd",
   padding: 12,
   textAlign: "left"
 };
 
 const td = {
-  border:
-    "1px solid #ddd",
+  border: "1px solid #ddd",
   padding: 12
 };
 
