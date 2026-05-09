@@ -1,4 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from "react-router-dom";
 
 // =========================
 // PAGES
@@ -39,6 +43,9 @@ import PatientAccountStatus from "./pages/PatientAccountStatus";
 
 // 🌍 CITY PATIENTS
 import CityPatients from "./pages/CityPatients";
+
+// ✅ COMPLETED CASES
+import CompletedCases from "./pages/CompletedCases";
 
 // 🔥 PERMISSIONS
 import Permissions from "./pages/Permissions";
@@ -131,6 +138,12 @@ export default function App() {
         <Route
           path="/city-patients"
           element={<CityPatients />}
+        />
+
+        {/* ✅ COMPLETED CASES */}
+        <Route
+          path="/completed-cases"
+          element={<CompletedCases />}
         />
 
         {/* REPORTS */}

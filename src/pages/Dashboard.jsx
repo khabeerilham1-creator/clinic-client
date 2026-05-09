@@ -126,6 +126,16 @@ export default function Dashboard() {
       icon: "🌍"
     },
 
+    {
+      name:
+       "Completed Cases",
+
+      path:
+       "/completed-cases",
+
+      icon: "✅"
+    },
+
     // INTELLIGENCE
     {
       name: "ACC",

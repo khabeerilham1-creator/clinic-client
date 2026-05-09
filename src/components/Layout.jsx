@@ -221,6 +221,13 @@ export default function Layout({
           />
 
           <Nav
+           icon="✅"
+           text="Completed Cases"
+           path="/completed-cases"
+           current={location.pathname}
+          />
+
+          <Nav
             icon="🔐"
             text="Permissions"
             path="/permissions"
