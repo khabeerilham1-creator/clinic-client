@@ -61,94 +61,6 @@ function Invoice() {
   };
 
   // =========================
-  // AUTO LOAD FIS
-  // =========================
-  const handlePatientChange = async (value) => {
-
-    setPatient(value);
-
-    try {
-
-      const res = await api.get(
-        "/fis/billing/" + value
-      );
-
-      const fis = res.data || [];
-
-      if (!fis.length) {
-
-        setRows([
-          {
-            treatment: "",
-            doctor: "",
-            qty: "",
-            rate: ""
-          }
-        ]);
-
-        calculate([]);
-
-        return;
-      }
-
-      let loadedRows = [];
-
-      fis.forEach(f => {
-
-        // 🔥 MULTIPLE PROCEDURES
-        if (Array.isArray(f.procedure)) {
-
-          f.procedure.forEach(p => {
-
-            loadedRows.push({
-
-              treatment:
-                p.treatment || "",
-
-              doctor:
-                p.doctor || "",
-
-              qty:
-                p.qty || 1,
-
-              rate:
-                p.rate || 0
-            });
-
-          });
-
-        } else {
-
-          loadedRows.push({
-
-            treatment:
-              f.procedure || "",
-
-            doctor:
-              f.doctor || "",
-
-            qty: 1,
-
-            rate:
-              f.amount || 0
-          });
-        }
-
-      });
-
-      setRows(loadedRows);
-
-      calculate(loadedRows);
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-
-  };
-
-  // =========================
   // ROW CHANGE
   // =========================
   const handleRowChange = (
@@ -432,7 +344,7 @@ function Invoice() {
         <select
           value={patient}
           onChange={(e)=>
-            handlePatientChange(
+            setPatient(
               e.target.value
             )
           }

@@ -17,7 +17,12 @@ function FIS() {
   const [discount, setDiscount] = useState("");
 
   const [rows, setRows] = useState([
-    { treatment: "", doctor: "", qty: "", rate: "" }
+    {
+      treatment: "",
+      doctor: "",
+      qty: "",
+      rate: ""
+    }
   ]);
 
   const [total, setTotal] = useState(0);
@@ -25,22 +30,35 @@ function FIS() {
   const [doctorShare, setDoctorShare] = useState(0);
   const [owner, setOwner] = useState(0);
 
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
+
     loadPatients();
+
     loadData();
+
   }, []);
 
   const loadPatients = async () => {
+
     const res = await api.get("/patients/");
+
     setPatients(res.data);
   };
 
   const loadData = async () => {
+
     const res = await api.get("/fis/billing");
+
     setRecords(res.data || []);
   };
 
-  const handleRowChange = (index, field, value) => {
+  const handleRowChange = (
+    index,
+    field,
+    value
+  ) => {
 
     const updated = [...rows];
 
@@ -75,18 +93,25 @@ function FIS() {
     calculate(updated);
   };
 
-  const calculate = (data = rows) => {
+  const calculate = (
+    data = rows
+  ) => {
 
     let t = 0;
 
     data.forEach(r => {
 
-      const rate = Number(r.rate) || 0;
+      const rate =
+        Number(r.rate) || 0;
 
-      t += rate;
+      const qty =
+        Number(r.qty) || 1;
+
+      t += rate * qty;
     });
 
-    const disc = Number(discount) || 0;
+    const disc =
+      Number(discount) || 0;
 
     const f = t - disc;
 
@@ -94,13 +119,17 @@ function FIS() {
 
     setFinal(f);
 
-    const lab = Number(labCharge) || 0;
+    const lab =
+      Number(labCharge) || 0;
 
-    const doc = (f - lab) * 0.25;
+    const doc =
+      (f - lab) * 0.25;
 
     setDoctorShare(doc);
 
-    setOwner(f - doc - lab);
+    setOwner(
+      f - doc - lab
+    );
   };
 
   useEffect(() => {
@@ -114,7 +143,9 @@ function FIS() {
     try {
 
       if (!patient)
-        return alert("Select patient ❗");
+        return alert(
+          "Select patient ❗"
+        );
 
       const payload = {
 
@@ -122,13 +153,17 @@ function FIS() {
 
         rows: rows.map(r => ({
 
-          treatment: r.treatment,
+          treatment:
+            r.treatment,
 
-          doctor: r.doctor,
+          doctor:
+            r.doctor,
 
-          qty: r.qty,
+          qty:
+            r.qty,
 
-          rate: r.rate
+          rate:
+            r.rate
 
         })),
 
@@ -171,9 +206,15 @@ function FIS() {
     }
   };
 
-  const deleteRecord = async (id) => {
+  const deleteRecord = async (
+    id
+  ) => {
 
-    if (!window.confirm("Delete?"))
+    if (
+      !window.confirm(
+        "Delete?"
+      )
+    )
       return;
 
     await api.delete(
@@ -182,6 +223,16 @@ function FIS() {
 
     loadData();
   };
+
+  // 🔥 SEARCH
+  const filtered =
+    records.filter(r =>
+      r.patient_name
+        ?.toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
+    );
 
   return (
 
@@ -193,6 +244,30 @@ function FIS() {
         FIS — Financial System
       </h1>
 
+      {/* SEARCH */}
+      <div style={{
+        background: "white",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20
+      }}>
+
+        <input
+          placeholder="Search Patient..."
+          value={search}
+          onChange={(e)=>
+            setSearch(
+              e.target.value
+            )
+          }
+          style={{
+            width: "100%",
+            padding: 10
+          }}
+        />
+
+      </div>
+
       {/* PATIENT */}
       <div style={{
         background: "white",
@@ -203,7 +278,9 @@ function FIS() {
 
         <select
           onChange={(e)=>
-            setPatient(e.target.value)
+            setPatient(
+              e.target.value
+            )
           }
           value={patient}
           style={{
@@ -313,6 +390,7 @@ function FIS() {
                 </td>
 
                 <td>
+
                   <button
                     onClick={() =>
                       removeRow(i)
@@ -320,6 +398,7 @@ function FIS() {
                   >
                     X
                   </button>
+
                 </td>
 
               </tr>
@@ -353,7 +432,9 @@ function FIS() {
           placeholder="Discount Amount"
           value={discount}
           onChange={(e)=>
-            setDiscount(e.target.value)
+            setDiscount(
+              e.target.value
+            )
           }
           style={{
             marginRight: 10
@@ -364,7 +445,9 @@ function FIS() {
           placeholder="Lab Charges"
           value={labCharge}
           onChange={(e)=>
-            setLabCharge(e.target.value)
+            setLabCharge(
+              e.target.value
+            )
           }
         />
 
@@ -420,9 +503,11 @@ function FIS() {
         borderRadius: 10
       }}>
 
-        <h2>Records</h2>
+        <h2>
+          Records
+        </h2>
 
-        {records.map(r => (
+        {filtered.map(r => (
 
           <div
             key={r._id}
@@ -437,28 +522,43 @@ function FIS() {
               {r.patient_name}
             </b>
 
-            <br/>
+            <br/><br/>
 
             {(r.rows || []).map(
               (row, idx) => (
-                <div key={idx}>
+
+                <div
+                  key={idx}
+                  style={{
+                    marginBottom: 8
+                  }}
+                >
                   • {row.treatment}
                   {" — "}
-                  Rs {row.rate}
+                  {row.doctor}
+                  {" — Qty: "}
+                  {row.qty}
+                  {" — Rs "}
+                  {row.rate}
                 </div>
+
               )
             )}
 
             <br/>
 
-            Amount:
+            <b>
+              Amount:
+            </b>
             {" "}Rs {r.amount}
 
-            <br/>
+            <br/><br/>
 
             <button
               onClick={() =>
-                deleteRecord(r._id)
+                deleteRecord(
+                  r._id
+                )
               }
             >
               Delete
