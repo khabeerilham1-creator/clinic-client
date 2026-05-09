@@ -32,6 +32,10 @@ function FIS() {
 
   const [search, setSearch] = useState("");
 
+  // 🔥 EDIT
+  const [editId, setEditId] =
+    useState(null);
+
   useEffect(() => {
 
     loadPatients();
@@ -138,6 +142,7 @@ function FIS() {
 
   }, [discount, labCharge]);
 
+  // 🔥 SAVE / UPDATE
   const save = async () => {
 
     try {
@@ -174,12 +179,26 @@ function FIS() {
           Number(labCharge) || 0
       };
 
-      await api.post(
-        "/fis/billing",
-        payload
-      );
+      // 🔥 UPDATE
+      if (editId) {
 
-      alert("Saved ✅");
+        await api.put(
+          "/fis/billing/" + editId,
+          payload
+        );
+
+        alert("Updated ✅");
+
+      } else {
+
+        // 🔥 CREATE
+        await api.post(
+          "/fis/billing",
+          payload
+        );
+
+        alert("Saved ✅");
+      }
 
       setRows([
         {
@@ -195,6 +214,8 @@ function FIS() {
       setDiscount("");
 
       setPatient("");
+
+      setEditId(null);
 
       loadData();
 
@@ -491,7 +512,9 @@ function FIS() {
             borderRadius: 6
           }}
         >
-          Save Billing
+          {editId
+            ? "Update Billing"
+            : "Save Billing"}
         </button>
 
       </div>
@@ -514,46 +537,139 @@ function FIS() {
             style={{
               borderBottom:
                 "1px solid #eee",
-              padding: 10
+              padding: 15,
+              marginBottom: 10
             }}
           >
 
-            <b>
+            <b style={{
+              fontSize: 18
+            }}>
               {r.patient_name}
             </b>
 
             <br/><br/>
 
+            {/* 🔥 FULL DETAILS */}
             {(r.rows || []).map(
               (row, idx) => (
 
                 <div
                   key={idx}
                   style={{
-                    marginBottom: 8
+                    background:
+                      "#f8fafc",
+                    padding: 10,
+                    borderRadius: 8,
+                    marginBottom: 10
                   }}
                 >
-                  • {row.treatment}
-                  {" — "}
+
+                  <b>
+                    Treatment:
+                  </b>
+                  {" "}
+                  {row.treatment}
+
+                  <br/>
+
+                  <b>
+                    Doctor:
+                  </b>
+                  {" "}
                   {row.doctor}
-                  {" — Qty: "}
+
+                  <br/>
+
+                  <b>
+                    Qty:
+                  </b>
+                  {" "}
                   {row.qty}
-                  {" — Rs "}
-                  {row.rate}
+
+                  <br/>
+
+                  <b>
+                    Rate:
+                  </b>
+                  {" "}
+                  Rs {row.rate}
+
                 </div>
 
               )
             )}
 
-            <br/>
-
             <b>
               Amount:
             </b>
-            {" "}Rs {r.amount}
+            {" "}
+            Rs {r.amount}
+
+            <br/>
+
+            <b>
+              Lab Charges:
+            </b>
+            {" "}
+            Rs {r.lab_charge || 0}
 
             <br/><br/>
 
+            {/* 🔥 EDIT */}
+            <button
+              onClick={() => {
+
+                setPatient(
+                  r.patient_name
+                );
+
+                setRows(
+                  r.rows || [
+                    {
+                      treatment: "",
+                      doctor: "",
+                      qty: "",
+                      rate: ""
+                    }
+                  ]
+                );
+
+                setLabCharge(
+                  r.lab_charge || ""
+                );
+
+                setEditId(r._id);
+
+              }}
+              style={{
+                marginRight: 10
+              }}
+            >
+              Edit
+            </button>
+
+            {/* 🔥 VIEW */}
+            <button
+              onClick={() => {
+
+                alert(
+                  JSON.stringify(
+                    r,
+                    null,
+                    2
+                  )
+                );
+
+              }}
+              style={{
+                marginRight: 10
+              }}
+            >
+              View
+            </button>
+
+            {/* 🔥 DELETE */}
             <button
               onClick={() =>
                 deleteRecord(
