@@ -5,50 +5,31 @@ import Layout from "../components/Layout";
 function Invoice() {
 
   const [records, setRecords] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadInvoices();
   }, []);
 
-  // 🔥 LOAD DIRECTLY FROM FIS
   const loadInvoices = async () => {
 
     try {
 
-      const res = await api.get(
-        "/fis/billing"
-      );
+      const res = await api.get("/fis/billing");
 
-      const converted =
-        (res.data || []).map(r => ({
-
-          _id: r._id,
-
-          patient_name:
-            r.patient_name,
-
-          amount:
-            r.amount || 0,
-
-          paid: 0,
-
-          balance:
-            r.amount || 0,
-
-          procedure:
-            r.procedure || "",
-
-          doctor:
-            r.doctor || ""
-        }));
-
-      setRecords(converted);
+      setRecords(res.data || []);
 
     } catch (err) {
 
       console.log(err);
     }
   };
+
+  const filteredRecords = records.filter(r =>
+    r.patient_name
+      ?.toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
 
@@ -60,14 +41,32 @@ function Invoice() {
         Invoice System 🧾
       </h1>
 
-      {/* LIST */}
+      {/* SEARCH */}
       <div style={card}>
 
-        <h2>
-          Auto Generated Invoices
-        </h2>
+        <input
+          type="text"
+          placeholder="🔍 Search Patient"
+          value={search}
+          onChange={(e)=>
+            setSearch(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 10,
+            borderRadius: 8,
+            border: "1px solid #ccc"
+          }}
+        />
 
-        {records.map(r => (
+      </div>
+
+      {/* SAVED INVOICES */}
+      <div style={card}>
+
+        <h2>Saved Invoices</h2>
+
+        {filteredRecords.map(r => (
 
           <div
             key={r._id}
@@ -78,35 +77,25 @@ function Invoice() {
             }}
           >
 
-            <b>
+            <h3>
               {r.patient_name}
-            </b>
+            </h3>
 
-            <br/>
+            <p>
+              <strong>
+                Procedure:
+              </strong>
+              {" "}
+              {r.procedure}
+            </p>
 
-            <b>Procedure:</b>
-            {" "}
-            {r.procedure}
-
-            <br/>
-
-            <b>Doctor:</b>
-            {" "}
-            {r.doctor}
-
-            <br/>
-
-            <b>Total:</b>
-            {" "}
-            Rs {r.amount}
-
-            <br/>
-
-            <b>Balance:</b>
-            {" "}
-            Rs {r.balance}
-
-            <br/><br/>
+            <p>
+              <strong>
+                Amount:
+              </strong>
+              {" "}
+              Rs {r.amount}
+            </p>
 
             <a
               href={`${api.defaults.baseURL}/invoice/pdf/${encodeURIComponent(r.patient_name)}`}
@@ -116,17 +105,15 @@ function Invoice() {
 
               <button
                 style={{
-                  padding:
-                    "8px 14px",
-                  background:
-                    "#2563eb",
+                  background: "#2563eb",
                   color: "white",
                   border: "none",
+                  padding: "8px 16px",
                   borderRadius: 6,
                   cursor: "pointer"
                 }}
               >
-                PDF Invoice
+                Generate Invoice PDF
               </button>
 
             </a>
@@ -142,15 +129,10 @@ function Invoice() {
 }
 
 const card = {
-
   background: "white",
-
   padding: 20,
-
   borderRadius: 10,
-
   marginBottom: 20,
-
   boxShadow:
     "0 2px 6px rgba(0,0,0,0.05)"
 };
