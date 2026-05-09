@@ -135,6 +135,13 @@ export default function Layout({ children }) {
             current={location.pathname}
           />
 
+          <Nav
+            icon="💳"
+            text="Patient Account Status"
+            path="/patient-account-status"
+            current={location.pathname}
+          />
+
         </Section>
 
         {/* INTELLIGENCE */}

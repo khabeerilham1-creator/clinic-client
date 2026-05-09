@@ -85,6 +85,12 @@ export default function Dashboard() {
       icon: "🏭"
     },
 
+    {
+      name: "Patient Account Status",
+      path: "/patient-account-status",
+      icon: "💳"
+    },
+
     // INTELLIGENCE
     {
       name: "ACC",
@@ -130,7 +136,6 @@ export default function Dashboard() {
       icon: "📁"
     },
 
-    // 🔥 NEW
     {
       name: "Permissions",
       path: "/permissions",

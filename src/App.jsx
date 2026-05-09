@@ -34,6 +34,9 @@ import Creditors from "./pages/Creditors";
 import Bills from "./pages/Bills";
 import Salary from "./pages/Salary";
 
+// 🔥 ACCOUNT STATUS
+import PatientAccountStatus from "./pages/PatientAccountStatus";
+
 // 🔥 PERMISSIONS
 import Permissions from "./pages/Permissions";
 
@@ -113,6 +116,12 @@ export default function App() {
         <Route
           path="/lvi"
           element={<LVI />}
+        />
+
+        {/* 🔥 ACCOUNT STATUS */}
+        <Route
+          path="/patient-account-status"
+          element={<PatientAccountStatus />}
         />
 
         {/* REPORTS */}
