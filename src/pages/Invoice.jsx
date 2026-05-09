@@ -1,249 +1,53 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
-
 import Layout from "../components/Layout";
 
 function Invoice() {
 
-  const navigate = useNavigate();
-
-  const [patients, setPatients] = useState([]);
   const [records, setRecords] = useState([]);
 
-  const [patient, setPatient] = useState("");
-
-  const [rows, setRows] = useState([
-    { treatment: "", doctor: "", qty: "", rate: "" }
-  ]);
-
-  const [payments, setPayments] = useState([
-    { amount: "", method: "" }
-  ]);
-
-  const [discount, setDiscount] = useState("");
-
-  const [total, setTotal] = useState(0);
-  const [final, setFinal] = useState(0);
-
-  const [editId, setEditId] = useState(null);
-
   useEffect(() => {
-    loadPatients();
     loadInvoices();
   }, []);
 
-  const loadPatients = async () => {
-    const res = await api.get("/patients/");
-    setPatients(res.data);
-  };
-
+  // 🔥 LOAD DIRECTLY FROM FIS
   const loadInvoices = async () => {
-    const res = await api.get("/invoice/");
-    setRecords(res.data);
-  };
-
-  const handleRowChange = (i, field, value) => {
-
-    const updated = [...rows];
-
-    updated[i][field] = value;
-
-    setRows(updated);
-
-    calculate(updated);
-  };
-
-  const addRow = () => {
-
-    setRows([
-      ...rows,
-      {
-        treatment: "",
-        doctor: "",
-        qty: "",
-        rate: ""
-      }
-    ]);
-  };
-
-  const removeRow = (i) => {
-
-    const updated = rows.filter(
-      (_, idx) => idx !== i
-    );
-
-    setRows(updated);
-
-    calculate(updated);
-  };
-
-  const handlePaymentChange = (
-    i,
-    field,
-    value
-  ) => {
-
-    const updated = [...payments];
-
-    updated[i][field] = value;
-
-    setPayments(updated);
-  };
-
-  const addPayment = () => {
-
-    setPayments([
-      ...payments,
-      {
-        amount: "",
-        method: ""
-      }
-    ]);
-  };
-
-  const calculate = (data = rows) => {
-
-    let t = 0;
-
-    data.forEach(r => {
-
-      t += Number(r.rate) || 0;
-
-    });
-
-    const disc = Number(discount) || 0;
-
-    setTotal(t);
-
-    const f = t - disc;
-
-    setFinal(f);
-  };
-
-  useEffect(() => {
-
-    calculate();
-
-  }, [discount]);
-
-  const handleEdit = (r) => {
-
-    setPatient(r.patient_name);
-
-    setRows(
-      r.rows || [
-        {
-          treatment: "",
-          doctor: "",
-          qty: "",
-          rate: ""
-        }
-      ]
-    );
-
-    setPayments(
-      r.payments || [
-        {
-          amount: "",
-          method: ""
-        }
-      ]
-    );
-
-    setDiscount(r.discount || "");
-
-    setEditId(r._id);
-  };
-
-  const saveInvoice = async () => {
 
     try {
 
-      if (!patient) {
+      const res = await api.get(
+        "/fis/billing"
+      );
 
-        alert("Select patient ❌");
+      const converted =
+        (res.data || []).map(r => ({
 
-        return;
-      }
+          _id: r._id,
 
-      if (!rows.length) {
+          patient_name:
+            r.patient_name,
 
-        alert("Add treatment ❌");
+          amount:
+            r.amount || 0,
 
-        return;
-      }
+          paid: 0,
 
-      const payload = {
+          balance:
+            r.amount || 0,
 
-        patient_name: patient,
+          procedure:
+            r.procedure || "",
 
-        rows,
+          doctor:
+            r.doctor || ""
+        }));
 
-        payments,
-
-        amount: total,
-
-        discount:
-          Number(discount) || 0
-      };
-
-      if (editId) {
-
-        await api.put(
-          "/invoice/" + editId,
-          payload
-        );
-
-      } else {
-
-        await api.post(
-          "/invoice/",
-          payload
-        );
-      }
-
-      alert("Saved ✅");
-
-      setRows([
-        {
-          treatment: "",
-          doctor: "",
-          qty: "",
-          rate: ""
-        }
-      ]);
-
-      setPayments([
-        {
-          amount: "",
-          method: ""
-        }
-      ]);
-
-      setDiscount("");
-
-      setPatient("");
-
-      setEditId(null);
-
-      loadInvoices();
+      setRecords(converted);
 
     } catch (err) {
 
       console.log(err);
-
-      alert("Error ❌");
     }
-  };
-
-  const deleteInvoice = async (id) => {
-
-    await api.delete(
-      "/invoice/" + id
-    );
-
-    loadInvoices();
   };
 
   return (
@@ -256,260 +60,12 @@ function Invoice() {
         Invoice System 🧾
       </h1>
 
-      {/* PATIENT */}
-      <div style={card}>
-
-        <select
-          value={patient}
-          onChange={(e)=>
-            setPatient(e.target.value)
-          }
-        >
-
-          <option value="">
-            -- Select Patient --
-          </option>
-
-          {patients.map(p => (
-
-            <option
-              key={p._id}
-              value={p.name}
-            >
-              {p.name}
-            </option>
-
-          ))}
-
-        </select>
-
-      </div>
-
-      {/* BILLING TABLE */}
-      <div style={card}>
-
-        <h3>Billing</h3>
-
-        <table style={{
-          width: "100%"
-        }}>
-
-          <thead>
-
-            <tr>
-              <th>Treatment</th>
-              <th>Doctor</th>
-              <th>Qty</th>
-              <th>Rate</th>
-              <th></th>
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {rows.map((r, i) => (
-
-              <tr key={i}>
-
-                <td>
-                  <input
-                    value={r.treatment}
-                    onChange={e =>
-                      handleRowChange(
-                        i,
-                        "treatment",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-
-                <td>
-                  <input
-                    value={r.doctor}
-                    onChange={e =>
-                      handleRowChange(
-                        i,
-                        "doctor",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-
-                <td>
-                  <input
-                    value={r.qty}
-                    onChange={e =>
-                      handleRowChange(
-                        i,
-                        "qty",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-
-                <td>
-                  <input
-                    value={r.rate}
-                    onChange={e =>
-                      handleRowChange(
-                        i,
-                        "rate",
-                        e.target.value
-                      )
-                    }
-                  />
-                </td>
-
-                <td>
-                  <button
-                    onClick={() =>
-                      removeRow(i)
-                    }
-                  >
-                    X
-                  </button>
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-        <button
-          onClick={addRow}
-          style={{
-            marginTop: 10
-          }}
-        >
-          ➕ Add Row
-        </button>
-
-      </div>
-
-      {/* SUMMARY */}
-      <div style={card}>
-
-        <input
-          placeholder="Discount Amount"
-          value={discount}
-          onChange={(e)=>
-            setDiscount(e.target.value)
-          }
-        />
-
-        <div style={{
-          marginTop: 15
-        }}>
-
-          <b>Total:</b>
-          {" "}Rs {total}
-
-          <br/>
-
-          <b>Discount:</b>
-          {" "}Rs {discount || 0}
-
-          <br/>
-
-          <b>Final:</b>
-          {" "}Rs {final}
-
-        </div>
-
-      </div>
-
-      {/* PAYMENTS */}
-      <div style={card}>
-
-        <h3>Payments</h3>
-
-        {payments.map((p, i) => (
-
-          <div
-            key={i}
-            style={{
-              marginBottom: 10
-            }}
-          >
-
-            <input
-              placeholder="Amount"
-              value={p.amount}
-              onChange={e =>
-                handlePaymentChange(
-                  i,
-                  "amount",
-                  e.target.value
-                )
-              }
-            />
-
-            <select
-              value={p.method}
-              onChange={e =>
-                handlePaymentChange(
-                  i,
-                  "method",
-                  e.target.value
-                )
-              }
-              style={{
-                marginLeft: 10
-              }}
-            >
-
-              <option value="">
-                Method
-              </option>
-
-              <option value="Cash">
-                Cash
-              </option>
-
-              <option value="Bank">
-                Bank
-              </option>
-
-            </select>
-
-          </div>
-
-        ))}
-
-        <button onClick={addPayment}>
-          ➕ Add Payment
-        </button>
-
-      </div>
-
-      {/* SAVE */}
-      <button
-        onClick={saveInvoice}
-        style={{
-          padding: "12px 25px",
-          background: "#2563eb",
-          color: "white",
-          border: "none",
-          borderRadius: 6,
-          marginBottom: 20
-        }}
-      >
-        {editId
-          ? "Update Invoice"
-          : "Save Invoice"}
-      </button>
-
       {/* LIST */}
       <div style={card}>
 
-        <h2>Saved Invoices</h2>
+        <h2>
+          Auto Generated Invoices
+        </h2>
 
         {records.map(r => (
 
@@ -518,7 +74,7 @@ function Invoice() {
             style={{
               borderBottom:
                 "1px solid #eee",
-              padding: 10
+              padding: 15
             }}
           >
 
@@ -528,46 +84,52 @@ function Invoice() {
 
             <br/>
 
-            Amount:
-            {" "}Rs {r.amount}
+            <b>Procedure:</b>
+            {" "}
+            {r.procedure}
 
             <br/>
 
-            Paid:
-            {" "}Rs {r.paid}
+            <b>Doctor:</b>
+            {" "}
+            {r.doctor}
 
             <br/>
 
-            Balance:
-            {" "}Rs {r.balance}
+            <b>Total:</b>
+            {" "}
+            Rs {r.amount}
 
             <br/>
 
-            <button
-              onClick={() =>
-                handleEdit(r)
-              }
-            >
-              Edit ✏️
-            </button>
+            <b>Balance:</b>
+            {" "}
+            Rs {r.balance}
+
+            <br/><br/>
 
             <a
               href={`${api.defaults.baseURL}/invoice/pdf/${encodeURIComponent(r.patient_name)}`}
               target="_blank"
               rel="noreferrer"
             >
-              <button>
-                PDF
-              </button>
-            </a>
 
-            <button
-              onClick={() =>
-                deleteInvoice(r._id)
-              }
-            >
-              Delete ❌
-            </button>
+              <button
+                style={{
+                  padding:
+                    "8px 14px",
+                  background:
+                    "#2563eb",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer"
+                }}
+              >
+                PDF Invoice
+              </button>
+
+            </a>
 
           </div>
 
