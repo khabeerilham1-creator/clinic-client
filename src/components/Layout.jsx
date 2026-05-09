@@ -228,6 +228,13 @@ export default function Layout({
           />
 
           <Nav
+           icon="⏳"
+           text="Pending Cases"
+           path="/pending-cases"
+           current={location.pathname}
+          />
+
+          <Nav
             icon="🔐"
             text="Permissions"
             path="/permissions"

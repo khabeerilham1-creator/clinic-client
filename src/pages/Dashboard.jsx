@@ -136,6 +136,16 @@ export default function Dashboard() {
       icon: "✅"
     },
 
+    {
+     name:
+       "Pending Cases",
+
+      path:
+       "/pending-cases",
+
+      icon: "⏳"
+    },
+
     // INTELLIGENCE
     {
       name: "ACC",
