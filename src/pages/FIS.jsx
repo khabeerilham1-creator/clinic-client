@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 
-// 🔥 ADDED
 import Layout from "../components/Layout";
 
 function FIS() {
@@ -32,8 +31,11 @@ function FIS() {
 
   const [search, setSearch] = useState("");
 
-  // 🔥 EDIT
   const [editId, setEditId] =
+    useState(null);
+
+  // 🔥 VIEW MODAL
+  const [viewData, setViewData] =
     useState(null);
 
   useEffect(() => {
@@ -142,7 +144,6 @@ function FIS() {
 
   }, [discount, labCharge]);
 
-  // 🔥 SAVE / UPDATE
   const save = async () => {
 
     try {
@@ -179,7 +180,6 @@ function FIS() {
           Number(labCharge) || 0
       };
 
-      // 🔥 UPDATE
       if (editId) {
 
         await api.put(
@@ -191,7 +191,6 @@ function FIS() {
 
       } else {
 
-        // 🔥 CREATE
         await api.post(
           "/fis/billing",
           payload
@@ -550,56 +549,6 @@ function FIS() {
 
             <br/><br/>
 
-            {/* 🔥 FULL DETAILS */}
-            {(r.rows || []).map(
-              (row, idx) => (
-
-                <div
-                  key={idx}
-                  style={{
-                    background:
-                      "#f8fafc",
-                    padding: 10,
-                    borderRadius: 8,
-                    marginBottom: 10
-                  }}
-                >
-
-                  <b>
-                    Treatment:
-                  </b>
-                  {" "}
-                  {row.treatment}
-
-                  <br/>
-
-                  <b>
-                    Doctor:
-                  </b>
-                  {" "}
-                  {row.doctor}
-
-                  <br/>
-
-                  <b>
-                    Qty:
-                  </b>
-                  {" "}
-                  {row.qty}
-
-                  <br/>
-
-                  <b>
-                    Rate:
-                  </b>
-                  {" "}
-                  Rs {row.rate}
-
-                </div>
-
-              )
-            )}
-
             <b>
               Amount:
             </b>
@@ -616,7 +565,7 @@ function FIS() {
 
             <br/><br/>
 
-            {/* 🔥 EDIT */}
+            {/* EDIT */}
             <button
               onClick={() => {
 
@@ -649,19 +598,11 @@ function FIS() {
               Edit
             </button>
 
-            {/* 🔥 VIEW */}
+            {/* VIEW */}
             <button
-              onClick={() => {
-
-                alert(
-                  JSON.stringify(
-                    r,
-                    null,
-                    2
-                  )
-                );
-
-              }}
+              onClick={() =>
+                setViewData(r)
+              }
               style={{
                 marginRight: 10
               }}
@@ -669,7 +610,7 @@ function FIS() {
               View
             </button>
 
-            {/* 🔥 DELETE */}
+            {/* DELETE */}
             <button
               onClick={() =>
                 deleteRecord(
@@ -686,8 +627,173 @@ function FIS() {
 
       </div>
 
+      {/* 🔥 VIEW MODAL */}
+      {viewData && (
+
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background:
+            "rgba(0,0,0,0.6)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999
+        }}>
+
+          <div style={{
+            background: "white",
+            width: "700px",
+            maxHeight: "85vh",
+            overflowY: "auto",
+            borderRadius: 12,
+            padding: 25,
+            boxShadow:
+              "0 10px 30px rgba(0,0,0,0.2)"
+          }}>
+
+            <div style={{
+              display: "flex",
+              justifyContent:
+                "space-between",
+              alignItems: "center",
+              marginBottom: 20
+            }}>
+
+              <h2>
+                Billing Details
+              </h2>
+
+              <button
+                onClick={() =>
+                  setViewData(null)
+                }
+                style={{
+                  background: "red",
+                  color: "white",
+                  border: "none",
+                  padding:
+                    "8px 14px",
+                  borderRadius: 6
+                }}
+              >
+                Close
+              </button>
+
+            </div>
+
+            <div style={{
+              marginBottom: 20
+            }}>
+
+              <b>Patient:</b>
+              {" "}
+              {viewData.patient_name}
+
+              <br/><br/>
+
+              <b>Total:</b>
+              {" "}
+              Rs {viewData.amount}
+
+              <br/><br/>
+
+              <b>Lab Charges:</b>
+              {" "}
+              Rs {
+                viewData.lab_charge || 0
+              }
+
+            </div>
+
+            <table style={{
+              width: "100%",
+              borderCollapse:
+                "collapse"
+            }}>
+
+              <thead>
+
+                <tr
+                  style={{
+                    background:
+                      "#f1f5f9"
+                  }}
+                >
+                  <th style={th}>
+                    Treatment
+                  </th>
+
+                  <th style={th}>
+                    Doctor
+                  </th>
+
+                  <th style={th}>
+                    Qty
+                  </th>
+
+                  <th style={th}>
+                    Rate
+                  </th>
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {(viewData.rows || [])
+                  .map((row, i) => (
+
+                  <tr key={i}>
+
+                    <td style={td}>
+                      {row.treatment}
+                    </td>
+
+                    <td style={td}>
+                      {row.doctor}
+                    </td>
+
+                    <td style={td}>
+                      {row.qty}
+                    </td>
+
+                    <td style={td}>
+                      Rs {row.rate}
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      )}
+
     </Layout>
   );
 }
+
+const th = {
+  border:
+    "1px solid #ddd",
+  padding: 12,
+  textAlign: "left"
+};
+
+const td = {
+  border:
+    "1px solid #ddd",
+  padding: 12
+};
 
 export default FIS;
