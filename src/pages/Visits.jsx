@@ -13,11 +13,11 @@ function Visits() {
 
   const [form, setForm] = useState({
     patient_id: "",
-    diagnosis: "",
+    visit_no: "",
     treatment: "",
-    medicines: "",
-    fee: "",
-    date: new Date().toISOString().split("T")[0]
+    date: new Date().toISOString().split("T")[0],
+    procedure_doctor: "",
+    status: "Planned"
   });
 
   const [editId, setEditId] = useState(null);
@@ -53,11 +53,6 @@ function Visits() {
     } catch (err) {
 
       console.log(err);
-
-      if (err.response?.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
-      }
     }
   };
 
@@ -75,16 +70,11 @@ function Visits() {
     } catch (err) {
 
       console.log(err);
-
-      if (err.response?.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
-      }
     }
   };
 
   // =========================
-  // HANDLE INPUT
+  // INPUT
   // =========================
   const handleChange = (e) => {
 
@@ -127,11 +117,11 @@ function Visits() {
 
       setForm({
         patient_id: "",
-        diagnosis: "",
+        visit_no: "",
         treatment: "",
-        medicines: "",
-        fee: "",
-        date: new Date().toISOString().split("T")[0]
+        date: new Date().toISOString().split("T")[0],
+        procedure_doctor: "",
+        status: "Planned"
       });
 
       setEditId(null);
@@ -142,18 +132,7 @@ function Visits() {
 
       console.log(err);
 
-      if (err.response?.status === 401) {
-
-        alert("Session expired ❌");
-
-        localStorage.removeItem("token");
-
-        navigate("/");
-
-      } else {
-
-        alert("Error saving visit ❌");
-      }
+      alert("Error ❌");
     }
   };
 
@@ -164,11 +143,11 @@ function Visits() {
 
     setForm({
       patient_id: v.patient_id || "",
-      diagnosis: v.diagnosis || "",
+      visit_no: v.visit_no || "",
       treatment: v.treatment || "",
-      medicines: v.medicines || "",
-      fee: v.fee || "",
-      date: v.date || ""
+      date: v.date || "",
+      procedure_doctor: v.procedure_doctor || "",
+      status: v.status || "Planned"
     });
 
     setEditId(v._id);
@@ -188,13 +167,11 @@ function Visits() {
     } catch (err) {
 
       console.log(err);
-
-      alert("Delete failed ❌");
     }
   };
 
   // =========================
-  // GET PATIENT NAME
+  // PATIENT NAME
   // =========================
   const getPatientName = (id) => {
 
@@ -212,7 +189,7 @@ function Visits() {
       <h1 style={{
         marginBottom: 20
       }}>
-        Patient Visits Module 🩺
+        Planned Sequence Of Treatment
       </h1>
 
       {/* FORM */}
@@ -225,17 +202,16 @@ function Visits() {
       }}>
 
         <h3>
-          {editId ? "Edit Visit" : "Add Visit"}
+          {editId
+            ? "Edit Treatment Plan"
+            : "Add Treatment Plan"}
         </h3>
 
         <select
           name="patient_id"
           value={form.patient_id}
           onChange={handleChange}
-          style={{
-            width: "100%",
-            padding: 10
-          }}
+          style={input}
         >
 
           <option value="">
@@ -261,10 +237,11 @@ function Visits() {
         <Grid>
 
           <input
-            name="diagnosis"
-            value={form.diagnosis}
+            name="visit_no"
+            value={form.visit_no}
             onChange={handleChange}
-            placeholder="Diagnosis"
+            placeholder="Visit No"
+            style={input}
           />
 
           <input
@@ -272,20 +249,7 @@ function Visits() {
             value={form.treatment}
             onChange={handleChange}
             placeholder="Treatment"
-          />
-
-          <input
-            name="medicines"
-            value={form.medicines}
-            onChange={handleChange}
-            placeholder="Medicines"
-          />
-
-          <input
-            name="fee"
-            value={form.fee}
-            onChange={handleChange}
-            placeholder="Fee"
+            style={input}
           />
 
           <input
@@ -293,7 +257,41 @@ function Visits() {
             name="date"
             value={form.date}
             onChange={handleChange}
+            style={input}
           />
+
+          <input
+            name="procedure_doctor"
+            value={form.procedure_doctor}
+            onChange={handleChange}
+            placeholder="Procedure Doctor"
+            style={input}
+          />
+
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            style={input}
+          >
+
+            <option value="Planned">
+              Planned
+            </option>
+
+            <option value="In Progress">
+              In Progress
+            </option>
+
+            <option value="Completed">
+              Completed
+            </option>
+
+            <option value="Cancelled">
+              Cancelled
+            </option>
+
+          </select>
 
         </Grid>
 
@@ -308,7 +306,9 @@ function Visits() {
             borderRadius: 6
           }}
         >
-          {editId ? "Update Visit" : "Add Visit"}
+          {editId
+            ? "Update Plan"
+            : "Save Plan"}
         </button>
 
       </div>
@@ -321,7 +321,7 @@ function Visits() {
         boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
       }}>
 
-        <h2>Saved Visits</h2>
+        <h2>Treatment Plan List</h2>
 
         <table style={{
           width: "100%",
@@ -332,9 +332,11 @@ function Visits() {
 
             <tr>
               <th align="left">Patient</th>
-              <th align="left">Diagnosis</th>
+              <th align="left">Visit No</th>
               <th align="left">Treatment</th>
               <th align="left">Date</th>
+              <th align="left">Doctor</th>
+              <th align="left">Status</th>
               <th align="right">Actions</th>
             </tr>
 
@@ -355,22 +357,50 @@ function Visits() {
                   {getPatientName(v.patient_id)}
                 </td>
 
-                <td>{v.diagnosis}</td>
+                <td>{v.visit_no}</td>
 
                 <td>{v.treatment}</td>
 
-                <td>{v.date || "-"}</td>
+                <td>{v.date}</td>
+
+                <td>
+                  {v.procedure_doctor}
+                </td>
+
+                <td>
+
+                  <span style={{
+                    padding: "5px 10px",
+                    borderRadius: 20,
+                    color: "white",
+                    background:
+                      v.status === "Completed"
+                        ? "#16a34a"
+                        : v.status === "Cancelled"
+                        ? "#dc2626"
+                        : v.status === "In Progress"
+                        ? "#ca8a04"
+                        : "#2563eb"
+                  }}>
+                    {v.status}
+                  </span>
+
+                </td>
 
                 <td align="right">
 
                   <button
-                    onClick={() => handleEdit(v)}
+                    onClick={() =>
+                      handleEdit(v)
+                    }
                   >
                     Edit
                   </button>
 
                   <button
-                    onClick={() => handleDelete(v._id)}
+                    onClick={() =>
+                      handleDelete(v._id)
+                    }
                     style={{
                       marginLeft: 10
                     }}
@@ -407,5 +437,14 @@ function Grid({ children }) {
     </div>
   );
 }
+
+/* INPUT */
+const input = {
+  width: "100%",
+  padding: 10,
+  borderRadius: 8,
+  border: "1px solid #cbd5e1",
+  boxSizing: "border-box"
+};
 
 export default Visits;
