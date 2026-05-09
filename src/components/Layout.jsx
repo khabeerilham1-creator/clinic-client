@@ -235,6 +235,13 @@ export default function Layout({
           />
 
           <Nav
+           icon="📅"
+           text="To Be Appointed"
+           path="/to-be-appointed"
+           current={location.pathname}
+          />
+
+          <Nav
             icon="🔐"
             text="Permissions"
             path="/permissions"

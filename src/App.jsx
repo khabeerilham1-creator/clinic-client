@@ -50,6 +50,9 @@ import CompletedCases from "./pages/CompletedCases";
 // ⏳ PENDING CASES
 import PendingCases from "./pages/PendingCases";
 
+// 📅 TO BE APPOINTED
+import ToBeAppointed from "./pages/ToBeAppointed";
+
 // 🔥 PERMISSIONS
 import Permissions from "./pages/Permissions";
 
@@ -143,6 +146,11 @@ export default function App() {
         <Route
           path="/pending-cases"
           element={<PendingCases />}
+        />
+
+        <Route
+          path="/to-be-appointed"
+          element={<ToBeAppointed />}
         />
 
         <Route

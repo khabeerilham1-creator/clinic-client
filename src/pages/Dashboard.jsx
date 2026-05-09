@@ -146,6 +146,16 @@ export default function Dashboard() {
       icon: "⏳"
     },
 
+    {
+     name:
+       "To Be Appointed",
+
+      path:
+       "/to-be-appointed",
+
+      icon: "📅"
+     },
+
     // INTELLIGENCE
     {
       name: "ACC",
