@@ -134,130 +134,129 @@ function Patients() {
     });
   };
 
-// =========================
-// SAVE
-// =========================
-const savePatient = async () => {
+  // =========================
+  // SAVE
+  // =========================
+  const savePatient = async () => {
 
-  try {
+    try {
 
-    // 🔥 CHECK DUPLICATE PATIENT
-    const existingPatient = patients.find((p) => {
+      const existingPatient = patients.find((p) => {
 
-      const sameMobile =
-        p.mobile_number &&
-        form.mobile_number &&
-        p.mobile_number.trim() ===
-        form.mobile_number.trim();
+        const sameMobile =
+          p.mobile_number &&
+          form.mobile_number &&
+          p.mobile_number.trim() ===
+          form.mobile_number.trim();
 
-      const sameNameDob =
-        p.name?.toLowerCase().trim() ===
-        form.name?.toLowerCase().trim()
-        &&
-        p.birth_date === form.birth_date;
+        const sameNameDob =
+          p.name?.toLowerCase().trim() ===
+          form.name?.toLowerCase().trim()
+          &&
+          p.birth_date === form.birth_date;
 
-      return sameMobile || sameNameDob;
-    });
+        return sameMobile || sameNameDob;
+      });
 
-    // 🔥 ALERT IF PATIENT EXISTS
-    if (existingPatient && !editId) {
+      if (existingPatient && !editId) {
 
-      alert("Patient already exists");
+        alert("Patient already exists");
 
-      navigate("/timeline/" + existingPatient._id);
+        navigate("/timeline/" + existingPatient._id);
 
-      return;
-    }
+        return;
+      }
 
-    let res;
+      let res;
 
-    if (editId) {
+      if (editId) {
 
-      res = await api.put(
-        "/patients/" + editId,
-        form
-      );
+        res = await api.put(
+          "/patients/" + editId,
+          form
+        );
 
-      alert("Updated ✅");
+        alert("Updated ✅");
 
-      setPatients(prev =>
-        prev.map(p =>
-          p._id === editId ? res.data : p
+        setPatients(prev =>
+          prev.map(p =>
+            p._id === editId ? res.data : p
+          )
+        );
+
+        setEditId(null);
+
+      } else {
+
+        res = await api.post(
+          "/patients/",
+          form
+        );
+
+        alert("Saved ✅");
+
+        setPatients(prev => [
+          res.data,
+          ...prev
+        ]);
+      }
+
+      // RESET
+      setForm({
+        reg_no: String((patients.length || 0) + 1)
+          .padStart(5, "0"),
+
+        date: new Date().toISOString().split("T")[0],
+
+        title: "Mr.",
+
+        name: "",
+        birth_date: "",
+        age: "",
+
+        gender: "",
+
+        occupation: "",
+
+        address: "",
+
+        email: "",
+
+        ptcl_number: "",
+
+        mobile_number: "",
+
+        emergency_number: "",
+
+        referred_by: "",
+
+        category: "",
+
+        colour_code: "friends",
+
+        purpose_of_visit: "",
+
+        consultation_fee_paid: "No",
+
+        conditions: "",
+
+        complaints: "segmental"
+      });
+
+    } catch (err) {
+
+      console.log(
+        JSON.stringify(
+          err.response?.data,
+          null,
+          2
         )
       );
 
-      setEditId(null);
-
-    } else {
-
-      res = await api.post(
-        "/patients/",
-        form
-      );
-
-      alert("Saved ✅");
-
-      setPatients(prev => [
-        res.data,
-        ...prev
-      ]);
+      alert("Backend save error ❌");
     }
+  };
 
-    // RESET
-    setForm({
-      reg_no: String((patients.length || 0) + 1)
-        .padStart(5, "0"),
-
-      date: new Date().toISOString().split("T")[0],
-
-      title: "Mr.",
-
-      name: "",
-      birth_date: "",
-      age: "",
-
-      gender: "",
-
-      occupation: "",
-
-      address: "",
-
-      email: "",
-
-      ptcl_number: "",
-
-      mobile_number: "",
-
-      emergency_number: "",
-
-      referred_by: "",
-
-      category: "",
-
-      colour_code: "friends",
-
-      purpose_of_visit: "",
-
-      consultation_fee_paid: "No",
-
-      conditions: "",
-
-      complaints: "segmental"
-    });
-
-  } catch (err) {
-
-    console.log(
-      JSON.stringify(
-        err.response?.data,
-        null,
-        2
-      )
-    );
-
-    alert("Backend save error ❌");
-  }
-};
   // =========================
   // DELETE
   // =========================
@@ -338,7 +337,7 @@ const savePatient = async () => {
         Patient Entry
       </h1>
 
-      {/* 🔥 SEARCH BAR */}
+      {/* SEARCH BAR */}
       <div style={{
         background: "white",
         padding: 15,
@@ -436,7 +435,6 @@ const savePatient = async () => {
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Patient Name"
               style={input}
             />
           </div>
@@ -477,7 +475,6 @@ const savePatient = async () => {
               name="occupation"
               value={form.occupation}
               onChange={handleChange}
-              placeholder="Occupation"
               style={input}
             />
           </div>
@@ -491,7 +488,6 @@ const savePatient = async () => {
               name="address"
               value={form.address}
               onChange={handleChange}
-              placeholder="Address"
               style={input}
             />
           </div>
@@ -505,7 +501,6 @@ const savePatient = async () => {
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="Email"
               style={input}
             />
           </div>
@@ -519,7 +514,6 @@ const savePatient = async () => {
               name="ptcl_number"
               value={form.ptcl_number}
               onChange={handleChange}
-              placeholder="PTCL Number"
               style={input}
             />
           </div>
@@ -533,7 +527,6 @@ const savePatient = async () => {
               name="mobile_number"
               value={form.mobile_number}
               onChange={handleChange}
-              placeholder="Mobile Number"
               style={input}
             />
           </div>
@@ -547,7 +540,6 @@ const savePatient = async () => {
               name="emergency_number"
               value={form.emergency_number}
               onChange={handleChange}
-              placeholder="Emergency Number"
               style={input}
             />
           </div>
@@ -561,7 +553,6 @@ const savePatient = async () => {
               name="referred_by"
               value={form.referred_by}
               onChange={handleChange}
-              placeholder="Referred By"
               style={input}
             />
           </div>
@@ -575,7 +566,6 @@ const savePatient = async () => {
               name="category"
               value={form.category}
               onChange={handleChange}
-              placeholder="Category"
               style={input}
             />
           </div>
@@ -625,7 +615,6 @@ const savePatient = async () => {
               name="purpose_of_visit"
               value={form.purpose_of_visit}
               onChange={handleChange}
-              placeholder="Purpose of Visit"
               style={input}
             />
           </div>
@@ -665,7 +654,6 @@ const savePatient = async () => {
           name="conditions"
           value={form.conditions}
           onChange={handleChange}
-          placeholder="Conditions"
         />
 
         <h3 style={{
