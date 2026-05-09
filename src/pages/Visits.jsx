@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 
-// 🔥 ADDED
 import Layout from "../components/Layout";
 
 function Visits() {
@@ -18,38 +17,111 @@ function Visits() {
     treatment: "",
     medicines: "",
     fee: "",
-    date: ""   // 🔥 ADDED DATE
+    date: new Date().toISOString().split("T")[0]
   });
 
   const [editId, setEditId] = useState(null);
 
-  const loadPatients = async () => {
-    const res = await api.get("/patients/");
-    setPatients(res.data);
-  };
-
-  const loadVisits = async () => {
-    const res = await api.get("/visits/");
-    setVisits(res.data);
-  };
-
+  // =========================
+  // AUTH
+  // =========================
   useEffect(() => {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/");
+      return;
+    }
+
     loadPatients();
     loadVisits();
+
   }, []);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  // =========================
+  // LOAD PATIENTS
+  // =========================
+  const loadPatients = async () => {
 
-  const saveVisit = async () => {
     try {
 
+      const res = await api.get("/patients/");
+
+      setPatients(res.data || []);
+
+    } catch (err) {
+
+      console.log(err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+      }
+    }
+  };
+
+  // =========================
+  // LOAD VISITS
+  // =========================
+  const loadVisits = async () => {
+
+    try {
+
+      const res = await api.get("/visits/");
+
+      setVisits(res.data || []);
+
+    } catch (err) {
+
+      console.log(err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+      }
+    }
+  };
+
+  // =========================
+  // HANDLE INPUT
+  // =========================
+  const handleChange = (e) => {
+
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // =========================
+  // SAVE
+  // =========================
+  const saveVisit = async () => {
+
+    try {
+
+      if (!form.patient_id)
+        return alert("Select patient ❗");
+
+      let res;
+
       if (editId) {
-        await api.put("/visits/" + editId, form);
+
+        res = await api.put(
+          "/visits/" + editId,
+          form
+        );
+
         alert("Updated ✅");
+
       } else {
-        await api.post("/visits/", form);
+
+        res = await api.post(
+          "/visits/",
+          form
+        );
+
         alert("Saved ✅");
       }
 
@@ -59,38 +131,77 @@ function Visits() {
         treatment: "",
         medicines: "",
         fee: "",
-        date: ""   // 🔥 RESET DATE
+        date: new Date().toISOString().split("T")[0]
       });
 
       setEditId(null);
+
       loadVisits();
 
     } catch (err) {
+
       console.log(err);
-      alert("Error ❌");
+
+      if (err.response?.status === 401) {
+
+        alert("Session expired ❌");
+
+        localStorage.removeItem("token");
+
+        navigate("/");
+
+      } else {
+
+        alert("Error saving visit ❌");
+      }
     }
   };
 
+  // =========================
+  // EDIT
+  // =========================
   const handleEdit = (v) => {
+
     setForm({
-      patient_id: v.patient_id,
-      diagnosis: v.diagnosis,
-      treatment: v.treatment,
+      patient_id: v.patient_id || "",
+      diagnosis: v.diagnosis || "",
+      treatment: v.treatment || "",
       medicines: v.medicines || "",
       fee: v.fee || "",
-      date: v.date || ""   // 🔥 LOAD DATE
+      date: v.date || ""
     });
 
     setEditId(v._id);
   };
 
+  // =========================
+  // DELETE
+  // =========================
   const handleDelete = async (id) => {
-    await api.delete("/visits/" + id);
-    loadVisits();
+
+    try {
+
+      await api.delete("/visits/" + id);
+
+      loadVisits();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Delete failed ❌");
+    }
   };
 
+  // =========================
+  // GET PATIENT NAME
+  // =========================
   const getPatientName = (id) => {
-    const p = patients.find(p => p._id === id);
+
+    const p = patients.find(
+      p => p._id === id
+    );
+
     return p ? p.name : "Unknown";
   };
 
@@ -98,7 +209,11 @@ function Visits() {
 
     <Layout>
 
-      <h1 style={{ marginBottom: 20 }}>Patient Visits Module 🩺</h1>
+      <h1 style={{
+        marginBottom: 20
+      }}>
+        Patient Visits Module 🩺
+      </h1>
 
       {/* FORM */}
       <div style={{
@@ -109,27 +224,77 @@ function Visits() {
         boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
       }}>
 
-        <h3>{editId ? "Edit Visit" : "Add Visit"}</h3>
+        <h3>
+          {editId ? "Edit Visit" : "Add Visit"}
+        </h3>
 
-        <select name="patient_id" value={form.patient_id} onChange={handleChange}>
-          <option value="">Select Patient</option>
+        <select
+          name="patient_id"
+          value={form.patient_id}
+          onChange={handleChange}
+          style={{
+            width: "100%",
+            padding: 10
+          }}
+        >
+
+          <option value="">
+            Select Patient
+          </option>
+
           {patients.map(p => (
-            <option key={p._id} value={p._id}>
-              {p.name} ({p.phone})
+
+            <option
+              key={p._id}
+              value={p._id}
+            >
+              {p.name}
             </option>
+
           ))}
+
         </select>
 
-        <br /><br />
+        <br />
+        <br />
 
         <Grid>
-          <input name="diagnosis" value={form.diagnosis} onChange={handleChange} placeholder="Diagnosis" />
-          <input name="treatment" value={form.treatment} onChange={handleChange} placeholder="Treatment" />
-          <input name="medicines" value={form.medicines} onChange={handleChange} placeholder="Medicines" />
-          <input name="fee" value={form.fee} onChange={handleChange} placeholder="Fee" />
 
-          {/* 🔥 DATE FIELD */}
-          <input type="date" name="date" value={form.date} onChange={handleChange} />
+          <input
+            name="diagnosis"
+            value={form.diagnosis}
+            onChange={handleChange}
+            placeholder="Diagnosis"
+          />
+
+          <input
+            name="treatment"
+            value={form.treatment}
+            onChange={handleChange}
+            placeholder="Treatment"
+          />
+
+          <input
+            name="medicines"
+            value={form.medicines}
+            onChange={handleChange}
+            placeholder="Medicines"
+          />
+
+          <input
+            name="fee"
+            value={form.fee}
+            onChange={handleChange}
+            placeholder="Fee"
+          />
+
+          <input
+            type="date"
+            name="date"
+            value={form.date}
+            onChange={handleChange}
+          />
+
         </Grid>
 
         <button
@@ -158,8 +323,13 @@ function Visits() {
 
         <h2>Saved Visits</h2>
 
-        <table style={{ width: "100%", marginTop: 10 }}>
+        <table style={{
+          width: "100%",
+          marginTop: 10
+        }}>
+
           <thead>
+
             <tr>
               <th align="left">Patient</th>
               <th align="left">Diagnosis</th>
@@ -167,23 +337,55 @@ function Visits() {
               <th align="left">Date</th>
               <th align="right">Actions</th>
             </tr>
+
           </thead>
 
           <tbody>
+
             {visits.map(v => (
-              <tr key={v._id} style={{ borderTop: "1px solid #eee" }}>
-                <td>{getPatientName(v.patient_id)}</td>
+
+              <tr
+                key={v._id}
+                style={{
+                  borderTop: "1px solid #eee"
+                }}
+              >
+
+                <td>
+                  {getPatientName(v.patient_id)}
+                </td>
+
                 <td>{v.diagnosis}</td>
+
                 <td>{v.treatment}</td>
+
                 <td>{v.date || "-"}</td>
 
                 <td align="right">
-                  <button onClick={() => handleEdit(v)}>Edit</button>
-                  <button onClick={() => handleDelete(v._id)}>Delete</button>
+
+                  <button
+                    onClick={() => handleEdit(v)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(v._id)}
+                    style={{
+                      marginLeft: 10
+                    }}
+                  >
+                    Delete
+                  </button>
+
                 </td>
+
               </tr>
+
             ))}
+
           </tbody>
+
         </table>
 
       </div>
@@ -194,6 +396,7 @@ function Visits() {
 
 /* GRID */
 function Grid({ children }) {
+
   return (
     <div style={{
       display: "grid",
