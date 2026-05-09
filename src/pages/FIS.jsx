@@ -712,46 +712,70 @@ function FIS() {
 
               <tbody>
 
-                {(
-                  viewData.rows?.length
-                    ? viewData.rows
-                    : [
-                        {
-                          treatment:
-                            viewData.procedure || "",
+                {viewData.rows?.length ? (
 
-                          doctor:
-                            viewData.doctor || "",
+                  viewData.rows.map((row, i) => (
 
-                          qty: 1,
+                    <tr key={i}>
 
-                          rate:
-                            viewData.amount || 0
-                        }
-                      ]
-                ).map((row, i) => (
+                      <td style={td}>
+                        {row.treatment}
+                      </td>
 
-                  <tr key={i}>
+                      <td style={td}>
+                        {row.doctor}
+                      </td>
 
-                    <td style={td}>
-                      {row.treatment}
-                    </td>
+                      <td style={td}>
+                        {row.qty}
+                      </td>
 
-                    <td style={td}>
-                      {row.doctor}
-                    </td>
+                      <td style={td}>
+                        Rs {row.rate}
+                      </td>
 
-                    <td style={td}>
-                      {row.qty}
-                    </td>
+                    </tr>
 
-                    <td style={td}>
-                      Rs {row.rate}
-                    </td>
+                  ))
 
-                  </tr>
+                ) : (
 
-                ))}
+                  viewData.procedure
+                    ?.split(",")
+                    .map((treatment, i) => (
+
+                      <tr key={i}>
+
+                        <td style={td}>
+                          {treatment.trim()}
+                        </td>
+
+                        <td style={td}>
+                          {
+                            viewData.doctor
+                              ?.split(",")[i]
+                              ?.trim()
+                          }
+                        </td>
+
+                        <td style={td}>
+                          1
+                        </td>
+
+                        <td style={td}>
+                          Rs {
+                            Math.floor(
+                              viewData.amount /
+                              viewData.procedure.split(",").length
+                            )
+                          }
+                        </td>
+
+                      </tr>
+
+                    ))
+
+                )}
 
               </tbody>
 
@@ -770,7 +794,8 @@ function FIS() {
 const th = {
   border: "1px solid #ddd",
   padding: 12,
-  textAlign: "left"
+  textAlign: "left",
+  background: "#f8fafc"
 };
 
 const td = {
