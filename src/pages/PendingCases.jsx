@@ -15,6 +15,18 @@ export default function PendingCases() {
   const [search, setSearch] =
     useState("");
 
+  const [form, setForm] =
+    useState({
+
+      patient_name: "",
+      mobile_number: "",
+      address: "",
+      amount: "",
+      paid: "",
+      balance: "",
+      lab_charge: ""
+    });
+
   useEffect(() => {
 
     loadData();
@@ -28,6 +40,58 @@ export default function PendingCases() {
     );
 
     setData(res.data || []);
+  };
+
+  // =========================
+  // MANUAL ADD
+  // =========================
+  const saveManual = async () => {
+
+    await api.post(
+      "/pending-cases/",
+      form
+    );
+
+    alert("Pending case added ✅");
+
+    setForm({
+
+      patient_name: "",
+      mobile_number: "",
+      address: "",
+      amount: "",
+      paid: "",
+      balance: "",
+      lab_charge: ""
+    });
+
+    loadData();
+  };
+
+  // =========================
+  // DELETE
+  // =========================
+  const deleteCase = async (
+    id,
+    source
+  ) => {
+
+    if (source === "auto") {
+
+      return alert(
+        "Auto tracked cases cannot be deleted"
+      );
+    }
+
+    if (!window.confirm(
+      "Delete case?"
+    )) return;
+
+    await api.delete(
+      "/pending-cases/" + id
+    );
+
+    loadData();
   };
 
   const filtered = data.filter(
@@ -47,8 +111,117 @@ export default function PendingCases() {
       <h1 style={{
         marginBottom: 20
       }}>
-        Pending Cases
+        Pending Cases ⏳
       </h1>
+
+      {/* MANUAL FORM */}
+      <div style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 12,
+        marginBottom: 20
+      }}>
+
+        <h3>
+          Add Manual Pending Case
+        </h3>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(2,1fr)",
+          gap: 10
+        }}>
+
+          <input
+            placeholder="Patient Name"
+            value={form.patient_name}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                patient_name:
+                  e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Mobile"
+            value={form.mobile_number}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                mobile_number:
+                  e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Address"
+            value={form.address}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                address:
+                  e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Amount"
+            value={form.amount}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                amount:
+                  e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Paid"
+            value={form.paid}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                paid:
+                  e.target.value
+              })
+            }
+          />
+
+          <input
+            placeholder="Balance"
+            value={form.balance}
+            onChange={(e)=>
+              setForm({
+                ...form,
+                balance:
+                  e.target.value
+              })
+            }
+          />
+
+        </div>
+
+        <button
+          onClick={saveManual}
+          style={{
+            marginTop: 15,
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: 8
+          }}
+        >
+          Save Pending Case
+        </button>
+
+      </div>
 
       {/* SEARCH */}
       <div style={{
@@ -101,10 +274,6 @@ export default function PendingCases() {
               </th>
 
               <th align="left">
-                Address
-              </th>
-
-              <th align="left">
                 Amount
               </th>
 
@@ -117,11 +286,11 @@ export default function PendingCases() {
               </th>
 
               <th align="left">
-                Lab
+                Source
               </th>
 
               <th align="left">
-                Status
+                Action
               </th>
 
             </tr>
@@ -153,12 +322,6 @@ export default function PendingCases() {
                 </td>
 
                 <td>
-                  {
-                    item.address
-                  }
-                </td>
-
-                <td>
                   Rs {
                     item.amount
                   }
@@ -180,16 +343,12 @@ export default function PendingCases() {
                 </td>
 
                 <td>
-                  Rs {
-                    item.lab_charge
-                  }
-                </td>
-
-                <td>
 
                   <span style={{
                     background:
-                      "#dc2626",
+                      item.source === "auto"
+                      ? "#16a34a"
+                      : "#2563eb",
 
                     color: "white",
 
@@ -200,8 +359,40 @@ export default function PendingCases() {
 
                     fontSize: 12
                   }}>
-                    Pending
+
+                    {
+                      item.source
+                    }
+
                   </span>
+
+                </td>
+
+                <td>
+
+                  <button
+                    onClick={()=>
+                      deleteCase(
+                        item._id,
+                        item.source
+                      )
+                    }
+                    style={{
+                      background:
+                        "#ef4444",
+
+                      color: "white",
+
+                      border: "none",
+
+                      padding:
+                        "6px 12px",
+
+                      borderRadius: 6
+                    }}
+                  >
+                    Delete
+                  </button>
 
                 </td>
 
