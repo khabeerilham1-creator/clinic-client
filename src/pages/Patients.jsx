@@ -757,103 +757,85 @@ function Patients() {
       }}>
 
         {/* MONTH SIDEBAR */}
-        <div style={{
-          background: "white",
-          padding: 18,
-          borderRadius: 14,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
-        }}>
+<div style={{
+  background: "white",
+  padding: 18,
+  borderRadius: 14,
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+}}>
 
-          <h3 style={{
-            marginBottom: 15
-          }}>
-            Monthly Archive 📅
-          </h3>
+  <h3 style={{
+    marginBottom: 15
+  }}>
+    Monthly Archive 📅
+  </h3>
 
-          <button
-            onClick={() => {
+  <input
+    type="month"
+    onChange={(e) => {
 
-              setSelectedMonth(null);
+      if (!e.target.value) {
 
-              loadPatients();
+        setSelectedMonth(null);
 
-            }}
-            style={{
-              width: "100%",
-              padding: 12,
-              borderRadius: 10,
-              border: "none",
-              background: "#2563eb",
-              color: "white",
-              fontWeight: "600",
-              marginBottom: 15,
-              cursor: "pointer"
-            }}
-          >
-            All Patients
-          </button>
+        loadPatients();
 
-          {months.map((m, i) => (
+        return;
+      }
 
-            <div
-              key={i}
-              onClick={() => {
+      const parts =
+        e.target.value.split("-");
 
-                setSelectedMonth(m);
+      const year =
+        parseInt(parts[0]);
 
-                loadMonthPatients(
-                  m.year,
-                  m.month
-                );
+      const month =
+        parseInt(parts[1]);
 
-              }}
-              style={{
-                padding: 12,
-                borderRadius: 10,
-                marginBottom: 10,
-                cursor: "pointer",
+      setSelectedMonth({
+        year,
+        month
+      });
 
-                background:
-                  selectedMonth?.month === m.month
-                  &&
-                  selectedMonth?.year === m.year
-                    ? "#2563eb"
-                    : "#f8fafc",
+      loadMonthPatients(
+        year,
+        month
+      );
 
-                color:
-                  selectedMonth?.month === m.month
-                  &&
-                  selectedMonth?.year === m.year
-                    ? "white"
-                    : "#0f172a",
+    }}
+    style={{
+      width: "100%",
+      padding: 12,
+      borderRadius: 10,
+      border: "1px solid #cbd5e1",
+      marginBottom: 15,
+      boxSizing: "border-box"
+    }}
+  />
 
-                border:
-                  "1px solid #e2e8f0"
-              }}
-            >
+  <button
+    onClick={() => {
 
-              <div style={{
-                fontWeight: "600"
-              }}>
-                {m.month_name}
-              </div>
+      setSelectedMonth(null);
 
-              <small>
-                {m.year}
-              </small>
+      loadPatients();
 
-              <div style={{
-                marginTop: 5,
-                fontSize: 13
-              }}>
-                {m.count} Patients
-              </div>
+    }}
+    style={{
+      width: "100%",
+      padding: 12,
+      borderRadius: 10,
+      border: "none",
+      background: "#2563eb",
+      color: "white",
+      fontWeight: "600",
+      cursor: "pointer"
+    }}
+  >
+    Show All Patients
+  </button>
 
-            </div>
-
-          ))}
-
-        </div>
+</div>
 
         {/* PATIENT LIST */}
         <div style={{
