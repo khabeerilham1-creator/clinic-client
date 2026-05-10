@@ -15,23 +15,17 @@ function Patients() {
   const [selectedMonth, setSelectedMonth] =
     useState(null);
 
+  // 🔥 SEARCH
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({
-
     reg_no: "",
-
-    date:
-      new Date()
-      .toISOString()
-      .split("T")[0],
+    date: new Date().toISOString().split("T")[0],
 
     title: "Mr.",
 
     name: "",
-
     birth_date: "",
-
     age: "",
 
     gender: "",
@@ -63,25 +57,21 @@ function Patients() {
     complaints: "segmental"
   });
 
-  const [editId, setEditId] =
-    useState(null);
+  const [editId, setEditId] = useState(null);
 
   // =========================
-  // LOAD PATIENTS
+  // LOAD
   // =========================
   const loadPatients = async () => {
 
     try {
 
-      const res = await api.get(
-        "/patients/"
-      );
+      const res = await api.get("/patients/");
 
       setPatients(res.data || []);
 
-      const nextNo = String(
-        (res.data?.length || 0) + 1
-      ).padStart(5, "0");
+      const nextNo = String((res.data?.length || 0) + 1)
+        .padStart(5, "0");
 
       setForm(prev => ({
         ...prev,
@@ -90,8 +80,9 @@ function Patients() {
 
     } catch (err) {
 
-      console.log(err);
+      console.log("LOAD ERROR:", err.response?.data || err);
 
+      alert("Failed to load patients ❌");
     }
   };
 
@@ -102,9 +93,7 @@ function Patients() {
 
     try {
 
-      const res = await api.get(
-        "/patients/months"
-      );
+      const res = await api.get("/patients/months");
 
       setMonths(res.data || []);
 
@@ -116,7 +105,7 @@ function Patients() {
   };
 
   // =========================
-  // LOAD MONTH PATIENTS
+  // MONTH FILTER
   // =========================
   const loadMonthPatients = async (
     year,
@@ -140,13 +129,10 @@ function Patients() {
 
   useEffect(() => {
 
-    const token =
-      localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
     if (!token) {
-
       navigate("/");
-
       return;
     }
 
@@ -157,33 +143,23 @@ function Patients() {
   }, [navigate]);
 
   // =========================
-  // AUTO AGE
+  // AGE AUTO
   // =========================
   useEffect(() => {
 
     if (!form.birth_date) return;
 
-    const birth = new Date(
-      form.birth_date
-    );
+    const birth = new Date(form.birth_date);
 
     const today = new Date();
 
-    let age =
-      today.getFullYear()
-      - birth.getFullYear();
+    let age = today.getFullYear() - birth.getFullYear();
 
-    const m =
-      today.getMonth()
-      - birth.getMonth();
+    const m = today.getMonth() - birth.getMonth();
 
     if (
       m < 0 ||
-      (
-        m === 0 &&
-        today.getDate()
-        < birth.getDate()
-      )
+      (m === 0 && today.getDate() < birth.getDate())
     ) {
       age--;
     }
@@ -196,14 +172,13 @@ function Patients() {
   }, [form.birth_date]);
 
   // =========================
-  // CHANGE
+  // INPUT CHANGE
   // =========================
   const handleChange = (e) => {
 
     setForm({
       ...form,
-      [e.target.name]:
-        e.target.value
+      [e.target.name]: e.target.value
     });
   };
 
@@ -213,6 +188,32 @@ function Patients() {
   const savePatient = async () => {
 
     try {
+
+      const existingPatient = patients.find((p) => {
+
+        const sameMobile =
+          p.mobile_number &&
+          form.mobile_number &&
+          p.mobile_number.trim() ===
+          form.mobile_number.trim();
+
+        const sameNameDob =
+          p.name?.toLowerCase().trim() ===
+          form.name?.toLowerCase().trim()
+          &&
+          p.birth_date === form.birth_date;
+
+        return sameMobile || sameNameDob;
+      });
+
+      if (existingPatient && !editId) {
+
+        alert("Patient already exists");
+
+        navigate("/timeline/" + existingPatient._id);
+
+        return;
+      }
 
       let res;
 
@@ -227,9 +228,7 @@ function Patients() {
 
         setPatients(prev =>
           prev.map(p =>
-            p._id === editId
-              ? res.data
-              : p
+            p._id === editId ? res.data : p
           )
         );
 
@@ -252,23 +251,17 @@ function Patients() {
 
       loadMonths();
 
+      // RESET
       setForm({
+        reg_no: String((patients.length || 0) + 1)
+          .padStart(5, "0"),
 
-        reg_no: String(
-          (patients.length || 0) + 1
-        ).padStart(5, "0"),
-
-        date:
-          new Date()
-          .toISOString()
-          .split("T")[0],
+        date: new Date().toISOString().split("T")[0],
 
         title: "Mr.",
 
         name: "",
-
         birth_date: "",
-
         age: "",
 
         gender: "",
@@ -302,10 +295,15 @@ function Patients() {
 
     } catch (err) {
 
-      console.log(err);
+      console.log(
+        JSON.stringify(
+          err.response?.data,
+          null,
+          2
+        )
+      );
 
-      alert("Save Error ❌");
-
+      alert("Backend save error ❌");
     }
   };
 
@@ -314,82 +312,461 @@ function Patients() {
   // =========================
   const deletePatient = async (id) => {
 
-    if (!window.confirm("Delete?"))
-      return;
-
     try {
 
-      await api.delete(
-        "/patients/" + id
-      );
+      await api.delete("/patients/" + id);
 
       setPatients(prev =>
-        prev.filter(
-          p => p._id !== id
-        )
+        prev.filter(p => p._id !== id)
       );
 
       loadMonths();
 
     } catch (err) {
 
-      console.log(err);
-
+      console.log("DELETE ERROR:", err.response?.data || err);
     }
   };
 
   // =========================
-  // SEARCH
+  // SEARCH FILTER
   // =========================
-  const filteredPatients =
-    patients.filter((p) => {
+  const filteredPatients = patients.filter((p) => {
 
-      const q =
-        search.toLowerCase();
+    const q = search.toLowerCase();
 
-      return (
+    return (
+      p.name?.toLowerCase().includes(q) ||
+      p.mobile_number?.toLowerCase().includes(q) ||
+      p.reg_no?.toLowerCase().includes(q)
+    );
+  });
 
-        p.name
-          ?.toLowerCase()
-          .includes(q)
+  // =========================
+  // GET COLOR
+  // =========================
+  const getPatientColor = (type) => {
 
-        ||
+    if (type === "friends") return "#16a34a";
 
-        p.mobile_number
-          ?.toLowerCase()
-          .includes(q)
+    if (type === "relatives") return "#2563eb";
 
-        ||
+    if (type === "neighbours") return "#ca8a04";
 
-        p.reg_no
-          ?.toLowerCase()
-          .includes(q)
+    if (type === "non_affording") return "#ea580c";
 
-      );
-    });
+    if (type === "compassionate") return "#dc2626";
+
+    return "#16a34a";
+  };
+
+  // =========================
+  // GET LABEL
+  // =========================
+  const getPatientLabel = (type) => {
+
+    if (type === "friends") return "Friends";
+
+    if (type === "relatives") return "Relatives";
+
+    if (type === "neighbours") return "Neighbours";
+
+    if (type === "non_affording") return "Non Affording";
+
+    if (type === "compassionate") return "Compassionate";
+
+    return "General";
+  };
 
   return (
 
     <Layout>
 
+      <h1 style={{
+        marginBottom: 20,
+        fontSize: 28
+      }}>
+        Patient Entry
+      </h1>
+
+      {/* SEARCH BAR */}
       <div style={{
-        display: "grid",
-        gridTemplateColumns:
-          "260px 1fr",
-        gap: 20
+        background: "white",
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 20,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
       }}>
 
-        {/* SIDEBAR */}
+        <input
+          type="text"
+          placeholder="🔍 Search by Name / Mobile / Registration No"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 12,
+            borderRadius: 8,
+            border: "1px solid #cbd5e1",
+            outline: "none",
+            fontSize: 14
+          }}
+        />
+
+      </div>
+
+      {/* FORM */}
+      <div style={{
+        background: "white",
+        padding: 25,
+        borderRadius: 14,
+        marginBottom: 20,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+      }}>
+
+        <h3 style={{
+          marginBottom: 20,
+          fontSize: 22
+        }}>
+          Patient Information
+        </h3>
+
+        <Grid>
+
+          <div>
+            <label style={label}>
+              Entry Date
+            </label>
+
+            <input
+              name="date"
+              type="date"
+              value={form.date}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Registration Number
+            </label>
+
+            <input
+              name="reg_no"
+              value={form.reg_no}
+              readOnly
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Title
+            </label>
+
+            <select
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              style={input}
+            >
+              <option>Mr.</option>
+              <option>Mrs.</option>
+              <option>Miss</option>
+              <option>Dr.</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={label}>
+              Patient Name
+            </label>
+
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Birth Date
+            </label>
+
+            <input
+              name="birth_date"
+              type="date"
+              value={form.birth_date}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Age (Auto Generated)
+            </label>
+
+            <input
+              name="age"
+              value={form.age}
+              readOnly
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Occupation
+            </label>
+
+            <input
+              name="occupation"
+              value={form.occupation}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Address
+            </label>
+
+            <input
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Email
+            </label>
+
+            <input
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              PTCL Number
+            </label>
+
+            <input
+              name="ptcl_number"
+              value={form.ptcl_number}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Mobile Number
+            </label>
+
+            <input
+              name="mobile_number"
+              value={form.mobile_number}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Emergency Number
+            </label>
+
+            <input
+              name="emergency_number"
+              value={form.emergency_number}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Referred By
+            </label>
+
+            <input
+              name="referred_by"
+              value={form.referred_by}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Category
+            </label>
+
+            <input
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          {/* PATIENT TYPE */}
+          <div>
+            <label style={label}>
+              Patient Type
+            </label>
+
+            <select
+              name="colour_code"
+              value={form.colour_code}
+              onChange={handleChange}
+              style={input}
+            >
+
+              <option value="friends">
+                🟢 Friends
+              </option>
+
+              <option value="relatives">
+                🔵 Relatives
+              </option>
+
+              <option value="neighbours">
+                🟡 Neighbours
+              </option>
+
+              <option value="non_affording">
+                🟠 Non Affording
+              </option>
+
+              <option value="compassionate">
+                🔴 Compassionate
+              </option>
+
+            </select>
+          </div>
+
+          <div>
+            <label style={label}>
+              Purpose of Visit
+            </label>
+
+            <input
+              name="purpose_of_visit"
+              value={form.purpose_of_visit}
+              onChange={handleChange}
+              style={input}
+            />
+          </div>
+
+          <div>
+            <label style={label}>
+              Consultation Fee
+            </label>
+
+            <select
+              name="consultation_fee_paid"
+              value={form.consultation_fee_paid}
+              onChange={handleChange}
+              style={input}
+            >
+              <option value="Yes">
+                Paid
+              </option>
+
+              <option value="No">
+                Pending
+              </option>
+            </select>
+          </div>
+
+        </Grid>
+
+        <h3 style={{
+          marginTop: 25,
+          marginBottom: 10
+        }}>
+          Medical Conditions
+        </h3>
+
+        <input
+          style={fullInput}
+          name="conditions"
+          value={form.conditions}
+          onChange={handleChange}
+        />
+
+        <h3 style={{
+          marginTop: 25,
+          marginBottom: 10
+        }}>
+          Dental Complaints
+        </h3>
+
+        <select
+          style={fullInput}
+          name="complaints"
+          value={form.complaints}
+          onChange={handleChange}
+        >
+          <option value="segmental">
+            Segmental
+          </option>
+
+          <option value="comprehensive">
+            Comprehensive
+          </option>
+        </select>
+
+        <button
+          onClick={savePatient}
+          style={{
+            marginTop: 25,
+            padding: "12px 24px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontWeight: "600"
+          }}
+        >
+          {editId ? "Update" : "Save"}
+        </button>
+
+      </div>
+
+      {/* BOTTOM ERP SECTION */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "280px 1fr",
+        gap: 20,
+        alignItems: "start"
+      }}>
+
+        {/* MONTH SIDEBAR */}
         <div style={{
           background: "white",
-          padding: 15,
+          padding: 18,
           borderRadius: 14,
-          height: "fit-content",
-          boxShadow:
-            "0 2px 8px rgba(0,0,0,0.05)"
+          boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
         }}>
 
-          <h3>
+          <h3 style={{
+            marginBottom: 15
+          }}>
             Monthly Archive 📅
           </h3>
 
@@ -403,18 +780,20 @@ function Patients() {
             }}
             style={{
               width: "100%",
-              padding: 10,
+              padding: 12,
+              borderRadius: 10,
               border: "none",
-              borderRadius: 8,
               background: "#2563eb",
               color: "white",
-              marginBottom: 15
+              fontWeight: "600",
+              marginBottom: 15,
+              cursor: "pointer"
             }}
           >
             All Patients
           </button>
 
-          {months.map((m, i)=> (
+          {months.map((m, i) => (
 
             <div
               key={i}
@@ -439,18 +818,23 @@ function Patients() {
                   &&
                   selectedMonth?.year === m.year
                     ? "#2563eb"
-                    : "#f1f5f9",
+                    : "#f8fafc",
 
                 color:
                   selectedMonth?.month === m.month
                   &&
                   selectedMonth?.year === m.year
                     ? "white"
-                    : "#0f172a"
+                    : "#0f172a",
+
+                border:
+                  "1px solid #e2e8f0"
               }}
             >
 
-              <div>
+              <div style={{
+                fontWeight: "600"
+              }}>
                 {m.month_name}
               </div>
 
@@ -458,7 +842,10 @@ function Patients() {
                 {m.year}
               </small>
 
-              <div>
+              <div style={{
+                marginTop: 5,
+                fontSize: 13
+              }}>
                 {m.count} Patients
               </div>
 
@@ -468,243 +855,103 @@ function Patients() {
 
         </div>
 
-        {/* MAIN */}
-        <div>
+        {/* PATIENT LIST */}
+        <div style={{
+          background: "white",
+          padding: 20,
+          borderRadius: 12,
+          boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+        }}>
 
-          <h1 style={{
-            marginBottom: 20
-          }}>
-            Patient Entry
-          </h1>
+          <h2>Patients List</h2>
 
-          {/* SEARCH */}
-          <div style={{
-            background: "white",
-            padding: 15,
-            borderRadius: 14,
-            marginBottom: 20
+          <table style={{
+            width: "100%",
+            marginTop: 10
           }}>
 
-            <input
-              type="text"
-              placeholder="Search Patient..."
-              value={search}
-              onChange={(e)=>
-                setSearch(
-                  e.target.value
-                )
-              }
-              style={fullInput}
-            />
+            <thead>
 
-          </div>
+              <tr>
+                <th align="left">Reg No</th>
+                <th align="left">Name</th>
+                <th align="left">Mobile</th>
+                <th align="left">Patient Type</th>
+                <th align="right">Actions</th>
+              </tr>
 
-          {/* FORM */}
-          <div style={{
-            background: "white",
-            padding: 25,
-            borderRadius: 14,
-            marginBottom: 20
-          }}>
+            </thead>
 
-            <Grid>
+            <tbody>
 
-              <Input
-                label="Entry Date"
-                name="date"
-                type="date"
-                value={form.date}
-                onChange={handleChange}
-              />
+              {(filteredPatients || []).map((p) => (
 
-              <Input
-                label="Registration Number"
-                name="reg_no"
-                value={form.reg_no}
-                readOnly
-              />
+                <tr
+                  key={p._id}
+                  style={{
+                    borderTop: "1px solid #eee"
+                  }}
+                >
 
-              <Input
-                label="Patient Name"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-              />
+                  <td>{p.reg_no}</td>
 
-              <Input
-                label="Mobile Number"
-                name="mobile_number"
-                value={form.mobile_number}
-                onChange={handleChange}
-              />
+                  <td>
+                    {p.title} {p.name}
+                  </td>
 
-              <Input
-                label="Birth Date"
-                name="birth_date"
-                type="date"
-                value={form.birth_date}
-                onChange={handleChange}
-              />
+                  <td>{p.mobile_number}</td>
 
-              <Input
-                label="Age"
-                value={form.age}
-                readOnly
-              />
+                  <td>
+                    <span style={{
+                      background: getPatientColor(p.colour_code),
+                      color: "white",
+                      padding: "4px 10px",
+                      borderRadius: 20,
+                      fontSize: 12
+                    }}>
+                      {getPatientLabel(p.colour_code)}
+                    </span>
+                  </td>
 
-              <Input
-                label="Occupation"
-                name="occupation"
-                value={form.occupation}
-                onChange={handleChange}
-              />
+                  <td align="right">
 
-              <Input
-                label="Address"
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-              />
+                    <button
+                      onClick={() =>
+                        navigate("/timeline/" + p._id)
+                      }
+                    >
+                      History
+                    </button>
 
-            </Grid>
+                    <button
+                      onClick={() => {
 
-            <button
-              onClick={savePatient}
-              style={{
-                marginTop: 20,
-                padding: "12px 24px",
-                border: "none",
-                borderRadius: 10,
-                background: "#2563eb",
-                color: "white",
-                fontWeight: "bold"
-              }}
-            >
-              {editId
-                ? "Update"
-                : "Save"}
-            </button>
+                        setForm({
+                          ...p
+                        });
 
-          </div>
+                        setEditId(p._id);
 
-          {/* LIST */}
-          <div style={{
-            background: "white",
-            padding: 20,
-            borderRadius: 14
-          }}>
+                      }}
+                    >
+                      Edit
+                    </button>
 
-            <h2>
-              Patients List
-            </h2>
+                    <button
+                      onClick={() => deletePatient(p._id)}
+                    >
+                      Delete
+                    </button>
 
-            <table style={{
-              width: "100%"
-            }}>
-
-              <thead>
-
-                <tr>
-
-                  <th align="left">
-                    Reg No
-                  </th>
-
-                  <th align="left">
-                    Name
-                  </th>
-
-                  <th align="left">
-                    Mobile
-                  </th>
-
-                  <th align="right">
-                    Actions
-                  </th>
+                  </td>
 
                 </tr>
 
-              </thead>
+              ))}
 
-              <tbody>
+            </tbody>
 
-                {filteredPatients.map((p)=> (
-
-                  <tr
-                    key={p._id}
-                    style={{
-                      borderTop:
-                        "1px solid #eee"
-                    }}
-                  >
-
-                    <td>
-                      {p.reg_no}
-                    </td>
-
-                    <td>
-                      {p.name}
-                    </td>
-
-                    <td>
-                      {p.mobile_number}
-                    </td>
-
-                    <td align="right">
-
-                      <button
-                        onClick={() =>
-                          navigate(
-                            "/timeline/" + p._id
-                          )
-                        }
-                      >
-                        History
-                      </button>
-
-                      <button
-                        onClick={() => {
-
-                          setForm({
-                            ...p
-                          });
-
-                          setEditId(
-                            p._id
-                          );
-
-                        }}
-                        style={{
-                          marginLeft: 10
-                        }}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          deletePatient(
-                            p._id
-                          )
-                        }
-                        style={{
-                          marginLeft: 10
-                        }}
-                      >
-                        Delete
-                      </button>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          </div>
+          </table>
 
         </div>
 
@@ -714,74 +961,50 @@ function Patients() {
   );
 }
 
+/* GRID */
+
 function Grid({ children }) {
 
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns:
-        "repeat(2,1fr)",
-      gap: 16
+      gridTemplateColumns: "repeat(2,1fr)",
+      gap: 16,
+      marginBottom: 10
     }}>
       {children}
     </div>
   );
 }
 
-function Input({
-  label,
-  ...props
-}) {
+/* STYLES */
 
-  return (
-
-    <div>
-
-      <label style={labelStyle}>
-        {label}
-      </label>
-
-      <input
-        {...props}
-        style={input}
-      />
-
-    </div>
-
-  );
-}
-
-const labelStyle = {
-
+const label = {
   display: "block",
-
   marginBottom: 6,
-
+  fontSize: 13,
   fontWeight: "600",
-
-  fontSize: 13
+  color: "#334155"
 };
 
 const input = {
-
   width: "100%",
-
   padding: 10,
-
   borderRadius: 8,
-
-  border: "1px solid #cbd5e1"
+  border: "1px solid #cbd5e1",
+  outline: "none",
+  boxSizing: "border-box",
+  background: "white"
 };
 
 const fullInput = {
-
   width: "100%",
-
-  padding: 12,
-
+  padding: 10,
   borderRadius: 8,
-
-  border: "1px solid #cbd5e1"
+  border: "1px solid #cbd5e1",
+  outline: "none",
+  boxSizing: "border-box",
+  background: "white"
 };
 
 export default Patients;
