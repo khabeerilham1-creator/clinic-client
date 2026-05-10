@@ -53,6 +53,9 @@ import PendingCases from "./pages/PendingCases";
 // 📅 TO BE APPOINTED
 import ToBeAppointed from "./pages/ToBeAppointed";
 
+// 🚫 TO BE EXCEPTED
+import ToBeExcepted from "./pages/ToBeExcepted";
+
 // 🔥 PERMISSIONS
 import Permissions from "./pages/Permissions";
 
@@ -68,16 +71,19 @@ export default function App() {
 
       <Routes>
 
+        {/* AUTH */}
         <Route
           path="/"
           element={<Login />}
         />
 
+        {/* DASHBOARD */}
         <Route
           path="/dashboard"
           element={<Dashboard />}
         />
 
+        {/* CORE */}
         <Route
           path="/patients"
           element={<Patients />}
@@ -93,11 +99,13 @@ export default function App() {
           element={<Checkup />}
         />
 
+        {/* TIMELINE */}
         <Route
           path="/timeline/:id"
           element={<Timeline />}
         />
 
+        {/* CLINICAL */}
         <Route
           path="/afi"
           element={<AFI />}
@@ -113,6 +121,7 @@ export default function App() {
           element={<Prescription />}
         />
 
+        {/* FINANCE */}
         <Route
           path="/fis"
           element={<FIS />}
@@ -128,31 +137,43 @@ export default function App() {
           element={<LVI />}
         />
 
+        {/* 🔥 ACCOUNT STATUS */}
         <Route
           path="/patient-account-status"
           element={<PatientAccountStatus />}
         />
 
+        {/* 🌍 CITY PATIENTS */}
         <Route
           path="/city-patients"
           element={<CityPatients />}
         />
 
+        {/* ✅ COMPLETED CASES */}
         <Route
           path="/completed-cases"
           element={<CompletedCases />}
         />
 
+        {/* ⏳ PENDING CASES */}
         <Route
           path="/pending-cases"
           element={<PendingCases />}
         />
 
+        {/* 📅 TO BE APPOINTED */}
         <Route
           path="/to-be-appointed"
           element={<ToBeAppointed />}
         />
 
+        {/* 🚫 TO BE EXCEPTED */}
+        <Route
+          path="/to-be-excepted"
+          element={<ToBeExcepted />}
+        />
+
+        {/* REPORTS */}
         <Route
           path="/reports"
           element={<Reports />}
@@ -163,16 +184,19 @@ export default function App() {
           element={<ReportView />}
         />
 
+        {/* FILES */}
         <Route
           path="/patient-files"
           element={<PatientFiles />}
         />
 
+        {/* AI */}
         <Route
           path="/ai"
           element={<AI />}
         />
 
+        {/* INTELLIGENCE */}
         <Route
           path="/acc"
           element={<ACC />}
@@ -183,6 +207,7 @@ export default function App() {
           element={<HAI />}
         />
 
+        {/* CONTROL */}
         <Route
           path="/debtors"
           element={<Debtors />}
@@ -203,6 +228,7 @@ export default function App() {
           element={<Salary />}
         />
 
+        {/* 🔥 PERMISSIONS */}
         <Route
           path="/permissions"
           element={<Permissions />}

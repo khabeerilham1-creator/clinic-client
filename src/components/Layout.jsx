@@ -242,6 +242,13 @@ export default function Layout({
           />
 
           <Nav
+           icon="🚫"
+           text="To Be Excepted"
+           path="/to-be-excepted"
+           current={location.pathname}
+          />
+
+          <Nav
             icon="🔐"
             text="Permissions"
             path="/permissions"

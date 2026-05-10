@@ -156,6 +156,16 @@ export default function Dashboard() {
       icon: "📅"
      },
 
+    {
+     name:
+       "To Be Excepted",
+
+      path:
+        "/to-be-excepted",
+
+      icon: "🚫"
+     },
+
     // INTELLIGENCE
     {
       name: "ACC",
