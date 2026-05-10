@@ -11,53 +11,18 @@ function PatientFiles() {
   const [selected, setSelected] = useState("");
   const [file, setFile] = useState(null);
 
-  const [monthGroups, setMonthGroups] = useState({});
-  const [openedMonth, setOpenedMonth] = useState("");
+  const [month, setMonth] = useState("");
 
-  useEffect(() => {
-    loadPatients();
-  }, []);
-
+  // =========================
+  // LOAD PATIENTS
+  // =========================
   const loadPatients = async () => {
 
     try {
 
       const res = await api.get("/patients/");
 
-      const data = res.data || [];
-
-      setPatients(data);
-
-      const grouped = {};
-
-      data.forEach((p) => {
-
-        const rawDate =
-          p.created_at ||
-          p.date;
-
-        const d = rawDate
-          ? new Date(rawDate)
-          : new Date();
-
-        const month =
-          d.toLocaleString(
-            "default",
-            {
-              month: "long",
-              year: "numeric"
-            }
-          );
-
-        if (!grouped[month]) {
-          grouped[month] = [];
-        }
-
-        grouped[month].push(p);
-
-      });
-
-      setMonthGroups(grouped);
+      setPatients(res.data || []);
 
     } catch (err) {
 
@@ -66,6 +31,15 @@ function PatientFiles() {
     }
   };
 
+  useEffect(() => {
+
+    loadPatients();
+
+  }, []);
+
+  // =========================
+  // LOAD FILE
+  // =========================
   const loadFile = async (id) => {
 
     try {
@@ -82,39 +56,64 @@ function PatientFiles() {
         timeline: res.data.timeline || []
       });
 
-    } catch {
+    } catch (err) {
+
+      console.log(err);
 
       setFile(null);
 
     }
   };
 
-  let primary = "#16a34a";
-  let light = "#dcfce7";
+  // =========================
+  // MONTH FILTER
+  // =========================
+  const filteredPatients = patients.filter((p) => {
 
-  if (
-    file?.patient?.colour_code ===
-    "yellow"
-  ) {
-    primary = "#ca8a04";
-    light = "#fef9c3";
-  }
+    if (!month) return true;
 
-  if (
-    file?.patient?.colour_code ===
-    "orange"
-  ) {
-    primary = "#ea580c";
-    light = "#fed7aa";
-  }
+    if (!p.date) return false;
 
-  if (
-    file?.patient?.colour_code ===
-    "red"
-  ) {
-    primary = "#dc2626";
-    light = "#fecaca";
-  }
+    return p.date.startsWith(month);
+
+  });
+
+  // =========================
+  // COLOR SYSTEM
+  // =========================
+  const getPatientColor = (type) => {
+
+    if (
+      type === "friends" ||
+      type === "green"
+    ) return "#16a34a";
+
+    if (
+      type === "relatives" ||
+      type === "blue"
+    ) return "#2563eb";
+
+    if (
+      type === "neighbours" ||
+      type === "yellow"
+    ) return "#ca8a04";
+
+    if (
+      type === "non_affording" ||
+      type === "orange"
+    ) return "#ea580c";
+
+    if (
+      type === "compassionate" ||
+      type === "red"
+    ) return "#dc2626";
+
+    return "#16a34a";
+  };
+
+  const primary = getPatientColor(
+    file?.patient?.colour_code
+  );
 
   return (
 
@@ -123,14 +122,13 @@ function PatientFiles() {
       {/* HEADER */}
       <div style={{
         display: "flex",
-        justifyContent:
-          "space-between",
+        justifyContent: "space-between",
         alignItems: "center",
         marginBottom: 20
       }}>
 
         <h1 style={{
-          fontSize: 30,
+          fontSize: 32,
           margin: 0
         }}>
           Patient Files 📁
@@ -147,163 +145,80 @@ function PatientFiles() {
 
       </div>
 
-      {/* MONTHS */}
+      {/* TOP BAR */}
       <div style={{
-        ...card,
+        display: "grid",
+        gridTemplateColumns:
+          "300px 1fr",
+        gap: 20,
         marginBottom: 20
       }}>
 
-        <h3>
-          Monthly Patient Records
-        </h3>
+        {/* MONTH FILTER */}
+        <div style={card}>
 
-        {
-          Object.keys(monthGroups)
-          .map((month) => (
+          <h3>
+            Monthly Archive 📅
+          </h3>
 
-            <div
-              key={month}
-              style={{
-                marginTop: 12
-              }}
-            >
+          <input
+            type="month"
+            value={month}
+            onChange={(e) =>
+              setMonth(
+                e.target.value
+              )
+            }
+            style={input}
+          />
 
-              <button
-                onClick={() =>
+          <button
+            onClick={() =>
+              setMonth("")
+            }
+            style={{
+              ...btn,
+              marginTop: 12,
+              width: "100%"
+            }}
+          >
+            Show All Patients
+          </button>
 
-                  setOpenedMonth(
+        </div>
 
-                    openedMonth === month
-                      ? ""
-                      : month
-                  )
-                }
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: 12,
-                  border: "none",
-                  borderRadius: 10,
-                  background: "#0f172a",
-                  color: "white",
-                  fontWeight: "bold",
-                  cursor: "pointer"
-                }}
-              >
+        {/* SELECT */}
+        <div style={{
+          ...card,
+          borderTop:
+            `5px solid ${primary}`
+        }}>
 
-                {month}
-                {" ("}
-                {
-                  monthGroups[
-                    month
-                  ].length
-                }
-                {" Patients)"}
+          <h3>
+            Select Patient
+          </h3>
 
-              </button>
+          <select
+            value={selected}
+            onChange={(e) => {
 
-              {
-                openedMonth === month && (
+              setSelected(
+                e.target.value
+              );
 
-                  <div style={{
-                    marginTop: 10
-                  }}>
+              loadFile(
+                e.target.value
+              );
 
-                    {
-                      monthGroups[
-                        month
-                      ].map((p) => (
+            }}
+            style={input}
+          >
 
-                        <div
-                          key={p._id}
-                          onClick={() => {
+            <option value="">
+              -- Select Patient --
+            </option>
 
-                            setSelected(
-                              p._id
-                            );
-
-                            loadFile(
-                              p._id
-                            );
-
-                          }}
-                          style={{
-                            padding: 12,
-                            border:
-                              "1px solid #eee",
-                            borderRadius: 10,
-                            marginBottom: 8,
-                            cursor: "pointer",
-                            background:
-                              "white"
-                          }}
-                        >
-
-                          <b>
-                            {p.name}
-                          </b>
-
-                          <div style={{
-                            fontSize: 13,
-                            color:
-                              "#64748b",
-                            marginTop: 4
-                          }}>
-                            {
-                              p.mobile_number
-                            }
-                          </div>
-
-                        </div>
-
-                      ))
-                    }
-
-                  </div>
-
-                )
-              }
-
-            </div>
-
-          ))
-        }
-
-      </div>
-
-      {/* SELECT */}
-      <div style={{
-        ...card,
-        borderTop:
-          `5px solid ${primary}`
-      }}>
-
-        <h3>
-          Select Patient
-        </h3>
-
-        <select
-          value={selected}
-          onChange={(e) => {
-
-            setSelected(
-              e.target.value
-            );
-
-            loadFile(
-              e.target.value
-            );
-
-          }}
-          style={input}
-        >
-
-          <option value="">
-            -- Select Patient --
-          </option>
-
-          {
-            patients.map((p) => (
+            {filteredPatients.map((p) => (
 
               <option
                 key={p._id}
@@ -312,283 +227,309 @@ function PatientFiles() {
                 {p.name}
               </option>
 
-            ))
-          }
+            ))}
 
-        </select>
+          </select>
+
+        </div>
 
       </div>
 
-      {
-        !file && (
+      {!file && (
 
-          <div style={empty}>
-            No Patient Selected
-          </div>
+        <div style={empty}>
+          No Patient Selected
+        </div>
 
-        )
-      }
+      )}
 
-      {
-        file && (
+      {file && (
 
+        <div>
+
+          {/* PATIENT INFO */}
           <div style={{
-            maxWidth: "100%",
-            margin: "auto"
+            ...card,
+            borderTop:
+              `6px solid ${primary}`
           }}>
 
-            {/* TOP INFO */}
             <div style={{
-              ...card,
-              borderTop:
-                `6px solid ${primary}`
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
             }}>
 
-              <div style={{
-                display: "flex",
-                justifyContent:
-                  "space-between",
-                alignItems:
-                  "center",
-                flexWrap: "wrap",
-                gap: 15
-              }}>
+              <div>
 
-                <div>
-
-                  <h2 style={{
-                    margin: 0
-                  }}>
-                    {
-                      file.patient?.title
-                    }
-                    {" "}
-                    {
-                      file.patient?.name
-                    }
-                  </h2>
-
-                  <p style={{
-                    margin: "5px 0",
-                    color: "#64748b"
-                  }}>
-                    Reg No:
-                    {" "}
-                    {
-                      file.patient?.reg_no
-                    }
-                  </p>
-
-                </div>
-
-                <div style={{
-                  background:
-                    primary,
-                  color: "white",
-                  padding:
-                    "8px 18px",
-                  borderRadius: 30,
-                  fontWeight: "bold"
+                <h2 style={{
+                  margin: 0
                 }}>
-                  {
-                    (
-                      file.patient
-                        ?.colour_code
-                      || "green"
-                    ).toUpperCase()
-                  }
-                </div>
+                  {file.patient?.title}{" "}
+                  {file.patient?.name}
+                </h2>
+
+                <p>
+                  Reg No:
+                  {" "}
+                  {file.patient?.reg_no}
+                </p>
 
               </div>
 
               <div style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(220px,1fr))",
-                gap: 12,
-                marginTop: 20
+                background: primary,
+                color: "white",
+                padding: "10px 18px",
+                borderRadius: 30,
+                fontWeight: "bold"
               }}>
 
-                <Info
-                  label="Mobile"
-                  value={
-                    file.patient
-                      ?.mobile_number
-                  }
-                />
-
-                <Info
-                  label="Age"
-                  value={
-                    file.patient?.age
-                  }
-                />
-
-                <Info
-                  label="Address"
-                  value={
-                    file.patient
-                      ?.address
-                  }
-                />
-
-                <Info
-                  label="Occupation"
-                  value={
-                    file.patient
-                      ?.occupation
-                  }
-                />
+                {(
+                  file.patient
+                    ?.colour_code || ""
+                ).toUpperCase()}
 
               </div>
 
             </div>
 
-            {/* MAIN */}
+            {/* INFO GRID */}
             <div style={{
               display: "grid",
               gridTemplateColumns:
-                "1fr 1fr",
-              gap: 20,
+                "repeat(auto-fit,minmax(220px,1fr))",
+              gap: 12,
               marginTop: 20
             }}>
 
-              {/* CHECKUPS */}
-              <Section
-                title="Checkups 🦷"
-                primary={primary}
-                light={light}
-              >
-
-                {
-                  file.checkups
-                    ?.length === 0
-                    ? (
-                      <p>
-                        No checkups
-                      </p>
-                    )
-                    : (
-
-                      file.checkups.map((c) => (
-
-                        <div
-                          key={c._id}
-                          style={item}
-                        >
-
-                          <b>
-                            Complaint:
-                          </b>
-                          {" "}
-                          {
-                            c.complaint
-                          }
-
-                          {
-                            (
-                              c.tasks
-                              || []
-                            ).map(
-                              (
-                                t,
-                                i
-                              ) => (
-
-                                <div
-                                  key={i}
-                                  style={{
-                                    marginTop: 6
-                                  }}
-                                >
-                                  Tooth
-                                  {" "}
-                                  {
-                                    t.tooth
-                                  }
-                                  {" → "}
-                                  {
-                                    t.treatment
-                                  }
-                                </div>
-
-                              )
-                            )
-                          }
-
-                        </div>
-
-                      ))
-
-                    )
+              <Info
+                label="Mobile"
+                value={
+                  file.patient
+                    ?.mobile_number
                 }
+              />
 
-              </Section>
-
-              {/* VISITS */}
-              <Section
-                title="Visits 🩺"
-                primary={primary}
-                light={light}
-              >
-
-                {
-                  file.visits
-                    ?.length === 0
-                    ? (
-                      <p>
-                        No visits
-                      </p>
-                    )
-                    : (
-
-                      file.visits.map((v) => (
-
-                        <div
-                          key={v._id}
-                          style={item}
-                        >
-
-                          <b>
-                            {
-                              v.diagnosis
-                            }
-                          </b>
-
-                          <div>
-                            {
-                              v.treatment
-                            }
-                          </div>
-
-                        </div>
-
-                      ))
-
-                    )
+              <Info
+                label="Age"
+                value={
+                  file.patient?.age
                 }
+              />
 
-              </Section>
+              <Info
+                label="Address"
+                value={
+                  file.patient
+                    ?.address
+                }
+              />
+
+              <Info
+                label="Occupation"
+                value={
+                  file.patient
+                    ?.occupation
+                }
+              />
+
+              <Info
+                label="Category"
+                value={
+                  file.patient
+                    ?.category
+                }
+              />
+
+              <Info
+                label="Purpose"
+                value={
+                  file.patient
+                    ?.purpose_of_visit
+                }
+              />
 
             </div>
 
           </div>
 
-        )
-      }
+          {/* MAIN */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns:
+              "1fr 1fr",
+            gap: 20,
+            marginTop: 20
+          }}>
+
+            {/* CHECKUPS */}
+            <Section
+              title="Checkups 🦷"
+              primary={primary}
+            >
+
+              {file.checkups.length === 0 ? (
+
+                <p>No checkups</p>
+
+              ) : (
+
+                file.checkups.map((c, i) => (
+
+                  <div
+                    key={i}
+                    style={item}
+                  >
+
+                    <b>
+                      Complaint:
+                    </b>
+                    {" "}
+                    {c.complaint}
+
+                  </div>
+
+                ))
+
+              )}
+
+            </Section>
+
+            {/* VISITS */}
+            <Section
+              title="Visits 🩺"
+              primary={primary}
+            >
+
+              {file.visits.length === 0 ? (
+
+                <p>No visits</p>
+
+              ) : (
+
+                file.visits.map((v, i) => (
+
+                  <div
+                    key={i}
+                    style={item}
+                  >
+
+                    <b>
+                      {v.treatment}
+                    </b>
+
+                    <div>
+                      {v.status}
+                    </div>
+
+                  </div>
+
+                ))
+
+              )}
+
+            </Section>
+
+            {/* INVOICES */}
+            <Section
+              title="Invoices 🧾"
+              primary={primary}
+            >
+
+              {file.invoices.length === 0 ? (
+
+                <p>No invoices</p>
+
+              ) : (
+
+                file.invoices.map((inv, i) => (
+
+                  <div
+                    key={i}
+                    style={item}
+                  >
+
+                    <div>
+                      Amount:
+                      {" "}
+                      Rs {inv.amount}
+                    </div>
+
+                    <div>
+                      Paid:
+                      {" "}
+                      Rs {inv.paid}
+                    </div>
+
+                    <div>
+                      Balance:
+                      {" "}
+                      Rs {inv.balance}
+                    </div>
+
+                  </div>
+
+                ))
+
+              )}
+
+            </Section>
+
+            {/* REPORTS */}
+            <Section
+              title="Reports 📄"
+              primary={primary}
+            >
+
+              <button
+                style={btn}
+                onClick={() =>
+                  navigate(
+                    "/timeline/" +
+                    file.patient?._id
+                  )
+                }
+              >
+                View Timeline
+              </button>
+
+              <button
+                style={{
+                  ...btn,
+                  marginLeft: 10
+                }}
+                onClick={() => {
+
+                  window.open(
+                    `${api.defaults.baseURL}/reports/pdf/${file.patient?._id}`
+                  );
+
+                }}
+              >
+                Download PDF
+              </button>
+
+            </Section>
+
+          </div>
+
+        </div>
+
+      )}
 
     </Layout>
-
   );
 }
 
 export default PatientFiles;
 
+/* ========================= */
+
 function Section({
   title,
   children,
-  primary,
-  light
+  primary
 }) {
 
   return (
@@ -602,11 +543,10 @@ function Section({
     }}>
 
       <div style={{
-        background: light,
-        color: primary,
+        background: primary,
+        color: "white",
         padding: 14,
-        fontWeight: "bold",
-        fontSize: 16
+        fontWeight: "bold"
       }}>
         {title}
       </div>
@@ -633,19 +573,19 @@ function Info({
       border:
         "1px solid #e2e8f0",
       borderRadius: 10,
-      padding: 10
+      padding: 12
     }}>
 
       <div style={{
         fontSize: 12,
-        color: "#64748b",
-        marginBottom: 5
+        color: "#64748b"
       }}>
         {label}
       </div>
 
       <div style={{
-        fontWeight: "600"
+        fontWeight: "600",
+        marginTop: 5
       }}>
         {value || "N/A"}
       </div>
@@ -655,43 +595,68 @@ function Info({
   );
 }
 
+/* ========================= */
+
 const card = {
+
   background: "white",
-  padding: 12,
+
+  padding: 18,
+
   borderRadius: 14,
+
   boxShadow:
     "0 2px 8px rgba(0,0,0,0.05)"
 };
 
 const input = {
+
   width: "100%",
+
   padding: 12,
+
   borderRadius: 10,
+
   border:
     "1px solid #cbd5e1",
+
   marginTop: 10
 };
 
 const item = {
+
   borderBottom:
     "1px solid #eee",
+
   padding: "10px 0"
 };
 
 const btn = {
+
   padding: "10px 18px",
+
   border: "none",
+
   borderRadius: 8,
+
   color: "white",
+
   cursor: "pointer",
+
   fontWeight: "bold",
+
   background: "#16a34a"
 };
 
 const empty = {
+
   background: "white",
+
   padding: 40,
+
   borderRadius: 14,
+
   textAlign: "center",
+
   fontSize: 18
 };
