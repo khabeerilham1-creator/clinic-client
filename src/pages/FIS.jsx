@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
-
 import Layout from "../components/Layout";
 
 function FIS() {
-
-  const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
   const [records, setRecords] = useState([]);
@@ -31,11 +27,9 @@ function FIS() {
 
   const [search, setSearch] = useState("");
 
-  const [editId, setEditId] =
-    useState(null);
+  const [editId, setEditId] = useState(null);
 
-  const [viewData, setViewData] =
-    useState(null);
+  const [viewData, setViewData] = useState(null);
 
   useEffect(() => {
 
@@ -49,7 +43,7 @@ function FIS() {
 
     const res = await api.get("/patients/");
 
-    setPatients(res.data);
+    setPatients(res.data || []);
   };
 
   const loadData = async () => {
@@ -59,6 +53,9 @@ function FIS() {
     setRecords(res.data || []);
   };
 
+  // =========================
+  // ROW CHANGE
+  // =========================
   const handleRowChange = (
     index,
     field,
@@ -74,6 +71,9 @@ function FIS() {
     calculate(updated);
   };
 
+  // =========================
+  // ADD ROW
+  // =========================
   const addRow = () => {
 
     setRows([
@@ -87,6 +87,9 @@ function FIS() {
     ]);
   };
 
+  // =========================
+  // REMOVE ROW
+  // =========================
   const removeRow = (i) => {
 
     const updated = rows.filter(
@@ -98,6 +101,9 @@ function FIS() {
     calculate(updated);
   };
 
+  // =========================
+  // CALCULATE
+  // =========================
   const calculate = (
     data = rows
   ) => {
@@ -109,10 +115,9 @@ function FIS() {
       const rate =
         Number(r.rate) || 0;
 
-      const qty =
-        Number(r.qty) || 1;
-
-      t += rate * qty;
+      // 🔥 FIXED
+      // QTY DOES NOT MULTIPLY
+      t += rate;
     });
 
     const disc =
@@ -143,6 +148,9 @@ function FIS() {
 
   }, [discount, labCharge]);
 
+  // =========================
+  // SAVE
+  // =========================
   const save = async () => {
 
     try {
@@ -172,7 +180,16 @@ function FIS() {
 
         })),
 
+        total:
+          Number(total) || 0,
+
+        discount:
+          Number(discount) || 0,
+
         amount:
+          Number(final) || 0,
+
+        final:
           Number(final) || 0,
 
         lab_charge:
@@ -198,6 +215,7 @@ function FIS() {
         alert("Saved ✅");
       }
 
+      // RESET
       setRows([
         {
           treatment: "",
@@ -215,6 +233,14 @@ function FIS() {
 
       setEditId(null);
 
+      setTotal(0);
+
+      setFinal(0);
+
+      setDoctorShare(0);
+
+      setOwner(0);
+
       loadData();
 
     } catch (err) {
@@ -225,6 +251,9 @@ function FIS() {
     }
   };
 
+  // =========================
+  // DELETE
+  // =========================
   const deleteRecord = async (
     id
   ) => {
@@ -243,6 +272,9 @@ function FIS() {
     loadData();
   };
 
+  // =========================
+  // FILTER
+  // =========================
   const filtered =
     records.filter(r =>
       r.patient_name
@@ -302,7 +334,8 @@ function FIS() {
           }
           value={patient}
           style={{
-            padding: 8
+            padding: 10,
+            width: "100%"
           }}
         >
 
@@ -365,6 +398,7 @@ function FIS() {
                         e.target.value
                       )
                     }
+                    style={input}
                   />
                 </td>
 
@@ -378,6 +412,7 @@ function FIS() {
                         e.target.value
                       )
                     }
+                    style={input}
                   />
                 </td>
 
@@ -391,6 +426,7 @@ function FIS() {
                         e.target.value
                       )
                     }
+                    style={input}
                   />
                 </td>
 
@@ -404,6 +440,7 @@ function FIS() {
                         e.target.value
                       )
                     }
+                    style={input}
                   />
                 </td>
 
@@ -455,7 +492,8 @@ function FIS() {
             )
           }
           style={{
-            marginRight: 10
+            ...input,
+            marginBottom: 10
           }}
         />
 
@@ -467,10 +505,12 @@ function FIS() {
               e.target.value
             )
           }
+          style={input}
         />
 
         <div style={{
-          marginTop: 20
+          marginTop: 20,
+          lineHeight: "32px"
         }}>
 
           <b>Total:</b>
@@ -493,6 +533,11 @@ function FIS() {
 
           <br/>
 
+          <b>Lab Share:</b>
+          {" "}Rs {labCharge || 0}
+
+          <br/>
+
           <b>Owner:</b>
           {" "}Rs {owner}
 
@@ -501,7 +546,7 @@ function FIS() {
         <button
           onClick={save}
           style={{
-            marginTop: 15,
+            marginTop: 20,
             padding: "10px 20px",
             background: "#16a34a",
             color: "white",
@@ -547,17 +592,13 @@ function FIS() {
 
             <br/><br/>
 
-            <b>
-              Amount:
-            </b>
+            <b>Amount:</b>
             {" "}
             Rs {r.amount}
 
             <br/>
 
-            <b>
-              Lab Charges:
-            </b>
+            <b>Lab Charges:</b>
             {" "}
             Rs {r.lab_charge || 0}
 
@@ -583,6 +624,10 @@ function FIS() {
 
                 setLabCharge(
                   r.lab_charge || ""
+                );
+
+                setDiscount(
+                  r.discount || ""
                 );
 
                 setEditId(r._id);
@@ -712,70 +757,29 @@ function FIS() {
 
               <tbody>
 
-                {viewData.rows?.length ? (
+                {viewData.rows?.map((row, i) => (
 
-                  viewData.rows.map((row, i) => (
+                  <tr key={i}>
 
-                    <tr key={i}>
+                    <td style={td}>
+                      {row.treatment}
+                    </td>
 
-                      <td style={td}>
-                        {row.treatment}
-                      </td>
+                    <td style={td}>
+                      {row.doctor}
+                    </td>
 
-                      <td style={td}>
-                        {row.doctor}
-                      </td>
+                    <td style={td}>
+                      {row.qty}
+                    </td>
 
-                      <td style={td}>
-                        {row.qty}
-                      </td>
+                    <td style={td}>
+                      Rs {row.rate}
+                    </td>
 
-                      <td style={td}>
-                        Rs {row.rate}
-                      </td>
+                  </tr>
 
-                    </tr>
-
-                  ))
-
-                ) : (
-
-                  viewData.procedure
-                    ?.split(",")
-                    .map((treatment, i) => (
-
-                      <tr key={i}>
-
-                        <td style={td}>
-                          {treatment.trim()}
-                        </td>
-
-                        <td style={td}>
-                          {
-                            viewData.doctor
-                              ?.split(",")[i]
-                              ?.trim()
-                          }
-                        </td>
-
-                        <td style={td}>
-                          1
-                        </td>
-
-                        <td style={td}>
-                          Rs {
-                            Math.floor(
-                              viewData.amount /
-                              viewData.procedure.split(",").length
-                            )
-                          }
-                        </td>
-
-                      </tr>
-
-                    ))
-
-                )}
+                ))}
 
               </tbody>
 
@@ -790,6 +794,13 @@ function FIS() {
     </Layout>
   );
 }
+
+const input = {
+  width: "100%",
+  padding: 10,
+  border: "1px solid #ddd",
+  borderRadius: 6
+};
 
 const th = {
   border: "1px solid #ddd",
