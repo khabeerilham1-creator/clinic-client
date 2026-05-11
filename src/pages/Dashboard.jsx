@@ -511,7 +511,34 @@ export default function Dashboard() {
         gap: 20
       }}>
 
-        {modules.map((m, i) => (
+        {modules
+.filter((m) => {
+
+  const role =
+    localStorage.getItem("role");
+
+  const permissions =
+    JSON.parse(
+      localStorage.getItem(
+        "permissions"
+      ) || "{}"
+    );
+
+  // CEO / ADMIN FULL ACCESS
+  if (
+    role === "CEO" ||
+    role === "admin"
+  ) {
+    return true;
+  }
+
+  // STAFF ACCESS
+  return (
+    permissions[m.permission]
+    === "enabled"
+  );
+})
+.map((m, i) => (
 
           <Link
             key={i}

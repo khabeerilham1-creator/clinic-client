@@ -41,6 +41,7 @@ function Permissions() {
     "patients",
     "visits",
     "checkup",
+    "ars",
     "afi",
     "cis",
     "prescription",

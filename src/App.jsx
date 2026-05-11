@@ -38,6 +38,9 @@ import Creditors from "./pages/Creditors";
 import Bills from "./pages/Bills";
 import Salary from "./pages/Salary";
 
+// 🚨 ALERT SYSTEM
+import ARS from "./pages/ARS";
+
 // 🔥 ACCOUNT STATUS
 import PatientAccountStatus from "./pages/PatientAccountStatus";
 
@@ -135,6 +138,12 @@ export default function App() {
         <Route
           path="/lvi"
           element={<LVI />}
+        />
+
+        {/* 🚨 ALERT SYSTEM */}
+        <Route
+          path="/ars"
+          element={<ARS />}
         />
 
         {/* 🔥 ACCOUNT STATUS */}

@@ -19,6 +19,7 @@ export default function Layout({
 
   const permissions =
     JSON.parse(
+
       localStorage.getItem(
         "permissions"
       ) || "{}"
@@ -29,15 +30,36 @@ export default function Layout({
   // =========================
   const canView = (module) => {
 
-    // CEO FULL ACCESS
+    // CEO / ADMIN FULL ACCESS
     if (
-      role === "CEO"
+
+      role === "CEO" ||
+
+      role === "admin"
+
     ) {
+
       return true;
     }
 
-    // DEFAULT HIDDEN
+    // IF NO PERMISSIONS
+    // SHOW DASHBOARD ONLY
+    if (
+
+      !permissions ||
+
+      Object.keys(
+        permissions
+      ).length === 0
+
+    ) {
+
+      return module === "dashboard";
+    }
+
+    // STAFF ACCESS
     return (
+
       permissions[module] ===
       "enabled"
     );
@@ -237,6 +259,93 @@ export default function Layout({
 
           )}
 
+          {canView("patient_account_status") && (
+
+            <Nav
+              icon="💳"
+              text="Patient Account Status"
+              path="/patient-account-status"
+              current={location.pathname}
+            />
+
+          )}
+
+        </Section>
+
+        {/* INTELLIGENCE */}
+        <Section title="INTELLIGENCE">
+
+          {canView("acc") && (
+
+            <Nav
+              icon="📊"
+              text="ACC"
+              path="/acc"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("hai") && (
+
+            <Nav
+              icon="👨‍⚕️"
+              text="HAI"
+              path="/hai"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("ars") && (
+
+           <Nav
+              icon="🚨"
+              text="ARS"
+              path="/ars"
+              current={location.pathname}
+            />
+
+          )}
+
+        </Section>
+
+        {/* CONTROL */}
+        <Section title="CONTROL">
+
+          {canView("debtors") && (
+
+            <Nav
+              icon="📉"
+              text="ACCOUNT RECEIVABLE"
+              path="/debtors"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("creditors") && (
+
+            <Nav
+              icon="📈"
+              text="ACCOUNT PAYABLE"
+              path="/creditors"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("bills") && (
+
+            <Nav
+              icon="💸"
+              text="Bills"
+              path="/bills"
+              current={location.pathname}
+            />
+
+          )}
+
         </Section>
 
         {/* SYSTEM */}
@@ -264,8 +373,63 @@ export default function Layout({
 
           )}
 
-          {/* CEO ONLY */}
-          {role === "CEO" && (
+          {canView("city_patients") && (
+
+            <Nav
+              icon="🌍"
+              text="City Patients"
+              path="/city-patients"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("completed_cases") && (
+
+            <Nav
+              icon="✅"
+              text="Completed Cases"
+              path="/completed-cases"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("pending_cases") && (
+
+            <Nav
+              icon="⏳"
+              text="Pending Cases"
+              path="/pending-cases"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("to_be_appointed") && (
+
+            <Nav
+              icon="📅"
+              text="To Be Appointed"
+              path="/to-be-appointed"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("to_be_excepted") && (
+
+            <Nav
+              icon="🚫"
+              text="To Be Excepted"
+              path="/to-be-excepted"
+              current={location.pathname}
+            />
+
+          )}
+
+          {(role === "CEO" ||
+            role === "admin") && (
 
             <Nav
               icon="🔐"
