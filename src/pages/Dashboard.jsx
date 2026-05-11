@@ -43,7 +43,8 @@ export default function Dashboard() {
         selectedYear
       ) {
 
-        url += `?month=${selectedMonth}&year=${selectedYear}`;
+        url +=
+          `?month=${selectedMonth}&year=${selectedYear}`;
       }
 
       const res =
@@ -78,6 +79,7 @@ export default function Dashboard() {
   // =========================
   const modules = [
 
+    // CORE
     {
       name: "Patients",
       path: "/patients",
@@ -94,6 +96,171 @@ export default function Dashboard() {
       name: "Checkup",
       path: "/checkup",
       icon: "🦷"
+    },
+
+    // CLINICAL
+    {
+      name: "AFI",
+      path: "/afi",
+      icon: "📋"
+    },
+
+    {
+      name: "CIS",
+      path: "/cis",
+      icon: "🧠"
+    },
+
+    {
+      name: "Prescription",
+      path: "/prescription",
+      icon: "💊"
+    },
+
+    // FINANCE
+    {
+      name: "FIS",
+      path: "/fis",
+      icon: "💰"
+    },
+
+    {
+      name: "Invoice",
+      path: "/invoice",
+      icon: "🧾"
+    },
+
+    {
+      name: "LVI",
+      path: "/lvi",
+      icon: "🏭"
+    },
+
+    {
+      name:
+        "Patient Account Status",
+
+      path:
+        "/patient-account-status",
+
+      icon: "💳"
+    },
+
+    // 🌍 CITY PATIENTS
+    {
+      name:
+        "City Patients",
+
+      path:
+        "/city-patients",
+
+      icon: "🌍"
+    },
+
+    {
+      name:
+        "Completed Cases",
+
+      path:
+        "/completed-cases",
+
+      icon: "✅"
+    },
+
+    {
+      name:
+        "Pending Cases",
+
+      path:
+        "/pending-cases",
+
+      icon: "⏳"
+    },
+
+    {
+      name:
+        "To Be Appointed",
+
+      path:
+        "/to-be-appointed",
+
+      icon: "📅"
+    },
+
+    {
+      name:
+        "To Be Excepted",
+
+      path:
+        "/to-be-excepted",
+
+      icon: "🚫"
+    },
+
+    // INTELLIGENCE
+    {
+      name: "ACC",
+      path: "/acc",
+      icon: "📊"
+    },
+
+    {
+      name: "HAI",
+      path: "/hai",
+      icon: "👨‍⚕️"
+    },
+
+    // CONTROL
+    {
+      name:
+        "ACCOUNT RECEIVABLE",
+
+      path: "/debtors",
+
+      icon: "📉"
+    },
+
+    {
+      name:
+        "ACCOUNT PAYABLE",
+
+      path:
+        "/creditors",
+
+      icon: "📈"
+    },
+
+    {
+      name: "Bills",
+      path: "/bills",
+      icon: "💸"
+    },
+
+    // SYSTEM
+    {
+      name: "Reports",
+      path: "/reports",
+      icon: "📄"
+    },
+
+    {
+      name:
+        "Patient Files",
+
+      path:
+        "/patient-files",
+
+      icon: "📁"
+    },
+
+    {
+      name:
+        "Permissions",
+
+      path:
+        "/permissions",
+
+      icon: "🔐"
     }
 
   ];
@@ -128,16 +295,14 @@ export default function Dashboard() {
 
         </div>
 
-        {/* MONTH FILTER */}
+        {/* FILTER */}
         <div style={{
           display: "flex",
           gap: 10
         }}>
 
           <select
-            value={
-              month
-            }
+            value={month}
             onChange={(e)=>
               setMonth(
                 e.target.value
@@ -147,20 +312,56 @@ export default function Dashboard() {
           >
 
             <option value="">
-              Month
+              Select Month
             </option>
 
-            {(stats.available_months || [])
-              .map((m, i) => (
+            <option value="1">
+              January
+            </option>
 
-              <option
-                key={i}
-                value={m.month}
-              >
-                {m.month_name}
-              </option>
+            <option value="2">
+              February
+            </option>
 
-            ))}
+            <option value="3">
+              March
+            </option>
+
+            <option value="4">
+              April
+            </option>
+
+            <option value="5">
+              May
+            </option>
+
+            <option value="6">
+              June
+            </option>
+
+            <option value="7">
+              July
+            </option>
+
+            <option value="8">
+              August
+            </option>
+
+            <option value="9">
+              September
+            </option>
+
+            <option value="10">
+              October
+            </option>
+
+            <option value="11">
+              November
+            </option>
+
+            <option value="12">
+              December
+            </option>
 
           </select>
 
@@ -175,20 +376,24 @@ export default function Dashboard() {
           >
 
             <option value="">
-              Year
+              Select Year
             </option>
 
-            {(stats.available_months || [])
-              .map((m, i) => (
+            <option value="2024">
+              2024
+            </option>
 
-              <option
-                key={i}
-                value={m.year}
-              >
-                {m.year}
-              </option>
+            <option value="2025">
+              2025
+            </option>
 
-            ))}
+            <option value="2026">
+              2026
+            </option>
+
+            <option value="2027">
+              2027
+            </option>
 
           </select>
 
@@ -263,10 +468,15 @@ export default function Dashboard() {
 
         borderRadius: 16,
 
-        marginBottom: 30
+        marginBottom: 30,
+
+        boxShadow:
+          "0 10px 25px rgba(0,0,0,0.15)"
       }}>
 
-        <h2>
+        <h2 style={{
+          marginBottom: 10
+        }}>
           Revenue Overview
         </h2>
 
@@ -324,8 +534,31 @@ export default function Dashboard() {
                 textAlign:
                   "center",
 
+                transition:
+                  "all 0.25s ease",
+
                 boxShadow:
-                  "0 2px 8px rgba(0,0,0,0.05)"
+                  "0 2px 8px rgba(0,0,0,0.05)",
+
+                cursor: "pointer"
+              }}
+
+              onMouseEnter={(e)=>{
+
+                e.currentTarget.style.transform =
+                  "translateY(-5px)";
+
+                e.currentTarget.style.boxShadow =
+                  "0 10px 20px rgba(0,0,0,0.1)";
+              }}
+
+              onMouseLeave={(e)=>{
+
+                e.currentTarget.style.transform =
+                  "translateY(0)";
+
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(0,0,0,0.05)";
               }}
             >
 
@@ -371,7 +604,10 @@ function KPI({
       borderRadius: 14,
 
       borderLeft:
-        `6px solid ${color}`
+        `6px solid ${color}`,
+
+      boxShadow:
+        "0 4px 10px rgba(0,0,0,0.05)"
     }}>
 
       <p style={{
@@ -380,7 +616,9 @@ function KPI({
         {title}
       </p>
 
-      <h2>
+      <h2 style={{
+        marginTop: 5
+      }}>
         {value || 0}
       </h2>
 
