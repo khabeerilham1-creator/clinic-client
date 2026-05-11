@@ -1,24 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
 import api from "../api";
+
 import Layout from "../components/Layout";
 
 function Permissions() {
 
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] =
+    useState([]);
 
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    role: "Receptionist"
-  });
+  const [editId, setEditId] =
+    useState(null);
 
-  const [permission, setPermission] = useState({
-    username: "",
-    module: "patients",
-    access: "enabled"
-  });
+  const [form, setForm] =
+    useState({
+
+      username: "",
+
+      password: "",
+
+      role: "Receptionist"
+    });
+
+  const [permission, setPermission] =
+    useState({
+
+      username: "",
+
+      module: "patients",
+
+      access: "enabled"
+    });
 
   const modules = [
+
     "dashboard",
     "patients",
     "visits",
@@ -45,37 +63,75 @@ function Permissions() {
 
     try {
 
-      const res = await api.get("/permissions/users");
+      const res =
+        await api.get(
+          "/permissions/users"
+        );
 
-      setUsers(res.data || []);
+      setUsers(
+        res.data || []
+      );
 
     } catch (err) {
 
       console.log(err);
-
     }
   };
 
   useEffect(() => {
+
     loadUsers();
+
   }, []);
 
   // =========================
-  // CREATE USER
+  // CREATE / UPDATE
   // =========================
-  const createUser = async () => {
+  const saveUser = async () => {
 
     try {
 
-      await api.post("/permissions/users", form);
+      if (
+        !form.username
+      ) {
+        return alert(
+          "Username required"
+        );
+      }
 
-      alert("User Created ✅");
+      if (editId) {
+
+        await api.put(
+
+          "/permissions/users/" + editId,
+
+          form
+        );
+
+        alert("User Updated ✅");
+
+      } else {
+
+        await api.post(
+
+          "/permissions/users",
+
+          form
+        );
+
+        alert("User Created ✅");
+      }
 
       setForm({
+
         username: "",
+
         password: "",
+
         role: "Receptionist"
       });
+
+      setEditId(null);
 
       loadUsers();
 
@@ -83,7 +139,39 @@ function Permissions() {
 
       console.log(err);
 
-      alert("Error ❌");
+      alert(
+        err.response?.data?.detail ||
+        "Error ❌"
+      );
+    }
+  };
+
+  // =========================
+  // DELETE
+  // =========================
+  const deleteUser = async (id) => {
+
+    if (
+      !window.confirm(
+        "Delete user?"
+      )
+    )
+      return;
+
+    try {
+
+      await api.delete(
+
+        "/permissions/users/" + id
+      );
+
+      alert("Deleted ✅");
+
+      loadUsers();
+
+    } catch (err) {
+
+      console.log(err);
     }
   };
 
@@ -94,9 +182,16 @@ function Permissions() {
 
     try {
 
-      await api.post("/permissions/apply", permission);
+      await api.post(
 
-      alert("Permission Updated ✅");
+        "/permissions/apply",
+
+        permission
+      );
+
+      alert(
+        "Permission Updated ✅"
+      );
 
       loadUsers();
 
@@ -112,24 +207,34 @@ function Permissions() {
 
     <Layout>
 
-      <h1 style={{ marginBottom: 20 }}>
+      <h1 style={{
+        marginBottom: 20
+      }}>
         Permissions Management
       </h1>
 
       {/* CREATE USER */}
       <div style={card}>
 
-        <h2>Create User</h2>
+        <h2>
+          {editId
+            ? "Edit User"
+            : "Create User"}
+        </h2>
 
         <Grid>
 
           <input
             placeholder="Username"
             value={form.username}
-            onChange={(e) =>
+            onChange={(e)=>
+
               setForm({
+
                 ...form,
-                username: e.target.value
+
+                username:
+                  e.target.value
               })
             }
             style={input}
@@ -138,10 +243,14 @@ function Permissions() {
           <input
             placeholder="Password"
             value={form.password}
-            onChange={(e) =>
+            onChange={(e)=>
+
               setForm({
+
                 ...form,
-                password: e.target.value
+
+                password:
+                  e.target.value
               })
             }
             style={input}
@@ -149,28 +258,52 @@ function Permissions() {
 
           <select
             value={form.role}
-            onChange={(e) =>
+            onChange={(e)=>
+
               setForm({
+
                 ...form,
-                role: e.target.value
+
+                role:
+                  e.target.value
               })
             }
             style={input}
           >
-            <option>CEO</option>
-            <option>Receptionist</option>
-            <option>Dentist</option>
-            <option>Assistant</option>
-            <option>Accountant</option>
+
+            <option>
+              CEO
+            </option>
+
+            <option>
+              Receptionist
+            </option>
+
+            <option>
+              Dentist
+            </option>
+
+            <option>
+              Assistant
+            </option>
+
+            <option>
+              Accountant
+            </option>
+
           </select>
 
         </Grid>
 
         <button
-          onClick={createUser}
+          onClick={saveUser}
           style={btn}
         >
-          Create User
+
+          {editId
+            ? "Update User"
+            : "Create User"}
+
         </button>
 
       </div>
@@ -178,18 +311,28 @@ function Permissions() {
       {/* APPLY */}
       <div style={card}>
 
-        <h2>Module Permissions</h2>
+        <h2>
+          Module Permissions
+        </h2>
 
         <Grid>
 
           <select
-            value={permission.username}
-            onChange={(e) =>
+            value={
+              permission.username
+            }
+
+            onChange={(e)=>
+
               setPermission({
+
                 ...permission,
-                username: e.target.value
+
+                username:
+                  e.target.value
               })
             }
+
             style={input}
           >
 
@@ -197,46 +340,67 @@ function Permissions() {
               Select User
             </option>
 
-            {users.map((u) => (
+            {users.map((u)=>(
+
               <option
                 key={u._id}
                 value={u.username}
               >
                 {u.username}
               </option>
+
             ))}
 
           </select>
 
           <select
-            value={permission.module}
-            onChange={(e) =>
+            value={
+              permission.module
+            }
+
+            onChange={(e)=>
+
               setPermission({
+
                 ...permission,
-                module: e.target.value
+
+                module:
+                  e.target.value
               })
             }
+
             style={input}
           >
 
-            {modules.map((m) => (
+            {modules.map((m)=>(
+
               <option key={m}>
                 {m}
               </option>
+
             ))}
 
           </select>
 
           <select
-            value={permission.access}
-            onChange={(e) =>
+            value={
+              permission.access
+            }
+
+            onChange={(e)=>
+
               setPermission({
+
                 ...permission,
-                access: e.target.value
+
+                access:
+                  e.target.value
               })
             }
+
             style={input}
           >
+
             <option value="enabled">
               Enabled
             </option>
@@ -248,6 +412,7 @@ function Permissions() {
             <option value="hidden">
               Hidden
             </option>
+
           </select>
 
         </Grid>
@@ -264,7 +429,9 @@ function Permissions() {
       {/* USERS */}
       <div style={card}>
 
-        <h2>Users</h2>
+        <h2>
+          Users
+        </h2>
 
         <table style={{
           width: "100%",
@@ -274,16 +441,30 @@ function Permissions() {
           <thead>
 
             <tr>
-              <th style={th}>Username</th>
-              <th style={th}>Role</th>
-              <th style={th}>Permissions</th>
+
+              <th style={th}>
+                Username
+              </th>
+
+              <th style={th}>
+                Role
+              </th>
+
+              <th style={th}>
+                Permissions
+              </th>
+
+              <th style={th}>
+                Actions
+              </th>
+
             </tr>
 
           </thead>
 
           <tbody>
 
-            {users.map((u) => (
+            {users.map((u)=>(
 
               <tr key={u._id}>
 
@@ -299,13 +480,55 @@ function Permissions() {
 
                   {Object.entries(
                     u.permissions || {}
-                  ).map(([k, v]) => (
+                  ).map(([k, v])=>(
 
                     <div key={k}>
                       <b>{k}</b> → {v}
                     </div>
 
                   ))}
+
+                </td>
+
+                <td style={td}>
+
+                  <button
+
+                    onClick={() => {
+
+                      setForm({
+
+                        username:
+                          u.username,
+
+                        password: "",
+
+                        role:
+                          u.role
+                      });
+
+                      setEditId(
+                        u._id
+                      );
+                    }}
+
+                    style={{
+                      marginRight: 10
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+
+                    onClick={() =>
+                      deleteUser(
+                        u._id
+                      )
+                    }
+                  >
+                    Delete
+                  </button>
 
                 </td>
 
@@ -325,52 +548,90 @@ function Permissions() {
 
 /* STYLES */
 
-function Grid({ children }) {
+function Grid({
+  children
+}) {
 
   return (
+
     <div style={{
+
       display: "grid",
-      gridTemplateColumns: "repeat(3,1fr)",
+
+      gridTemplateColumns:
+        "repeat(3,1fr)",
+
       gap: 10,
+
       marginBottom: 15
+
     }}>
+
       {children}
+
     </div>
   );
 }
 
 const card = {
+
   background: "white",
+
   padding: 20,
+
   borderRadius: 12,
+
   marginBottom: 20,
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+
+  boxShadow:
+    "0 2px 6px rgba(0,0,0,0.05)"
 };
 
 const input = {
+
   padding: 10,
-  border: "1px solid #ddd",
+
+  border:
+    "1px solid #ddd",
+
   borderRadius: 8
 };
 
 const btn = {
-  padding: "10px 20px",
-  background: "#2563eb",
+
+  padding:
+    "10px 20px",
+
+  background:
+    "#2563eb",
+
   color: "white",
+
   border: "none",
+
   borderRadius: 8,
+
   cursor: "pointer"
 };
 
 const th = {
-  border: "1px solid #ddd",
+
+  border:
+    "1px solid #ddd",
+
   padding: 10,
-  background: "#f8fafc"
+
+  background:
+    "#f8fafc"
 };
 
 const td = {
-  border: "1px solid #ddd",
+
+  border:
+    "1px solid #ddd",
+
   padding: 10,
+
   verticalAlign: "top"
 };
 
