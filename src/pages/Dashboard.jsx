@@ -20,6 +20,43 @@ export default function Dashboard() {
   const [stats, setStats] =
     useState({});
 
+  const [month, setMonth] =
+    useState("");
+
+  const [year, setYear] =
+    useState("");
+
+  // =========================
+  // LOAD DASHBOARD
+  // =========================
+  const loadDashboard = async (
+    selectedMonth,
+    selectedYear
+  ) => {
+
+    try {
+
+      let url = "/dashboard/";
+
+      if (
+        selectedMonth &&
+        selectedYear
+      ) {
+
+        url += `?month=${selectedMonth}&year=${selectedYear}`;
+      }
+
+      const res =
+        await api.get(url);
+
+      setStats(res.data);
+
+    } catch {
+
+      setStats({});
+    }
+  };
+
   useEffect(() => {
 
     const token =
@@ -30,16 +67,9 @@ export default function Dashboard() {
     if (!token) {
 
       navigate("/");
-
     }
 
-    api.get("/dashboard/")
-      .then(res =>
-        setStats(res.data)
-      )
-      .catch(() =>
-        setStats({})
-      );
+    loadDashboard();
 
   }, [navigate]);
 
@@ -48,7 +78,6 @@ export default function Dashboard() {
   // =========================
   const modules = [
 
-    // CORE
     {
       name: "Patients",
       path: "/patients",
@@ -65,171 +94,6 @@ export default function Dashboard() {
       name: "Checkup",
       path: "/checkup",
       icon: "🦷"
-    },
-
-    // CLINICAL
-    {
-      name: "AFI",
-      path: "/afi",
-      icon: "📋"
-    },
-
-    {
-      name: "CIS",
-      path: "/cis",
-      icon: "🧠"
-    },
-
-    {
-      name: "Prescription",
-      path: "/prescription",
-      icon: "💊"
-    },
-
-    // FINANCE
-    {
-      name: "FIS",
-      path: "/fis",
-      icon: "💰"
-    },
-
-    {
-      name: "Invoice",
-      path: "/invoice",
-      icon: "🧾"
-    },
-
-    {
-      name: "LVI",
-      path: "/lvi",
-      icon: "🏭"
-    },
-
-    {
-      name:
-        "Patient Account Status",
-
-      path:
-        "/patient-account-status",
-
-      icon: "💳"
-    },
-
-    // 🌍 CITY PATIENTS
-    {
-      name:
-        "City Patients",
-
-      path:
-        "/city-patients",
-
-      icon: "🌍"
-    },
-
-    {
-      name:
-       "Completed Cases",
-
-      path:
-       "/completed-cases",
-
-      icon: "✅"
-    },
-
-    {
-     name:
-       "Pending Cases",
-
-      path:
-       "/pending-cases",
-
-      icon: "⏳"
-    },
-
-    {
-     name:
-       "To Be Appointed",
-
-      path:
-       "/to-be-appointed",
-
-      icon: "📅"
-     },
-
-    {
-     name:
-       "To Be Excepted",
-
-      path:
-        "/to-be-excepted",
-
-      icon: "🚫"
-     },
-
-    // INTELLIGENCE
-    {
-      name: "ACC",
-      path: "/acc",
-      icon: "📊"
-    },
-
-    {
-      name: "HAI",
-      path: "/hai",
-      icon: "👨‍⚕️"
-    },
-
-    // CONTROL
-    {
-      name:
-        "ACCOUNT RECEIVABLE",
-
-      path: "/debtors",
-
-      icon: "📉"
-    },
-
-    {
-      name:
-        "ACCOUNT PAYABLE",
-
-      path:
-        "/creditors",
-
-      icon: "📈"
-    },
-
-    {
-      name: "Bills",
-      path: "/bills",
-      icon: "💸"
-    },
-
-    // SYSTEM
-    {
-      name: "Reports",
-      path: "/reports",
-      icon: "📄"
-    },
-
-    {
-      name:
-        "Patient Files",
-
-      path:
-        "/patient-files",
-
-      icon: "📁"
-    },
-
-    {
-      name:
-        "Permissions",
-
-      path:
-        "/permissions",
-
-      icon: "🔐"
     }
 
   ];
@@ -240,21 +104,116 @@ export default function Dashboard() {
 
       {/* HEADER */}
       <div style={{
-        marginBottom: 30
+        marginBottom: 30,
+        display: "flex",
+        justifyContent:
+          "space-between",
+        alignItems: "center"
       }}>
 
-        <h1 style={{
-          fontSize: 28,
-          marginBottom: 5
-        }}>
-          Dashboard
-        </h1>
+        <div>
 
-        <p style={{
-          color: "#64748b"
+          <h1 style={{
+            fontSize: 28,
+            marginBottom: 5
+          }}>
+            Dashboard
+          </h1>
+
+          <p style={{
+            color: "#64748b"
+          }}>
+            Revenue Analytics
+          </p>
+
+        </div>
+
+        {/* MONTH FILTER */}
+        <div style={{
+          display: "flex",
+          gap: 10
         }}>
-          Welcome to Holistic Domain of Creativity
-        </p>
+
+          <select
+            value={
+              month
+            }
+            onChange={(e)=>
+              setMonth(
+                e.target.value
+              )
+            }
+            style={filterInput}
+          >
+
+            <option value="">
+              Month
+            </option>
+
+            {(stats.available_months || [])
+              .map((m, i) => (
+
+              <option
+                key={i}
+                value={m.month}
+              >
+                {m.month_name}
+              </option>
+
+            ))}
+
+          </select>
+
+          <select
+            value={year}
+            onChange={(e)=>
+              setYear(
+                e.target.value
+              )
+            }
+            style={filterInput}
+          >
+
+            <option value="">
+              Year
+            </option>
+
+            {(stats.available_months || [])
+              .map((m, i) => (
+
+              <option
+                key={i}
+                value={m.year}
+              >
+                {m.year}
+              </option>
+
+            ))}
+
+          </select>
+
+          <button
+            onClick={() =>
+              loadDashboard(
+                month,
+                year
+              )
+            }
+            style={{
+              padding:
+                "10px 18px",
+              border: "none",
+              borderRadius: 8,
+              background:
+                "#2563eb",
+              color: "white",
+              cursor: "pointer"
+            }}
+          >
+            Filter
+          </button>
+
+        </div>
 
       </div>
 
@@ -274,7 +233,7 @@ export default function Dashboard() {
         />
 
         <KPI
-          title="Revenue"
+          title="Monthly Revenue"
           value={`Rs ${stats.revenue || 0}`}
           color="#22c55e"
         />
@@ -304,31 +263,31 @@ export default function Dashboard() {
 
         borderRadius: 16,
 
-        marginBottom: 30,
-
-        boxShadow:
-          "0 10px 25px rgba(0,0,0,0.15)"
+        marginBottom: 30
       }}>
 
-        <h2 style={{
-          marginBottom: 10
-        }}>
-          Clinic Overview
+        <h2>
+          Revenue Overview
         </h2>
 
         <p>
-          Total Revenue:
+          Monthly Revenue:
           Rs {stats.revenue || 0}
         </p>
 
         <p>
-          Today's Patients:
-          {stats.today_patients || 0}
+          Doctor Share:
+          Rs {stats?.split?.doctor || 0}
         </p>
 
         <p>
-          Logged Role:
-          {localStorage.getItem("role")}
+          Lab Share:
+          Rs {stats?.split?.lab || 0}
+        </p>
+
+        <p>
+          Owner Profit:
+          Rs {stats?.split?.owner || 0}
         </p>
 
       </div>
@@ -348,45 +307,25 @@ export default function Dashboard() {
             key={i}
             to={m.path}
             style={{
-              textDecoration: "none"
+              textDecoration:
+                "none"
             }}
           >
 
             <div
               style={{
-                background: "white",
+                background:
+                  "white",
 
                 padding: 20,
 
                 borderRadius: 14,
 
-                textAlign: "center",
-
-                transition:
-                  "all 0.25s ease",
+                textAlign:
+                  "center",
 
                 boxShadow:
-                  "0 2px 8px rgba(0,0,0,0.05)",
-
-                cursor: "pointer"
-              }}
-
-              onMouseEnter={(e)=>{
-
-                e.currentTarget.style.transform =
-                  "translateY(-5px)";
-
-                e.currentTarget.style.boxShadow =
-                  "0 10px 20px rgba(0,0,0,0.1)";
-              }}
-
-              onMouseLeave={(e)=>{
-
-                e.currentTarget.style.transform =
-                  "translateY(0)";
-
-                e.currentTarget.style.boxShadow =
-                  "0 2px 8px rgba(0,0,0,0.05)";
+                  "0 2px 8px rgba(0,0,0,0.05)"
               }}
             >
 
@@ -432,10 +371,7 @@ function KPI({
       borderRadius: 14,
 
       borderLeft:
-        `6px solid ${color}`,
-
-      boxShadow:
-        "0 4px 10px rgba(0,0,0,0.05)"
+        `6px solid ${color}`
     }}>
 
       <p style={{
@@ -444,12 +380,20 @@ function KPI({
         {title}
       </p>
 
-      <h2 style={{
-        marginTop: 5
-      }}>
+      <h2>
         {value || 0}
       </h2>
 
     </div>
   );
 }
+
+const filterInput = {
+
+  padding: 10,
+
+  borderRadius: 8,
+
+  border:
+    "1px solid #cbd5e1"
+};
