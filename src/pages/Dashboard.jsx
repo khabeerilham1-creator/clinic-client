@@ -27,6 +27,37 @@ export default function Dashboard() {
     useState("");
 
   // =========================
+  // USER ACCESS
+  // =========================
+  const role =
+    localStorage.getItem("role");
+
+  const permissions =
+    JSON.parse(
+      localStorage.getItem(
+        "permissions"
+      ) || "{}"
+    );
+
+  const isAdmin =
+    role === "CEO" ||
+    role === "admin";
+
+  const canView = (
+    permission
+  ) => {
+
+    if (isAdmin) {
+      return true;
+    }
+
+    return (
+      permissions[permission]
+      === "enabled"
+    );
+  };
+
+  // =========================
   // LOAD DASHBOARD
   // =========================
   const loadDashboard = async (
@@ -36,7 +67,8 @@ export default function Dashboard() {
 
     try {
 
-      let url = "/dashboard/";
+      let url =
+        "/dashboard/";
 
       if (
         selectedMonth &&
@@ -79,61 +111,67 @@ export default function Dashboard() {
   // =========================
   const modules = [
 
-    // CORE
     {
       name: "Patients",
       path: "/patients",
-      icon: "👤"
+      icon: "👤",
+      permission: "patients"
     },
 
     {
       name: "Visits",
       path: "/visits",
-      icon: "🩺"
+      icon: "🩺",
+      permission: "visits"
     },
 
     {
       name: "Checkup",
       path: "/checkup",
-      icon: "🦷"
+      icon: "🦷",
+      permission: "checkup"
     },
 
-    // CLINICAL
     {
       name: "AFI",
       path: "/afi",
-      icon: "📋"
+      icon: "📋",
+      permission: "afi"
     },
 
     {
       name: "CIS",
       path: "/cis",
-      icon: "🧠"
+      icon: "🧠",
+      permission: "cis"
     },
 
     {
       name: "Prescription",
       path: "/prescription",
-      icon: "💊"
+      icon: "💊",
+      permission: "prescription"
     },
 
-    // FINANCE
     {
       name: "FIS",
       path: "/fis",
-      icon: "💰"
+      icon: "💰",
+      permission: "fis"
     },
 
     {
       name: "Invoice",
       path: "/invoice",
-      icon: "🧾"
+      icon: "🧾",
+      permission: "invoice"
     },
 
     {
       name: "LVI",
       path: "/lvi",
-      icon: "🏭"
+      icon: "🏭",
+      permission: "lvi"
     },
 
     {
@@ -143,10 +181,12 @@ export default function Dashboard() {
       path:
         "/patient-account-status",
 
-      icon: "💳"
+      icon: "💳",
+
+      permission:
+        "patient_account_status"
     },
 
-    // 🌍 CITY PATIENTS
     {
       name:
         "City Patients",
@@ -154,7 +194,10 @@ export default function Dashboard() {
       path:
         "/city-patients",
 
-      icon: "🌍"
+      icon: "🌍",
+
+      permission:
+        "city_patients"
     },
 
     {
@@ -164,7 +207,10 @@ export default function Dashboard() {
       path:
         "/completed-cases",
 
-      icon: "✅"
+      icon: "✅",
+
+      permission:
+        "completed_cases"
     },
 
     {
@@ -174,7 +220,10 @@ export default function Dashboard() {
       path:
         "/pending-cases",
 
-      icon: "⏳"
+      icon: "⏳",
+
+      permission:
+        "pending_cases"
     },
 
     {
@@ -184,7 +233,10 @@ export default function Dashboard() {
       path:
         "/to-be-appointed",
 
-      icon: "📅"
+      icon: "📅",
+
+      permission:
+        "to_be_appointed"
     },
 
     {
@@ -194,30 +246,44 @@ export default function Dashboard() {
       path:
         "/to-be-excepted",
 
-      icon: "🚫"
+      icon: "🚫",
+
+      permission:
+        "to_be_excepted"
     },
 
-    // INTELLIGENCE
     {
       name: "ACC",
       path: "/acc",
-      icon: "📊"
+      icon: "📊",
+      permission: "acc"
     },
 
     {
       name: "HAI",
       path: "/hai",
-      icon: "👨‍⚕️"
+      icon: "👨‍⚕️",
+      permission: "hai"
     },
 
-    // CONTROL
+    {
+      name: "ARS",
+      path: "/ars",
+      icon: "🚨",
+      permission: "ars"
+    },
+
     {
       name:
         "ACCOUNT RECEIVABLE",
 
-      path: "/debtors",
+      path:
+        "/debtors",
 
-      icon: "📉"
+      icon: "📉",
+
+      permission:
+        "debtors"
     },
 
     {
@@ -227,20 +293,24 @@ export default function Dashboard() {
       path:
         "/creditors",
 
-      icon: "📈"
+      icon: "📈",
+
+      permission:
+        "creditors"
     },
 
     {
       name: "Bills",
       path: "/bills",
-      icon: "💸"
+      icon: "💸",
+      permission: "bills"
     },
 
-    // SYSTEM
     {
       name: "Reports",
       path: "/reports",
-      icon: "📄"
+      icon: "📄",
+      permission: "reports"
     },
 
     {
@@ -250,17 +320,10 @@ export default function Dashboard() {
       path:
         "/patient-files",
 
-      icon: "📁"
-    },
+      icon: "📁",
 
-    {
-      name:
-        "Permissions",
-
-      path:
-        "/permissions",
-
-      icon: "🔐"
+      permission:
+        "patient_files"
     }
 
   ];
@@ -271,274 +334,198 @@ export default function Dashboard() {
 
       {/* HEADER */}
       <div style={{
-        marginBottom: 30,
-        display: "flex",
-        justifyContent:
-          "space-between",
-        alignItems: "center"
-      }}>
-
-        <div>
-
-          <h1 style={{
-            fontSize: 28,
-            marginBottom: 5
-          }}>
-            Dashboard
-          </h1>
-
-          <p style={{
-            color: "#64748b"
-          }}>
-            Revenue Analytics
-          </p>
-
-        </div>
-
-        {/* FILTER */}
-        <div style={{
-          display: "flex",
-          gap: 10
-        }}>
-
-          <select
-            value={month}
-            onChange={(e)=>
-              setMonth(
-                e.target.value
-              )
-            }
-            style={filterInput}
-          >
-
-            <option value="">
-              Select Month
-            </option>
-
-            <option value="1">
-              January
-            </option>
-
-            <option value="2">
-              February
-            </option>
-
-            <option value="3">
-              March
-            </option>
-
-            <option value="4">
-              April
-            </option>
-
-            <option value="5">
-              May
-            </option>
-
-            <option value="6">
-              June
-            </option>
-
-            <option value="7">
-              July
-            </option>
-
-            <option value="8">
-              August
-            </option>
-
-            <option value="9">
-              September
-            </option>
-
-            <option value="10">
-              October
-            </option>
-
-            <option value="11">
-              November
-            </option>
-
-            <option value="12">
-              December
-            </option>
-
-          </select>
-
-          <select
-            value={year}
-            onChange={(e)=>
-              setYear(
-                e.target.value
-              )
-            }
-            style={filterInput}
-          >
-
-            <option value="">
-              Select Year
-            </option>
-
-            <option value="2024">
-              2024
-            </option>
-
-            <option value="2025">
-              2025
-            </option>
-
-            <option value="2026">
-              2026
-            </option>
-
-            <option value="2027">
-              2027
-            </option>
-
-          </select>
-
-          <button
-            onClick={() =>
-              loadDashboard(
-                month,
-                year
-              )
-            }
-            style={{
-              padding:
-                "10px 18px",
-              border: "none",
-              borderRadius: 8,
-              background:
-                "#2563eb",
-              color: "white",
-              cursor: "pointer"
-            }}
-          >
-            Filter
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* KPI */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(auto-fit, minmax(220px,1fr))",
-        gap: 20,
         marginBottom: 30
       }}>
 
-        <KPI
-          title="Patients"
-          value={stats.patients}
-          color="#6366f1"
-        />
-
-        <KPI
-          title="Monthly Revenue"
-          value={`Rs ${stats.revenue || 0}`}
-          color="#22c55e"
-        />
-
-        <KPI
-          title="Checkups"
-          value={stats.checkups}
-          color="#f59e0b"
-        />
-
-        <KPI
-          title="Today Revenue"
-          value={`Rs ${stats.today_revenue || 0}`}
-          color="#ef4444"
-        />
-
-      </div>
-
-      {/* OVERVIEW */}
-      <div style={{
-        background:
-          "linear-gradient(135deg, #06b6d4, #2563eb)",
-
-        color: "white",
-
-        padding: 25,
-
-        borderRadius: 16,
-
-        marginBottom: 30,
-
-        boxShadow:
-          "0 10px 25px rgba(0,0,0,0.15)"
-      }}>
-
-        <h2 style={{
-          marginBottom: 10
+        <h1 style={{
+          fontSize: 28,
+          marginBottom: 5
         }}>
-          Revenue Overview
-        </h2>
+          Dashboard
+        </h1>
 
-        <p>
-          Monthly Revenue:
-          Rs {stats.revenue || 0}
-        </p>
-
-        <p>
-          Doctor Share:
-          Rs {stats?.split?.doctor || 0}
-        </p>
-
-        <p>
-          Lab Share:
-          Rs {stats?.split?.lab || 0}
-        </p>
-
-        <p>
-          Owner Profit:
-          Rs {stats?.split?.owner || 0}
+        <p style={{
+          color: "#64748b"
+        }}>
+          Clinic Management
         </p>
 
       </div>
+
+      {/* ADMIN ONLY */}
+      {isAdmin && (
+
+        <>
+
+          {/* FILTER */}
+          <div style={{
+            display: "flex",
+            gap: 10,
+            marginBottom: 25
+          }}>
+
+            <select
+              value={month}
+              onChange={(e)=>
+                setMonth(
+                  e.target.value
+                )
+              }
+              style={filterInput}
+            >
+              <option value="">
+                Select Month
+              </option>
+
+              {[...Array(12)].map(
+                (_, i) => (
+
+                <option
+                  key={i}
+                  value={i + 1}
+                >
+                  {new Date(
+                    0,
+                    i
+                  ).toLocaleString(
+                    "default",
+                    {
+                      month: "long"
+                    }
+                  )}
+                </option>
+
+              ))}
+            </select>
+
+            <select
+              value={year}
+              onChange={(e)=>
+                setYear(
+                  e.target.value
+                )
+              }
+              style={filterInput}
+            >
+
+              <option value="">
+                Select Year
+              </option>
+
+              <option value="2024">
+                2024
+              </option>
+
+              <option value="2025">
+                2025
+              </option>
+
+              <option value="2026">
+                2026
+              </option>
+
+            </select>
+
+            <button
+              onClick={() =>
+                loadDashboard(
+                  month,
+                  year
+                )
+              }
+              style={filterBtn}
+            >
+              Filter
+            </button>
+
+          </div>
+
+          {/* KPI */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(220px,1fr))",
+
+            gap: 20,
+
+            marginBottom: 30
+          }}>
+
+            <KPI
+              title="Patients"
+              value={stats.patients}
+              color="#6366f1"
+            />
+
+            <KPI
+              title="Monthly Revenue"
+              value={`Rs ${stats.revenue || 0}`}
+              color="#22c55e"
+            />
+
+            <KPI
+              title="Checkups"
+              value={stats.checkups}
+              color="#f59e0b"
+            />
+
+            <KPI
+              title="Today Revenue"
+              value={`Rs ${stats.today_revenue || 0}`}
+              color="#ef4444"
+            />
+
+          </div>
+
+          {/* OVERVIEW */}
+          <div style={overviewCard}>
+
+            <h2>
+              Revenue Overview
+            </h2>
+
+            <p>
+              Monthly Revenue:
+              Rs {stats.revenue || 0}
+            </p>
+
+            <p>
+              Doctor Share:
+              Rs {stats?.split?.doctor || 0}
+            </p>
+
+            <p>
+              Lab Share:
+              Rs {stats?.split?.lab || 0}
+            </p>
+
+            <p>
+              Owner Profit:
+              Rs {stats?.split?.owner || 0}
+            </p>
+
+          </div>
+
+        </>
+
+      )}
 
       {/* MODULE GRID */}
       <div style={{
         display: "grid",
         gridTemplateColumns:
-          "repeat(auto-fill, minmax(180px,1fr))",
+          "repeat(auto-fill,minmax(180px,1fr))",
 
         gap: 20
       }}>
 
         {modules
-.filter((m) => {
-
-  const role =
-    localStorage.getItem("role");
-
-  const permissions =
-    JSON.parse(
-      localStorage.getItem(
-        "permissions"
-      ) || "{}"
-    );
-
-  // CEO / ADMIN FULL ACCESS
-  if (
-    role === "CEO" ||
-    role === "admin"
-  ) {
-    return true;
-  }
-
-  // STAFF ACCESS
-  return (
-    permissions[m.permission]
-    === "enabled"
-  );
-})
-.map((m, i) => (
+        .filter((m)=>
+          canView(
+            m.permission
+          )
+        )
+        .map((m, i) => (
 
           <Link
             key={i}
@@ -549,45 +536,7 @@ export default function Dashboard() {
             }}
           >
 
-            <div
-              style={{
-                background:
-                  "white",
-
-                padding: 20,
-
-                borderRadius: 14,
-
-                textAlign:
-                  "center",
-
-                transition:
-                  "all 0.25s ease",
-
-                boxShadow:
-                  "0 2px 8px rgba(0,0,0,0.05)",
-
-                cursor: "pointer"
-              }}
-
-              onMouseEnter={(e)=>{
-
-                e.currentTarget.style.transform =
-                  "translateY(-5px)";
-
-                e.currentTarget.style.boxShadow =
-                  "0 10px 20px rgba(0,0,0,0.1)";
-              }}
-
-              onMouseLeave={(e)=>{
-
-                e.currentTarget.style.transform =
-                  "translateY(0)";
-
-                e.currentTarget.style.boxShadow =
-                  "0 2px 8px rgba(0,0,0,0.05)";
-              }}
-            >
+            <div style={moduleCard}>
 
               <div style={{
                 fontSize: 30
@@ -614,7 +563,6 @@ export default function Dashboard() {
 }
 
 /* KPI */
-
 function KPI({
   title,
   value,
@@ -625,33 +573,51 @@ function KPI({
 
     <div style={{
       background: "white",
-
       padding: 20,
-
       borderRadius: 14,
-
       borderLeft:
-        `6px solid ${color}`,
-
-      boxShadow:
-        "0 4px 10px rgba(0,0,0,0.05)"
+        `6px solid ${color}`
     }}>
 
-      <p style={{
-        color: "#64748b"
-      }}>
+      <p>
         {title}
       </p>
 
-      <h2 style={{
-        marginTop: 5
-      }}>
+      <h2>
         {value || 0}
       </h2>
 
     </div>
   );
 }
+
+const moduleCard = {
+
+  background: "white",
+
+  padding: 20,
+
+  borderRadius: 14,
+
+  textAlign: "center",
+
+  boxShadow:
+    "0 2px 8px rgba(0,0,0,0.05)"
+};
+
+const overviewCard = {
+
+  background:
+    "linear-gradient(135deg,#06b6d4,#2563eb)",
+
+  color: "white",
+
+  padding: 25,
+
+  borderRadius: 16,
+
+  marginBottom: 30
+};
 
 const filterInput = {
 
@@ -661,4 +627,21 @@ const filterInput = {
 
   border:
     "1px solid #cbd5e1"
+};
+
+const filterBtn = {
+
+  padding:
+    "10px 18px",
+
+  border: "none",
+
+  borderRadius: 8,
+
+  background:
+    "#2563eb",
+
+  color: "white",
+
+  cursor: "pointer"
 };
