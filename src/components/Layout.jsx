@@ -155,18 +155,7 @@ export default function Layout({
             <Nav
               icon="👤"
               text="Patients Entry"
-              path="/patients entry"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("visits") && (
-
-            <Nav
-              icon="🩺"
-              text="Planned Sequence Of Treatment"
-              path="/Planned Sequence Of Treatment"
+              path="/patients"
               current={location.pathname}
             />
 
@@ -178,6 +167,17 @@ export default function Layout({
               icon="🦷"
               text="Checkup"
               path="/checkup"
+              current={location.pathname}
+            />
+
+          )}
+
+          {canView("visits") && (
+
+            <Nav
+              icon="🩺"
+              text="Planned Sequence Of Treatment"
+              path="/visits"
               current={location.pathname}
             />
 
@@ -205,18 +205,7 @@ export default function Layout({
             <Nav
               icon="📋"
               text="APPOINTMENT"
-              path="/APPOINTMENT"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("cis") && (
-
-            <Nav
-              icon="🧠"
-              text="CIS"
-              path="/cis"
+              path="/afi"
               current={location.pathname}
             />
 
@@ -243,7 +232,7 @@ export default function Layout({
             <Nav
               icon="💰"
               text="Financial System"
-              path="/Financial System"
+              path="/fis"
               current={location.pathname}
             />
 
@@ -260,12 +249,12 @@ export default function Layout({
 
           )}
 
-          {canView("lvi") && (
+          {canView("lab Intelligence System") && (
 
             <Nav
               icon="🏭"
               text="lab Intelligence System"
-              path="/lab Intelligence System"
+              path="/lvi"
               current={location.pathname}
             />
 
@@ -291,7 +280,7 @@ export default function Layout({
 
             <Nav
               icon="📊"
-              text="ACC"
+              text="Analytics & Command Center"
               path="/acc"
               current={location.pathname}
             />
@@ -302,7 +291,7 @@ export default function Layout({
 
             <Nav
               icon="👨‍⚕️"
-              text="HAI"
+              text="Staff & accountability intelligence"
               path="/hai"
               current={location.pathname}
             />
@@ -313,7 +302,7 @@ export default function Layout({
 
            <Nav
               icon="🚨"
-              text="ARS"
+              text="Alert & Reminder System"
               path="/ars"
               current={location.pathname}
             />

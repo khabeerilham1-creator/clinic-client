@@ -108,7 +108,7 @@ export default function HAI() {
     <Layout>
 
       <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
-      <h1>HR & ACCOUNTABILITY INTELLIGENCE (HAI)</h1>
+      <h1>Staff & accountability intelligence</h1>
 
       {/* TABS */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>

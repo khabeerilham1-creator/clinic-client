@@ -112,14 +112,14 @@ export default function Dashboard() {
   const modules = [
 
     {
-      name: "Patients",
+      name: "Patients Entry",
       path: "/patients",
       icon: "👤",
       permission: "patients"
     },
 
     {
-      name: "Visits",
+      name: "Planned Sequence Of Treatment",
       path: "/visits",
       icon: "🩺",
       permission: "visits"
@@ -133,17 +133,10 @@ export default function Dashboard() {
     },
 
     {
-      name: "AFI",
+      name: "APPOINTMENT",
       path: "/afi",
       icon: "📋",
       permission: "afi"
-    },
-
-    {
-      name: "CIS",
-      path: "/cis",
-      icon: "🧠",
-      permission: "cis"
     },
 
     {
@@ -154,7 +147,7 @@ export default function Dashboard() {
     },
 
     {
-      name: "FIS",
+      name: "Financial System",
       path: "/fis",
       icon: "💰",
       permission: "fis"
@@ -168,7 +161,7 @@ export default function Dashboard() {
     },
 
     {
-      name: "LVI",
+      name: "Lab Intelligence System",
       path: "/lvi",
       icon: "🏭",
       permission: "lvi"
@@ -253,21 +246,21 @@ export default function Dashboard() {
     },
 
     {
-      name: "ACC",
+      name: "Analytics & Command Center",
       path: "/acc",
       icon: "📊",
       permission: "acc"
     },
 
     {
-      name: "HAI",
+      name: "Staff & accountability intelligence",
       path: "/hai",
       icon: "👨‍⚕️",
       permission: "hai"
     },
 
     {
-      name: "ARS",
+      name: "Alert & Reminder System",
       path: "/ars",
       icon: "🚨",
       permission: "ars"

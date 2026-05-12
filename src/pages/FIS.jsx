@@ -291,7 +291,7 @@ function FIS() {
       <h1 style={{
         marginBottom: 20
       }}>
-        FIS — Financial System
+        Financial System
       </h1>
 
       {/* SEARCH */}

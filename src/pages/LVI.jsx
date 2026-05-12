@@ -114,7 +114,7 @@ function LVI() {
       {/* HEADER */}
       <div style={{ marginBottom: 20 }}>
         <button onClick={() => navigate("/dashboard")}>⬅ Back</button>
-        <h1>LVI — Lab Intelligence System 🧪</h1>
+        <h1>Lab Intelligence System 🧪</h1>
       </div>
 
       {/* ========================= CASES ========================= */}

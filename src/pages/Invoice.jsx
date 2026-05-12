@@ -1,43 +1,83 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
-
 import Layout from "../components/Layout";
 
 function Invoice() {
 
-  const navigate = useNavigate();
+  // =========================
+  // DATE FORMAT
+  // =========================
+  const formatDate = (date) => {
 
-  const [patients, setPatients] = useState([]);
-  const [records, setRecords] = useState([]);
+    if (!date) return "";
 
-  const [patient, setPatient] = useState("");
+    const d = new Date(date);
 
-  const [rows, setRows] = useState([
-    {
-      treatment: "",
-      doctor: "",
-      qty: "",
-      rate: ""
-    }
-  ]);
+    const day = String(
+      d.getDate()
+    ).padStart(2, "0");
 
-  const [payments, setPayments] = useState([
-    {
-      amount: "",
-      method: ""
-    }
-  ]);
+    const month = String(
+      d.getMonth() + 1
+    ).padStart(2, "0");
 
-  const [discount, setDiscount] = useState("");
+    const year =
+      d.getFullYear();
 
-  const [total, setTotal] = useState(0);
-  const [final, setFinal] = useState(0);
+    return `${day}/${month}/${year}`;
+  };
 
-  const [search, setSearch] = useState("");
+  const todayDate =
+    formatDate(new Date());
 
-  const [editId, setEditId] = useState(null);
+  const [patients, setPatients] =
+    useState([]);
 
+  const [records, setRecords] =
+    useState([]);
+
+  const [patient, setPatient] =
+    useState("");
+
+  const [invoiceDate, setInvoiceDate] =
+    useState(todayDate);
+
+  const [rows, setRows] =
+    useState([
+      {
+        treatment: "",
+        doctor: "",
+        qty: "",
+        rate: ""
+      }
+    ]);
+
+  const [payments, setPayments] =
+    useState([
+      {
+        amount: "",
+        method: ""
+      }
+    ]);
+
+  const [discount, setDiscount] =
+    useState("");
+
+  const [total, setTotal] =
+    useState(0);
+
+  const [final, setFinal] =
+    useState(0);
+
+  const [search, setSearch] =
+    useState("");
+
+  const [editId, setEditId] =
+    useState(null);
+
+  // =========================
+  // LOAD
+  // =========================
   useEffect(() => {
 
     loadPatients();
@@ -48,14 +88,16 @@ function Invoice() {
 
   const loadPatients = async () => {
 
-    const res = await api.get("/patients/");
+    const res =
+      await api.get("/patients/");
 
     setPatients(res.data);
   };
 
   const loadInvoices = async () => {
 
-    const res = await api.get("/invoice/");
+    const res =
+      await api.get("/invoice/");
 
     setRecords(res.data);
   };
@@ -99,9 +141,10 @@ function Invoice() {
   // =========================
   const removeRow = (i) => {
 
-    const updated = rows.filter(
-      (_, idx) => idx !== i
-    );
+    const updated =
+      rows.filter(
+        (_, idx) => idx !== i
+      );
 
     setRows(updated);
 
@@ -117,7 +160,8 @@ function Invoice() {
     value
   ) => {
 
-    const updated = [...payments];
+    const updated =
+      [...payments];
 
     updated[i][field] = value;
 
@@ -138,13 +182,18 @@ function Invoice() {
   // =========================
   // CALCULATE
   // =========================
-  const calculate = (data = rows) => {
+  const calculate = (
+    data = rows
+  ) => {
 
     let t = 0;
 
     data.forEach(r => {
 
-      t += Number(r.rate) || 0;
+      t +=
+        (Number(r.qty) || 1)
+        *
+        (Number(r.rate) || 0);
 
     });
 
@@ -170,6 +219,10 @@ function Invoice() {
   const handleEdit = (r) => {
 
     setPatient(r.patient_name);
+
+    setInvoiceDate(
+      r.invoice_date || todayDate
+    );
 
     setRows(
       r.rows || [
@@ -214,18 +267,12 @@ function Invoice() {
         return;
       }
 
-      if (!rows.length) {
-
-        alert(
-          "Add treatment ❌"
-        );
-
-        return;
-      }
-
       const payload = {
 
         patient_name: patient,
+
+        invoice_date:
+          invoiceDate,
 
         rows,
 
@@ -274,6 +321,10 @@ function Invoice() {
 
       setPatient("");
 
+      setInvoiceDate(
+        todayDate
+      );
+
       setEditId(null);
 
       loadInvoices();
@@ -289,7 +340,9 @@ function Invoice() {
   // =========================
   // DELETE
   // =========================
-  const deleteInvoice = async (id) => {
+  const deleteInvoice = async (
+    id
+  ) => {
 
     await api.delete(
       "/invoice/" + id
@@ -301,13 +354,14 @@ function Invoice() {
   // =========================
   // SEARCH
   // =========================
-  const filtered = records.filter(r =>
-    r.patient_name
-      ?.toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
-  );
+  const filtered =
+    records.filter(r =>
+      r.patient_name
+        ?.toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
+    );
 
   return (
 
@@ -340,6 +394,32 @@ function Invoice() {
 
       {/* PATIENT */}
       <div style={card}>
+
+        <div style={{
+          marginBottom: 15
+        }}>
+
+          <label>
+            Invoice Date
+          </label>
+
+          <input
+            type="text"
+            value={invoiceDate}
+            onChange={(e)=>
+              setInvoiceDate(
+                e.target.value
+              )
+            }
+            placeholder="13/05/2026"
+            style={{
+              width: "100%",
+              padding: 10,
+              marginTop: 5
+            }}
+          />
+
+        </div>
 
         <select
           value={patient}
@@ -617,6 +697,12 @@ function Invoice() {
             <b>
               {r.patient_name}
             </b>
+
+            <br/>
+
+            Date:
+            {" "}
+            {r.invoice_date}
 
             <br/>
 
