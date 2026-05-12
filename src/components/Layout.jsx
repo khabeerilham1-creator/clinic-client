@@ -154,8 +154,8 @@ export default function Layout({
 
             <Nav
               icon="👤"
-              text="Patients"
-              path="/patients"
+              text="Patients Entry"
+              path="/patients entry"
               current={location.pathname}
             />
 
@@ -165,8 +165,8 @@ export default function Layout({
 
             <Nav
               icon="🩺"
-              text="Visits"
-              path="/visits"
+              text="Planned Sequence Of Treatment"
+              path="/Planned Sequence Of Treatment"
               current={location.pathname}
             />
 
