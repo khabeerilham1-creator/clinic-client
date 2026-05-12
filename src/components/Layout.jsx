@@ -183,6 +183,18 @@ export default function Layout({
 
           )}
 
+           {canView("invoice") && (
+
+            <Nav
+              icon="🧾"
+              text="Invoice"
+              path="/invoice"
+              current={location.pathname}
+            />
+
+          )}
+
+
         </Section>
 
         {/* CLINICAL */}
@@ -192,8 +204,8 @@ export default function Layout({
 
             <Nav
               icon="📋"
-              text="AFI"
-              path="/afi"
+              text="APPOINTMENT"
+              path="/APPOINTMENT"
               current={location.pathname}
             />
 
@@ -230,8 +242,8 @@ export default function Layout({
 
             <Nav
               icon="💰"
-              text="FIS"
-              path="/fis"
+              text="Financial System"
+              path="/Financial System"
               current={location.pathname}
             />
 
@@ -252,8 +264,8 @@ export default function Layout({
 
             <Nav
               icon="🏭"
-              text="LVI"
-              path="/lvi"
+              text="lab Intelligence System"
+              path="/lab Intelligence System"
               current={location.pathname}
             />
 
