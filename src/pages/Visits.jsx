@@ -13,6 +13,7 @@ function Visits() {
 
   const [form, setForm] = useState({
     patient_id: "",
+    patient_name: "",
     visit_no: "",
     treatment: "",
     date: new Date().toISOString().split("T")[0],
@@ -78,9 +79,28 @@ function Visits() {
   // =========================
   const handleChange = (e) => {
 
+    const value = e.target.value;
+
+    if (e.target.name === "patient_id") {
+
+      const selectedPatient =
+        patients.find(
+          p => p._id === value
+        );
+
+      setForm({
+        ...form,
+        patient_id: value,
+        patient_name:
+          selectedPatient?.name || ""
+      });
+
+      return;
+    }
+
     setForm({
       ...form,
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     });
   };
 
@@ -94,29 +114,110 @@ function Visits() {
       if (!form.patient_id)
         return alert("Select patient ❗");
 
-      let res;
+      const payload = {
+        ...form
+      };
 
       if (editId) {
 
-        res = await api.put(
+        await api.put(
           "/visits/" + editId,
-          form
+          payload
         );
+
+        // AUTO UPDATE APPOINTMENT
+        if (
+          form.status === "Planned"
+        ) {
+
+          try {
+
+            await api.post("/afi/", {
+
+              patient_name:
+              form.patient_name,
+
+              doctor:
+              form.procedure_doctor,
+
+              procedure:
+              form.treatment,
+
+              appointment_date:
+              form.date,
+
+              appointment_time: "",
+
+              chair: "",
+
+              source: "Visit Auto",
+
+              status: "Planned"
+            });
+
+          } catch (err) {
+
+            console.log(
+              "AUTO AFI ERROR",
+              err
+            );
+          }
+        }
 
         alert("Updated ✅");
 
       } else {
 
-        res = await api.post(
+        await api.post(
           "/visits/",
-          form
+          payload
         );
+
+        // AUTO CREATE APPOINTMENT
+        if (
+          form.status === "Planned"
+        ) {
+
+          try {
+
+            await api.post("/afi/", {
+
+              patient_name:
+              form.patient_name,
+
+              doctor:
+              form.procedure_doctor,
+
+              procedure:
+              form.treatment,
+
+              appointment_date:
+              form.date,
+
+              appointment_time: "",
+
+              chair: "",
+
+              source: "Visit Auto",
+
+              status: "Planned"
+            });
+
+          } catch (err) {
+
+            console.log(
+              "AUTO AFI ERROR",
+              err
+            );
+          }
+        }
 
         alert("Saved ✅");
       }
 
       setForm({
         patient_id: "",
+        patient_name: "",
         visit_no: "",
         treatment: "",
         date: new Date().toISOString().split("T")[0],
@@ -143,11 +244,14 @@ function Visits() {
 
     setForm({
       patient_id: v.patient_id || "",
+      patient_name: v.patient_name || "",
       visit_no: v.visit_no || "",
       treatment: v.treatment || "",
       date: v.date || "",
-      procedure_doctor: v.procedure_doctor || "",
-      status: v.status || "Planned"
+      procedure_doctor:
+      v.procedure_doctor || "",
+      status:
+      v.status || "Planned"
     });
 
     setEditId(v._id);
@@ -160,7 +264,9 @@ function Visits() {
 
     try {
 
-      await api.delete("/visits/" + id);
+      await api.delete(
+        "/visits/" + id
+      );
 
       loadVisits();
 
@@ -170,24 +276,13 @@ function Visits() {
     }
   };
 
-  // =========================
-  // PATIENT NAME
-  // =========================
-  const getPatientName = (id) => {
-
-    const p = patients.find(
-      p => p._id === id
-    );
-
-    return p ? p.name : "Unknown";
-  };
-
   return (
 
     <Layout>
 
       <h1 style={{
-        marginBottom: 20
+        marginBottom: 20,
+        fontSize: 26
       }}>
         Planned Sequence Of Treatment
       </h1>
@@ -195,13 +290,16 @@ function Visits() {
       {/* FORM */}
       <div style={{
         background: "white",
-        padding: 20,
-        borderRadius: 10,
+        padding: 18,
+        borderRadius: 14,
         marginBottom: 20,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+        boxShadow:
+          "0 2px 8px rgba(0,0,0,0.05)"
       }}>
 
-        <h3>
+        <h3 style={{
+          marginBottom: 15
+        }}>
           {editId
             ? "Edit Treatment Plan"
             : "Add Treatment Plan"}
@@ -297,14 +395,7 @@ function Visits() {
 
         <button
           onClick={saveVisit}
-          style={{
-            marginTop: 15,
-            padding: "10px 20px",
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: 6
-          }}
+          style={saveBtn}
         >
           {editId
             ? "Update Plan"
@@ -315,108 +406,106 @@ function Visits() {
 
       {/* LIST */}
       <div style={{
-        background: "white",
-        padding: 20,
-        borderRadius: 10,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit,minmax(240px,1fr))",
+        gap: 14
       }}>
 
-        <h2>Treatment Plan List</h2>
+        {visits.map(v => (
 
-        <table style={{
-          width: "100%",
-          marginTop: 10
-        }}>
+          <div
+            key={v._id}
+            style={card}
+          >
 
-          <thead>
+            <div style={{
+              display: "flex",
+              justifyContent:
+                "space-between",
+              alignItems: "center",
+              marginBottom: 10
+            }}>
 
-            <tr>
-              <th align="left">Patient</th>
-              <th align="left">Visit No</th>
-              <th align="left">Treatment</th>
-              <th align="left">Date</th>
-              <th align="left">Doctor</th>
-              <th align="left">Status</th>
-              <th align="right">Actions</th>
-            </tr>
+              <h2 style={{
+                margin: 0,
+                fontSize: 18
+              }}>
+                {v.patient_name}
+              </h2>
 
-          </thead>
+              <span style={{
+                padding: "4px 10px",
+                borderRadius: 20,
+                fontSize: 11,
+                color: "white",
+                background:
+                  v.status === "Completed"
+                    ? "#16a34a"
+                    : v.status === "Cancelled"
+                    ? "#dc2626"
+                    : v.status === "In Progress"
+                    ? "#ca8a04"
+                    : "#2563eb"
+              }}>
+                {v.status}
+              </span>
 
-          <tbody>
+            </div>
 
-            {visits.map(v => (
+            <p style={text}>
+              🆔 Visit No:
+              {" "}
+              {v.visit_no}
+            </p>
 
-              <tr
-                key={v._id}
-                style={{
-                  borderTop: "1px solid #eee"
-                }}
+            <p style={text}>
+              🩺 Treatment:
+              {" "}
+              {v.treatment}
+            </p>
+
+            <p style={text}>
+              📅 Date:
+              {" "}
+              {v.date}
+            </p>
+
+            <p style={text}>
+              👨‍⚕️ Doctor:
+              {" "}
+              {v.procedure_doctor}
+            </p>
+
+            <div style={{
+              display: "flex",
+              gap: 10,
+              marginTop: 14
+            }}>
+
+              <button
+                onClick={() =>
+                  handleEdit(v)
+                }
+                style={editBtn}
               >
+                Edit
+              </button>
 
-                <td>
-                  {getPatientName(v.patient_id)}
-                </td>
+              <button
+                onClick={() =>
+                  handleDelete(v._id)
+                }
+                style={deleteBtn}
+              >
+                Delete
+              </button>
 
-                <td>{v.visit_no}</td>
+            </div>
 
-                <td>{v.treatment}</td>
+          </div>
 
-                <td>{v.date}</td>
-
-                <td>
-                  {v.procedure_doctor}
-                </td>
-
-                <td>
-
-                  <span style={{
-                    padding: "5px 10px",
-                    borderRadius: 20,
-                    color: "white",
-                    background:
-                      v.status === "Completed"
-                        ? "#16a34a"
-                        : v.status === "Cancelled"
-                        ? "#dc2626"
-                        : v.status === "In Progress"
-                        ? "#ca8a04"
-                        : "#2563eb"
-                  }}>
-                    {v.status}
-                  </span>
-
-                </td>
-
-                <td align="right">
-
-                  <button
-                    onClick={() =>
-                      handleEdit(v)
-                    }
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleDelete(v._id)
-                    }
-                    style={{
-                      marginLeft: 10
-                    }}
-                  >
-                    Delete
-                  </button>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
+        ))}
 
       </div>
 
@@ -430,21 +519,108 @@ function Grid({ children }) {
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: "repeat(2,1fr)",
-      gap: 10
+      gridTemplateColumns:
+        "repeat(2,1fr)",
+      gap: 12
     }}>
       {children}
     </div>
   );
 }
 
-/* INPUT */
+/* STYLES */
+
 const input = {
+
   width: "100%",
+
   padding: 10,
-  borderRadius: 8,
+
+  borderRadius: 10,
+
   border: "1px solid #cbd5e1",
-  boxSizing: "border-box"
+
+  boxSizing: "border-box",
+
+  fontSize: 13
+};
+
+const saveBtn = {
+
+  marginTop: 16,
+
+  padding: "10px 18px",
+
+  background: "#2563eb",
+
+  color: "white",
+
+  border: "none",
+
+  borderRadius: 10,
+
+  cursor: "pointer",
+
+  fontSize: 13
+};
+
+const card = {
+
+  background: "white",
+
+  padding: 14,
+
+  borderRadius: 14,
+
+  boxShadow:
+    "0 2px 8px rgba(0,0,0,0.05)"
+};
+
+const text = {
+
+  fontSize: 13,
+
+  margin: "6px 0",
+
+  color: "#334155"
+};
+
+const editBtn = {
+
+  flex: 1,
+
+  padding: 8,
+
+  border: "none",
+
+  borderRadius: 8,
+
+  background: "#f59e0b",
+
+  color: "white",
+
+  cursor: "pointer",
+
+  fontSize: 12
+};
+
+const deleteBtn = {
+
+  flex: 1,
+
+  padding: 8,
+
+  border: "none",
+
+  borderRadius: 8,
+
+  background: "#dc2626",
+
+  color: "white",
+
+  cursor: "pointer",
+
+  fontSize: 12
 };
 
 export default Visits;
