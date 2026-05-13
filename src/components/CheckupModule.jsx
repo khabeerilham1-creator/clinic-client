@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import toothImg from "../assets/tooth_chart.png";
@@ -7,8 +7,6 @@ import toothImg from "../assets/tooth_chart.png";
 function CheckupModule() {
 
   const nav = useNavigate();
-
-  // ---------------- STATE ----------------
 
   const [patientName, setPatientName] = useState("");
   const [contact, setContact] = useState("");
@@ -18,7 +16,7 @@ function CheckupModule() {
   const [tasks, setTasks] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
 
-  // ---------------- COMPLAINT OPTIONS ----------------
+  // ---------------- COMPLAINTS ----------------
 
   const complaints = [
 
@@ -38,7 +36,7 @@ function CheckupModule() {
 
   ];
 
-  // ---------------- CONDITION → TREATMENT ----------------
+  // ---------------- CONDITION MAP ----------------
 
   const conditionMap = {
 
@@ -233,59 +231,83 @@ function CheckupModule() {
 
   const saveCheckup = async () => {
 
-  if (
-    !patientName ||
-    !contact ||
-    !date
-  ) {
+    if (
+      !patientName ||
+      !contact ||
+      !date
+    ) {
 
-    alert("Fill all patient info");
+      alert(
+        "Fill all patient info"
+      );
 
-    return;
+      return;
 
-  }
+    }
 
-  if (tasks.length === 0) {
+    if (
+      tasks.length === 0
+    ) {
 
-    alert("Select at least one tooth");
+      alert(
+        "Select at least one tooth"
+      );
 
-    return;
+      return;
 
-  }
+    }
 
-  try {
+    try {
 
-    await axios.post(
-      "https://pis-backend-final-1.onrender.com/checkups/",
-      {
+      const payload = {
 
-        patient_name: patientName,
+        patient_name:
+          patientName,
 
         contact: contact,
 
         date: date,
 
-        chief_complaint:
+        complaint:
           complaint?.value || "",
 
         tasks: tasks
 
-      }
-    );
+      };
 
-    alert("Checkup Saved ✅");
+      console.log(payload);
 
-    window.location.reload();
+      await api.post(
+        "/checkups/",
+        payload
+      );
 
-  } catch (err) {
+      alert(
+        "Checkup Saved ✅"
+      );
 
-    console.log(err);
+      setTasks([]);
 
-    alert("Error saving ❌");
+      setPatientName("");
 
-  }
+      setContact("");
 
-};
+      setDate("");
+
+      setComplaint(null);
+
+    } catch (err) {
+
+      console.log(
+        err.response?.data || err
+      );
+
+      alert(
+        "Error saving ❌"
+      );
+
+    }
+
   };
 
   return (
@@ -293,8 +315,6 @@ function CheckupModule() {
     <div style={{
       padding: "20px"
     }}>
-
-      {/* BACK */}
 
       <button
         onClick={() =>
@@ -312,6 +332,7 @@ function CheckupModule() {
 
       <input
         placeholder="Patient Name"
+        value={patientName}
         onChange={(e)=>
           setPatientName(
             e.target.value
@@ -324,6 +345,7 @@ function CheckupModule() {
 
       <input
         placeholder="Contact"
+        value={contact}
         onChange={(e)=>
           setContact(
             e.target.value
@@ -336,6 +358,7 @@ function CheckupModule() {
 
       <input
         type="date"
+        value={date}
         onChange={(e)=>
           setDate(
             e.target.value
@@ -355,6 +378,7 @@ function CheckupModule() {
 
       <Select
         options={complaints}
+        value={complaint}
         onChange={setComplaint}
         placeholder="Search or select complaint..."
       />
@@ -383,72 +407,38 @@ function CheckupModule() {
 
         {[
 
-          // TOP
-
           { n:1, x:30, y:25 },
-
           { n:2, x:70, y:25 },
-
           { n:3, x:110, y:25 },
-
           { n:4, x:150, y:25 },
-
           { n:5, x:190, y:25 },
-
           { n:6, x:230, y:25 },
-
           { n:7, x:270, y:25 },
-
           { n:8, x:310, y:25 },
-
           { n:9, x:350, y:25 },
-
           { n:10, x:390, y:25 },
-
           { n:11, x:430, y:25 },
-
           { n:12, x:470, y:25 },
-
           { n:13, x:510, y:25 },
-
           { n:14, x:550, y:25 },
-
           { n:15, x:590, y:25 },
-
           { n:16, x:630, y:25 },
 
-          // BOTTOM
-
           { n:32, x:30, y:120 },
-
           { n:31, x:70, y:120 },
-
           { n:30, x:110, y:120 },
-
           { n:29, x:150, y:120 },
-
           { n:28, x:190, y:120 },
-
           { n:27, x:230, y:120 },
-
           { n:26, x:270, y:120 },
-
           { n:25, x:310, y:120 },
-
           { n:24, x:350, y:120 },
-
           { n:23, x:390, y:120 },
-
           { n:22, x:430, y:120 },
-
           { n:21, x:470, y:120 },
-
           { n:20, x:510, y:120 },
-
           { n:19, x:550, y:120 },
-
           { n:18, x:590, y:120 },
-
           { n:17, x:630, y:120 }
 
         ].map((tooth, i)=>(
