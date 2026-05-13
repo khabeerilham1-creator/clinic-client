@@ -1,387 +1,238 @@
 /* eslint-disable jsx-a11y/alt-text */
 
-import React, {
-  useEffect,
-  useState
-} from "react";
-
+import React, { useEffect, useState } from "react";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
-
 import Layout from "../components/Layout";
 
-/* =========================================
-AUTO TREATMENT MAP
-========================================= */
-
 const conditionsMap = {
-
   Caries: "Composite Filling",
-
   Missing: "Implant",
-
-  Fracture: "Crown",
-
+  Fracture: "Ceramic Crown",
   Infection: "RCT",
-
   Mobility: "Splinting",
-
   Attrition: "Night Guard",
-
   Abrasion: "Restoration",
-
   Impaction: "Extraction",
-
-  Calculus: "Scaling & Polishing",
-
-  Gingivitis: "Deep Scaling",
-
-  Periodontitis: "Periodontal Therapy",
-
+  Calculus: "U/S Scaling & Polishing",
+  Gingivitis: "Medication",
+  Periodontitis: "Deep Scaling",
   Healthy: "None"
-
 };
-
-/* =========================================
-SOFT TISSUE OPTIONS
-========================================= */
-
-const softTissueConditions = [
-
-  "Gingivitis",
-
-  "Periodontitis",
-
-  "Gingival Hypertrophy",
-
-  "Epulis",
-
-  "Localized Gums",
-
-  "Generalized Gums",
-
-  "Ulcer",
-
-  "Lesion",
-
-  "Swelling",
-
-  "Bleeding Gums"
-
-];
-
-/* =========================================
-CLINICAL TREATMENTS
-========================================= */
-
-const treatmentsList = [
-
-  "Scaling & Polishing",
-
-  "Medication",
-
-  "Surgical Intervention",
-
-  "RCT",
-
-  "Extraction",
-
-  "Composite Filling",
-
-  "Crown",
-
-  "Bridge",
-
-  "Implant",
-
-  "Night Guard",
-
-  "Deep Scaling"
-
-];
 
 function Checkup() {
 
-  const navigate =
-    useNavigate();
+  const [patients, setPatients] = useState([]);
+  const [checkups, setCheckups] = useState([]);
 
-  const [patients,
-    setPatients] =
-    useState([]);
+  const [patientId, setPatientId] = useState("");
+  const [complaint, setComplaint] = useState("");
 
-  const [checkups,
-    setCheckups] =
-    useState([]);
+  const [clinicalTasks, setClinicalTasks] = useState([]);
+  const [labTasks, setLabTasks] = useState([]);
 
-  const [patientId,
-    setPatientId] =
-    useState("");
-
-  const [chiefComplaint,
-    setChiefComplaint] =
-    useState("");
-
-  const [detailedComplaint,
-    setDetailedComplaint] =
-    useState("");
-
-  const [softTissue,
-    setSoftTissue] =
-    useState({
-
-      details: "",
-
-      condition: "",
-
-      treatment: ""
-
-    });
-
-  const [clinicalTasks,
-    setClinicalTasks] =
-    useState([]);
-
-  const [labTasks,
-    setLabTasks] =
-    useState([]);
-
-  const [editId,
-    setEditId] =
-    useState(null);
-
-  /* =========================================
-  LOAD
-  ========================================= */
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
 
     loadPatients();
-
     loadCheckups();
 
   }, []);
 
-  const loadPatients =
-    async () => {
+  const loadPatients = async () => {
 
     const res =
-      await api.get(
-        "/patients/"
-      );
+      await api.get("/patients/");
 
-    setPatients(
-      res.data || []
-    );
+    setPatients(res.data || []);
 
   };
 
-  const loadCheckups =
-    async () => {
+  const loadCheckups = async () => {
 
     const res =
-      await api.get(
-        "/checkups/"
-      );
+      await api.get("/checkups/");
 
-    setCheckups(
-      res.data || []
-    );
+    setCheckups(res.data || []);
 
   };
 
-  /* =========================================
-  TOOTH SELECT
-  ========================================= */
+  // =========================
+  // SELECT TOOTH
+  // =========================
 
-  const selectClinicalTooth =
-    (tooth) => {
+  const selectTooth = (
+    tooth,
+    type
+  ) => {
 
-    if (
-      !clinicalTasks.find(
-        t => t.tooth === tooth
-      )
-    ) {
+    const data =
+      type === "clinical"
+        ? [...clinicalTasks]
+        : [...labTasks];
+
+    const exists =
+      data.find(
+        x => x.tooth === tooth
+      );
+
+    if (exists) {
+
+      const filtered =
+        data.filter(
+          x => x.tooth !== tooth
+        );
+
+      if (type === "clinical") {
+
+        setClinicalTasks(filtered);
+
+      } else {
+
+        setLabTasks(filtered);
+
+      }
+
+      return;
+
+    }
+
+    const newTask = {
+
+      tooth,
+
+      condition: "",
+
+      treatment: "",
+
+      implant_size: "",
+
+      implant_brand: ""
+
+    };
+
+    if (type === "clinical") {
 
       setClinicalTasks([
-
         ...clinicalTasks,
-
-        {
-
-          tooth,
-
-          condition: "",
-
-          treatment: "",
-
-          implant_size: "",
-
-          implant_company: ""
-
-        }
-
+        newTask
       ]);
 
-    }
-
-  };
-
-  const selectLabTooth =
-    (tooth) => {
-
-    if (
-      !labTasks.find(
-        t => t.tooth === tooth
-      )
-    ) {
+    } else {
 
       setLabTasks([
-
         ...labTasks,
-
-        {
-
-          tooth,
-
-          work: ""
-
-        }
-
+        newTask
       ]);
 
     }
 
   };
 
-  /* =========================================
-  UPDATE TASK
-  ========================================= */
+  // =========================
+  // UPDATE TASK
+  // =========================
 
-  const updateClinical =
-    (
-      index,
-      field,
-      value
-    ) => {
+  const updateTask = (
+    index,
+    field,
+    value,
+    type
+  ) => {
 
-    const updated =
-      [...clinicalTasks];
+    const data =
+      type === "clinical"
+        ? [...clinicalTasks]
+        : [...labTasks];
 
-    updated[index][field] =
+    data[index][field] =
       value;
 
     if (
       field === "condition"
     ) {
 
-      updated[index]
-      .treatment =
-        conditionsMap[value]
-        || "";
+      data[index].treatment =
+        conditionsMap[value] || "";
 
     }
 
-    setClinicalTasks(
-      updated
-    );
+    if (type === "clinical") {
+
+      setClinicalTasks(data);
+
+    } else {
+
+      setLabTasks(data);
+
+    }
 
   };
 
-  const updateLab =
-    (
-      index,
-      field,
-      value
-    ) => {
+  // =========================
+  // REMOVE TASK
+  // =========================
 
-    const updated =
-      [...labTasks];
+  const removeTask = (
+    index,
+    type
+  ) => {
 
-    updated[index][field] =
-      value;
+    if (type === "clinical") {
 
-    setLabTasks(updated);
-
-  };
-
-  /* =========================================
-  REMOVE
-  ========================================= */
-
-  const removeClinical =
-    (index) => {
-
-    setClinicalTasks(
-
-      clinicalTasks.filter(
-        (_, i) =>
-          i !== index
-      )
-
-    );
-
-  };
-
-  const removeLab =
-    (index) => {
-
-    setLabTasks(
-
-      labTasks.filter(
-        (_, i) =>
-          i !== index
-      )
-
-    );
-
-  };
-
-  /* =========================================
-  SAVE
-  ========================================= */
-
-  const saveCheckup =
-    async () => {
-
-    if (!patientId)
-      return alert(
-        "Select Patient ❌"
+      setClinicalTasks(
+        clinicalTasks.filter(
+          (_, i) => i !== index
+        )
       );
+
+    } else {
+
+      setLabTasks(
+        labTasks.filter(
+          (_, i) => i !== index
+        )
+      );
+
+    }
+
+  };
+
+  // =========================
+  // SAVE
+  // =========================
+
+  const saveCheckup = async () => {
 
     const payload = {
 
       patient: patientId,
 
-      patient_id:
-        patientId,
+      patient_id: patientId,
 
-      complaint:
-        chiefComplaint,
+      complaint,
 
-      detailed_complaint:
-        detailedComplaint,
-
-      soft_tissue:
-        softTissue,
-
-      tasks:
+      clinical_tasks:
         clinicalTasks,
 
       lab_tasks:
-        labTasks
+        labTasks,
+
+      tasks: [
+        ...clinicalTasks,
+        ...labTasks
+      ]
 
     };
 
     if (editId) {
 
       await api.put(
-
-        "/checkups/" +
-        editId,
-
+        "/checkups/" + editId,
         payload
-
       );
+
+      alert("Updated ✅");
 
     } else {
 
@@ -390,44 +241,79 @@ function Checkup() {
         payload
       );
 
+      alert("Saved ✅");
+
     }
 
-    alert(
-      "Checkup Saved ✅"
-    );
-
-    setPatientId("");
-
-    setChiefComplaint("");
-
-    setDetailedComplaint("");
-
-    setClinicalTasks([]);
-
-    setLabTasks([]);
-
-    setSoftTissue({
-
-      details: "",
-
-      condition: "",
-
-      treatment: ""
-
-    });
-
-    setEditId(null);
+    resetForm();
 
     loadCheckups();
 
   };
 
-  /* =========================================
-  DELETE
-  ========================================= */
+  // =========================
+  // RESET
+  // =========================
 
-  const deleteCheckup =
-    async (id) => {
+  const resetForm = () => {
+
+    setPatientId("");
+
+    setComplaint("");
+
+    setClinicalTasks([]);
+
+    setLabTasks([]);
+
+    setEditId(null);
+
+  };
+
+  // =========================
+  // EDIT
+  // =========================
+
+  const editCheckup = (c) => {
+
+    setEditId(c._id);
+
+    setPatientId(
+      c.patient ||
+      c.patient_id
+    );
+
+    setComplaint(
+      c.complaint || ""
+    );
+
+    setClinicalTasks(
+      c.clinical_tasks ||
+      []
+    );
+
+    setLabTasks(
+      c.lab_tasks ||
+      []
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  };
+
+  // =========================
+  // DELETE
+  // =========================
+
+  const deleteCheckup = async (id) => {
+
+    if (
+      !window.confirm(
+        "Delete checkup?"
+      )
+    ) return;
 
     await api.delete(
       "/checkups/" + id
@@ -437,16 +323,15 @@ function Checkup() {
 
   };
 
-  /* =========================================
-  GET NAME
-  ========================================= */
+  // =========================
+  // PATIENT NAME
+  // =========================
 
-  const getPatientName =
-    (id) => {
+  const getPatientName = (id) => {
 
     const p =
       patients.find(
-        p => p._id === id
+        x => x._id === id
       );
 
     return p
@@ -454,26 +339,6 @@ function Checkup() {
       : "Unknown";
 
   };
-
-  /* =========================================
-  TEETH NUMBERS
-  ========================================= */
-
-  const upperTeeth = [
-
-    18,17,16,15,14,13,12,11,
-
-    21,22,23,24,25,26,27,28
-
-  ];
-
-  const lowerTeeth = [
-
-    48,47,46,45,44,43,42,41,
-
-    31,32,33,34,35,36,37,38
-
-  ];
 
   return (
 
@@ -485,13 +350,11 @@ function Checkup() {
         Advanced Checkup Module
       </h1>
 
-      {/* ========================================= */}
       {/* TOP */}
-      {/* ========================================= */}
 
       <div style={card}>
 
-        <div style={topGrid}>
+        <div style={grid}>
 
           <div>
 
@@ -535,15 +398,12 @@ function Checkup() {
             </label>
 
             <input
-              value={
-                chiefComplaint
-              }
+              value={complaint}
               onChange={(e)=>
-                setChiefComplaint(
+                setComplaint(
                   e.target.value
                 )
               }
-              placeholder="Chief Complaint"
               style={input}
             />
 
@@ -552,154 +412,168 @@ function Checkup() {
         </div>
 
         <textarea
-          value={
-            detailedComplaint
-          }
+          placeholder="Write detailed complaint..."
+          value={complaint}
           onChange={(e)=>
-            setDetailedComplaint(
+            setComplaint(
               e.target.value
             )
           }
-          placeholder="Write detailed complaint..."
           style={textarea}
         />
 
       </div>
 
-      {/* ========================================= */}
-      {/* SOFT TISSUE */}
-      {/* ========================================= */}
+      {/* SOFT TISSUE ASSESSMENT */}
 
-      <div style={card}>
+<div style={card}>
 
-        <h2>
-          Soft Tissue Assessment
-        </h2>
+  <h2 style={{
+    marginBottom: 20
+  }}>
+    Soft Tissue Assessment
+  </h2>
 
-        <div style={topGrid}>
+  <div style={{
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    gap: 20
+  }}>
 
-          <div>
+    {/* DETAILS */}
 
-            <label>
-              Details
-            </label>
+    <div>
 
-            <textarea
-              value={
-                softTissue.details
-              }
-              onChange={(e)=>
+      <label
+        style={{
+          fontWeight: "600",
+          display: "block",
+          marginBottom: 10
+        }}
+      >
+        Details
+      </label>
 
-                setSoftTissue({
+      <textarea
+        placeholder="Write details..."
+        style={{
+          width: "100%",
+          minHeight: 180,
+          padding: 12,
+          borderRadius: 10,
+          border: "1px solid #cbd5e1",
+          resize: "vertical"
+        }}
+      />
 
-                  ...softTissue,
+    </div>
 
-                  details:
-                    e.target.value
+    {/* CONDITIONS */}
 
-                })
+    <div>
 
-              }
-              style={textarea}
-            />
+      <label
+        style={{
+          fontWeight: "600",
+          display: "block",
+          marginBottom: 10
+        }}
+      >
+        Conditions
+      </label>
 
-          </div>
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }}>
 
-          <div>
+        {[
+          "Gingivitis",
+          "Periodontitis",
+          "Gingival Hypertrophy",
+          "Epulis",
+          "Others"
+        ].map((item) => (
 
-            <label>
-              Condition
-            </label>
+          <label
+            key={item}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10
+            }}
+          >
 
-            <select
-              value={
-                softTissue.condition
-              }
-              onChange={(e)=>
+            <input type="checkbox" />
 
-                setSoftTissue({
+            {item}
 
-                  ...softTissue,
+          </label>
 
-                  condition:
-                    e.target.value
-
-                })
-
-              }
-              style={input}
-            >
-
-              <option value="">
-                Select
-              </option>
-
-              {softTissueConditions.map(c => (
-
-                <option key={c}>
-                  {c}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-          <div>
-
-            <label>
-              Treatment
-            </label>
-
-            <select
-              value={
-                softTissue.treatment
-              }
-              onChange={(e)=>
-
-                setSoftTissue({
-
-                  ...softTissue,
-
-                  treatment:
-                    e.target.value
-
-                })
-
-              }
-              style={input}
-            >
-
-              <option value="">
-                Select
-              </option>
-
-              {treatmentsList.map(t => (
-
-                <option key={t}>
-                  {t}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-        </div>
+        ))}
 
       </div>
 
-      {/* ========================================= */}
-      {/* DENTAL CHARTS */}
-      {/* ========================================= */}
+    </div>
 
-      <div style={chartGrid}>
+    {/* TREATMENT */}
 
-        {/* ========================================= */}
+    <div>
+
+      <label
+        style={{
+          fontWeight: "600",
+          display: "block",
+          marginBottom: 10
+        }}
+      >
+        Treatment
+      </label>
+
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }}>
+
+        {[
+          "U/S Scaling & Polishing",
+          "Medications",
+          "Surgical Intervention",
+          "Manual"
+        ].map((item) => (
+
+          <label
+            key={item}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10
+            }}
+          >
+
+            <input type="checkbox" />
+
+            {item}
+
+          </label>
+
+        ))}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{/* CHARTS */}
+
+<div style={chartsGrid}>
+
         {/* CLINICAL */}
-        {/* ========================================= */}
 
         <div style={card}>
 
@@ -707,222 +581,33 @@ function Checkup() {
             Clinical Tasks
           </h2>
 
-          <h4>
-            Dental Chart
-          </h4>
-
-          <div style={{
-            marginBottom: 20
-          }}>
-
-            <div style={teethRow}>
-
-              {upperTeeth.map(t => (
-
-                <button
-                  key={t}
-                  onClick={() =>
-                    selectClinicalTooth(t)
-                  }
-                  style={{
-                    ...toothBtn,
-
-                    background:
-                      clinicalTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "#16a34a"
-                      : "white",
-
-                    color:
-                      clinicalTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "white"
-                      : "black"
-
-                  }}
-                >
-                  {t}
-                </button>
-
-              ))}
-
-            </div>
-
-            <div style={teethRow}>
-
-              {lowerTeeth.map(t => (
-
-                <button
-                  key={t}
-                  onClick={() =>
-                    selectClinicalTooth(t)
-                  }
-                  style={{
-                    ...toothBtn,
-
-                    background:
-                      clinicalTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "#16a34a"
-                      : "white",
-
-                    color:
-                      clinicalTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "white"
-                      : "black"
-
-                  }}
-                >
-                  {t}
-                </button>
-
-              ))}
-
-            </div>
-
-          </div>
+          <DentalChart
+            tasks={clinicalTasks}
+            selectTooth={(t)=>
+              selectTooth(
+                t,
+                "clinical"
+              )
+            }
+            activeColor="#16a34a"
+          />
 
           {clinicalTasks.map((t, i) => (
 
-            <div
+            <TaskCard
               key={i}
-              style={taskCard}
-            >
-
-              <h3>
-                Tooth {t.tooth}
-              </h3>
-
-              <select
-                value={t.condition}
-                onChange={(e)=>
-
-                  updateClinical(
-
-                    i,
-
-                    "condition",
-
-                    e.target.value
-
-                  )
-
-                }
-                style={input}
-              >
-
-                <option value="">
-                  Select Condition
-                </option>
-
-                {Object.keys(
-                  conditionsMap
-                ).map(c => (
-
-                  <option key={c}>
-                    {c}
-                  </option>
-
-                ))}
-
-              </select>
-
-              <input
-                value={t.treatment}
-                onChange={(e)=>
-
-                  updateClinical(
-
-                    i,
-
-                    "treatment",
-
-                    e.target.value
-
-                  )
-
-                }
-                placeholder="Treatment"
-                style={input}
-              />
-
-              {/* IMPLANT EXTRA */}
-
-              {t.treatment
-                ?.toLowerCase()
-                .includes("implant") && (
-
-                <>
-
-                  <input
-                    placeholder="Implant Size"
-                    value={
-                      t.implant_size
-                    }
-                    onChange={(e)=>
-
-                      updateClinical(
-
-                        i,
-
-                        "implant_size",
-
-                        e.target.value
-
-                      )
-
-                    }
-                    style={input}
-                  />
-
-                  <input
-                    placeholder="Made In / Company"
-                    value={
-                      t.implant_company
-                    }
-                    onChange={(e)=>
-
-                      updateClinical(
-
-                        i,
-
-                        "implant_company",
-
-                        e.target.value
-
-                      )
-
-                    }
-                    style={input}
-                  />
-
-                </>
-
-              )}
-
-              <button
-                onClick={() =>
-                  removeClinical(i)
-                }
-                style={deleteBtn}
-              >
-                Remove
-              </button>
-
-            </div>
+              task={t}
+              index={i}
+              type="clinical"
+              updateTask={updateTask}
+              removeTask={removeTask}
+            />
 
           ))}
 
         </div>
 
-        {/* ========================================= */}
         {/* LAB */}
-        {/* ========================================= */}
 
         <div style={card}>
 
@@ -930,126 +615,27 @@ function Checkup() {
             Lab Tasks
           </h2>
 
-          <h4>
-            Dental Chart
-          </h4>
-
-          <div style={{
-            marginBottom: 20
-          }}>
-
-            <div style={teethRow}>
-
-              {upperTeeth.map(t => (
-
-                <button
-                  key={t}
-                  onClick={() =>
-                    selectLabTooth(t)
-                  }
-                  style={{
-                    ...toothBtn,
-
-                    background:
-                      labTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "#2563eb"
-                      : "white",
-
-                    color:
-                      labTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "white"
-                      : "black"
-
-                  }}
-                >
-                  {t}
-                </button>
-
-              ))}
-
-            </div>
-
-            <div style={teethRow}>
-
-              {lowerTeeth.map(t => (
-
-                <button
-                  key={t}
-                  onClick={() =>
-                    selectLabTooth(t)
-                  }
-                  style={{
-                    ...toothBtn,
-
-                    background:
-                      labTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "#2563eb"
-                      : "white",
-
-                    color:
-                      labTasks.find(
-                        x => x.tooth === t
-                      )
-                      ? "white"
-                      : "black"
-
-                  }}
-                >
-                  {t}
-                </button>
-
-              ))}
-
-            </div>
-
-          </div>
+          <DentalChart
+            tasks={labTasks}
+            selectTooth={(t)=>
+              selectTooth(
+                t,
+                "lab"
+              )
+            }
+            activeColor="#2563eb"
+          />
 
           {labTasks.map((t, i) => (
 
-            <div
+            <TaskCard
               key={i}
-              style={taskCard}
-            >
-
-              <h3>
-                Tooth {t.tooth}
-              </h3>
-
-              <input
-                placeholder="Lab Work"
-                value={t.work}
-                onChange={(e)=>
-
-                  updateLab(
-
-                    i,
-
-                    "work",
-
-                    e.target.value
-
-                  )
-
-                }
-                style={input}
-              />
-
-              <button
-                onClick={() =>
-                  removeLab(i)
-                }
-                style={deleteBtn}
-              >
-                Remove
-              </button>
-
-            </div>
+              task={t}
+              index={i}
+              type="lab"
+              updateTask={updateTask}
+              removeTask={removeTask}
+            />
 
           ))}
 
@@ -1057,22 +643,20 @@ function Checkup() {
 
       </div>
 
-      {/* ========================================= */}
       {/* SAVE */}
-      {/* ========================================= */}
 
       <button
         onClick={saveCheckup}
         style={saveBtn}
       >
+
         {editId
           ? "Update Checkup"
           : "Save Checkup"}
+
       </button>
 
-      {/* ========================================= */}
-      {/* CHECKUP LIST */}
-      {/* ========================================= */}
+      {/* LIST */}
 
       <div style={card}>
 
@@ -1107,7 +691,8 @@ function Checkup() {
 
             </p>
 
-            {c.tasks?.map((t, i) => (
+            {(c.tasks || []).map(
+              (t, i) => (
 
               <p key={i}>
 
@@ -1125,16 +710,31 @@ function Checkup() {
 
             ))}
 
-            <button
-              onClick={() =>
-                deleteCheckup(
-                  c._id
-                )
-              }
-              style={deleteBtn}
-            >
-              Delete
-            </button>
+            <div style={{
+              display: "flex",
+              gap: 10,
+              marginTop: 10
+            }}>
+
+              <button
+                onClick={() =>
+                  editCheckup(c)
+                }
+                style={editBtn}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() =>
+                  deleteCheckup(c._id)
+                }
+                style={deleteBtn}
+              >
+                Delete
+              </button>
+
+            </div>
 
           </div>
 
@@ -1148,170 +748,361 @@ function Checkup() {
 
 }
 
-/* =========================================
-STYLES
-========================================= */
+// =========================
+// TASK CARD
+// =========================
+
+function TaskCard({
+  task,
+  index,
+  type,
+  updateTask,
+  removeTask
+}) {
+
+  return (
+
+    <div style={taskCard}>
+
+      <h4>
+        Tooth {task.tooth}
+      </h4>
+
+      <select
+        value={task.condition}
+        onChange={(e)=>
+          updateTask(
+            index,
+            "condition",
+            e.target.value,
+            type
+          )
+        }
+        style={input}
+      >
+
+        <option value="">
+          Select Condition
+        </option>
+
+        {Object.keys(
+          conditionsMap
+        ).map(c => (
+
+          <option
+            key={c}
+            value={c}
+          >
+            {c}
+          </option>
+
+        ))}
+
+      </select>
+
+      <input
+        placeholder="Treatment"
+        value={task.treatment}
+        onChange={(e)=>
+          updateTask(
+            index,
+            "treatment",
+            e.target.value,
+            type
+          )
+        }
+        style={input}
+      />
+
+      {task.treatment
+        ?.toLowerCase()
+        .includes("implant") && (
+
+        <>
+
+          <input
+            placeholder="Implant Size"
+            value={
+              task.implant_size
+            }
+            onChange={(e)=>
+              updateTask(
+                index,
+                "implant_size",
+                e.target.value,
+                type
+              )
+            }
+            style={input}
+          />
+
+          <input
+            placeholder="Made In"
+            value={
+              task.implant_brand
+            }
+            onChange={(e)=>
+              updateTask(
+                index,
+                "implant_brand",
+                e.target.value,
+                type
+              )
+            }
+            style={input}
+          />
+
+        </>
+
+      )}
+
+      <button
+        onClick={() =>
+          removeTask(index, type)
+        }
+        style={deleteBtn}
+      >
+        Remove
+      </button>
+
+    </div>
+
+  );
+
+}
+
+// =========================
+// DENTAL CHART
+// =========================
+
+function DentalChart({
+  tasks,
+  selectTooth,
+  activeColor
+}) {
+
+  const upper = [
+    1,2,3,4,5,6,7,8,
+    9,10,11,12,13,14,15,16
+  ];
+
+  const lower = [
+    32,31,30,29,28,27,26,25,
+    24,23,22,21,20,19,18,17
+  ];
+
+  return (
+
+    <div style={{
+      position: "relative",
+      width: "100%",
+      maxWidth: 720,
+      margin: "auto",
+      marginBottom: 25
+    }}>
+
+      <img
+        src="/teeth.png"
+        style={{
+          width: "100%",
+          display: "block"
+        }}
+      />
+
+      {/* UPPER */}
+
+      {upper.map((tooth, i) => {
+
+        const active =
+          tasks.find(
+            x => x.tooth === tooth
+          );
+
+        return (
+
+          <div
+            key={tooth}
+            onClick={() =>
+              selectTooth(tooth)
+            }
+            style={{
+              position: "absolute",
+
+              top: "18%",
+
+              left:
+                `${2 + (i * 6.1)}%`,
+
+              width: 28,
+
+              height: 70,
+
+              cursor: "pointer",
+
+              borderRadius: 10,
+
+              background:
+                active
+                  ? `${activeColor}66`
+                  : "transparent",
+
+              border:
+                active
+                  ? `2px solid ${activeColor}`
+                  : "2px solid transparent",
+
+              transition: "0.2s"
+            }}
+          />
+
+        );
+
+      })}
+
+      {/* LOWER */}
+
+      {lower.map((tooth, i) => {
+
+        const active =
+          tasks.find(
+            x => x.tooth === tooth
+          );
+
+        return (
+
+          <div
+            key={tooth}
+            onClick={() =>
+              selectTooth(tooth)
+            }
+            style={{
+              position: "absolute",
+
+              top: "54%",
+
+              left:
+                `${2 + (i * 6.1)}%`,
+
+              width: 28,
+
+              height: 82,
+
+              cursor: "pointer",
+
+              borderRadius: 10,
+
+              background:
+                active
+                  ? `${activeColor}66`
+                  : "transparent",
+
+              border:
+                active
+                  ? `2px solid ${activeColor}`
+                  : "2px solid transparent",
+
+              transition: "0.2s"
+            }}
+          />
+
+        );
+
+      })}
+
+    </div>
+
+  );
+
+}
+
+// =========================
+// STYLES
+// =========================
 
 const card = {
-
   background: "white",
-
   padding: 20,
-
   borderRadius: 14,
-
   marginBottom: 20,
-
   boxShadow:
     "0 2px 8px rgba(0,0,0,0.05)"
-
-};
-
-const topGrid = {
-
-  display: "grid",
-
-  gridTemplateColumns:
-    "1fr 1fr",
-
-  gap: 20,
-
-  marginBottom: 15
-
-};
-
-const chartGrid = {
-
-  display: "grid",
-
-  gridTemplateColumns:
-    "1fr 1fr",
-
-  gap: 20
-
 };
 
 const input = {
-
   width: "100%",
-
   padding: 10,
-
   border:
     "1px solid #cbd5e1",
-
   borderRadius: 8,
-
-  marginTop: 6
-
+  marginTop: 6,
+  marginBottom: 10
 };
 
 const textarea = {
-
   width: "100%",
-
   minHeight: 90,
-
   padding: 10,
-
   border:
     "1px solid #cbd5e1",
-
   borderRadius: 8,
-
-  marginTop: 6
-
+  marginTop: 10
 };
 
-const teethRow = {
-
-  display: "flex",
-
-  flexWrap: "wrap",
-
-  gap: 8,
-
-  marginBottom: 10
-
+const grid = {
+  display: "grid",
+  gridTemplateColumns:
+    "1fr 1fr",
+  gap: 20
 };
 
-const toothBtn = {
-
-  width: 45,
-
-  height: 45,
-
-  borderRadius: 10,
-
-  border:
-    "1px solid #cbd5e1",
-
-  cursor: "pointer",
-
-  fontWeight: "bold"
-
+const chartsGrid = {
+  display: "grid",
+  gridTemplateColumns:
+    "1fr 1fr",
+  gap: 20
 };
 
 const taskCard = {
-
   border:
     "1px solid #e2e8f0",
-
   borderRadius: 12,
-
-  padding: 15,
-
-  marginBottom: 15
-
+  padding: 14,
+  marginBottom: 12
 };
 
 const listCard = {
-
   borderBottom:
     "1px solid #eee",
-
   paddingBottom: 15,
-
   marginBottom: 15
-
 };
 
 const saveBtn = {
-
   background: "#2563eb",
-
   color: "white",
-
   border: "none",
-
-  padding:
-    "12px 24px",
-
+  padding: "12px 24px",
   borderRadius: 8,
+  marginBottom: 20,
+  cursor: "pointer"
+};
 
-  cursor: "pointer",
-
-  marginBottom: 20
-
+const editBtn = {
+  background: "#16a34a",
+  color: "white",
+  border: "none",
+  padding: "8px 14px",
+  borderRadius: 8,
+  cursor: "pointer"
 };
 
 const deleteBtn = {
-
-  background: "#ef4444",
-
+  background: "#dc2626",
   color: "white",
-
   border: "none",
-
-  padding:
-    "8px 14px",
-
+  padding: "8px 14px",
   borderRadius: 8,
-
-  cursor: "pointer",
-
-  marginTop: 10
-
+  cursor: "pointer"
 };
 
 export default Checkup;
