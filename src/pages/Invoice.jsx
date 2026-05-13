@@ -60,6 +60,12 @@ const PRICE_LIST = {
     "Category 3": 25000
   },	
 
+  "Ceramic Crowns Per unit": { 
+    "Category 1": 35000,
+    "Category 2": 30000,
+    "Category 3": 25000
+  },	
+
   "Segurical EXT": {
     "Category 1": 15000,
     "Category 2": 10000,
@@ -285,27 +291,27 @@ function Invoice() {
 
   };
 
-  const generateHTML = (
-    category
-  ) => {
+ const generateHTML = (
+  category
+) => {
 
-    const bills =
-      rows.map(r => {
+  const bills =
+    rows.map(r => {
 
-        const rate =
-          PRICE_LIST[
-            r.treatment
-          ]?.[
-            category
-          ] || 0;
+      const rate =
+        PRICE_LIST[
+          r.treatment
+        ]?.[
+          category
+        ] || 0;
 
-        return `
+      return `
 <tr>
 <td>${r.treatment}</td>
 <td>${r.qty}</td>
-<td>Rs ${rate}</td>
+<td>${rate}</td>
 <td>
-Rs ${
+${
   Number(r.qty)
   *
   Number(rate)
@@ -314,31 +320,31 @@ Rs ${
 </tr>
 `;
 
-      }).join("");
+    }).join("");
 
-    const totalAmount =
-      rows.reduce(
-        (a, b) =>
-          a +
-          (
-            Number(b.qty)
-            *
-            Number(
-              PRICE_LIST[
-                b.treatment
-              ]?.[
-                category
-              ] || 0
-            )
-          ),
-        0
-      );
+  const totalAmount =
+    rows.reduce(
+      (a, b) =>
+        a +
+        (
+          Number(b.qty)
+          *
+          Number(
+            PRICE_LIST[
+              b.treatment
+            ]?.[
+              category
+            ] || 0
+          )
+        ),
+      0
+    );
 
-    const finalAmount =
-      totalAmount -
-      Number(discount || 0);
+  const finalAmount =
+    totalAmount -
+    Number(discount || 0);
 
-    return `
+  return `
 
 <!DOCTYPE html>
 
@@ -350,52 +356,85 @@ Rs ${
 
 <style>
 
-body{
-font-family:Arial;
-padding:25px;
+@page{
+  size:A4;
+  margin:0;
 }
+
+body{
+  font-family:Arial;
+  background:white;
+  margin:0;
+  padding:0;
+}
+
+/* 🔥 MAIN PRINT AREA */
+
+.invoice-wrapper{
+
+  width:170mm;
+
+  min-height:140mm;
+
+  margin:auto;
+
+  margin-top:75mm;
+
+  padding:15mm;
+
+  box-sizing:border-box;
+
+}
+
+/* 🔥 HEADER */
 
 h1{
-text-align:center;
-background:#2563eb;
-color:white;
-padding:15px;
-border-radius:10px;
+  text-align:center;
+  color:#2563eb;
+  margin-bottom:25px;
+  font-size:28px;
 }
 
+/* 🔥 SECTION */
+
 .section{
-border:2px solid #2563eb;
-margin-top:20px;
-border-radius:10px;
-overflow:hidden;
+  border:2px solid #2563eb;
+  margin-top:20px;
+  border-radius:10px;
+  overflow:hidden;
 }
 
 .title{
-background:#dbeafe;
-padding:10px;
-font-weight:bold;
-color:#2563eb;
+  background:#dbeafe;
+  padding:10px;
+  font-weight:bold;
+  color:#2563eb;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
+  width:100%;
+  border-collapse:collapse;
 }
 
 th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:center;
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+  font-size:14px;
 }
 
 .badge{
-background:#2563eb;
-color:white;
-padding:6px 14px;
-border-radius:20px;
-display:inline-block;
-font-size:12px;
-font-weight:bold;
+  background:#2563eb;
+  color:white;
+  padding:6px 14px;
+  border-radius:20px;
+  display:inline-block;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.summary td{
+  font-size:15px;
 }
 
 </style>
@@ -403,6 +442,8 @@ font-weight:bold;
 </head>
 
 <body>
+
+<div class="invoice-wrapper">
 
 <h1>HDC Invoice</h1>
 
@@ -451,28 +492,28 @@ ${bills}
 SUMMARY
 </div>
 
-<table>
+<table class="summary">
 
 <tr>
 <td>Total</td>
-<td>Rs ${totalAmount}</td>
+<td>${totalAmount}</td>
 </tr>
 
 <tr>
 <td>Discount</td>
-<td>Rs ${discount || 0}</td>
+<td>${discount || 0}</td>
 </tr>
 
 <tr>
 <td>Paid</td>
-<td>Rs 0</td>
+<td>0</td>
 </tr>
 
 <tr>
 <td><b>Balance</b></td>
 <td>
 <b>
-Rs ${finalAmount}
+${finalAmount}
 </b>
 </td>
 </tr>
@@ -481,11 +522,14 @@ Rs ${finalAmount}
 
 </div>
 
+</div>
+
 </body>
 
 </html>
 
 `;
+
 
   };
 
@@ -826,13 +870,13 @@ Rs ${finalAmount}
 
                 <td>
 
-                  Rs {r.rate}
+                  {r.rate}
 
                 </td>
 
                 <td>
 
-                  Rs {
+                  {
                     Number(r.qty)
                     *
                     Number(r.rate)
@@ -889,12 +933,12 @@ Rs ${finalAmount}
 
           <h2>
             Total:
-            Rs {total}
+            {total}
           </h2>
 
           <h2>
             Final:
-            Rs {final}
+            {final}
           </h2>
 
         </div>
@@ -1100,7 +1144,7 @@ Rs ${finalAmount}
 
                     <div>
 
-                      Rs {
+                      {
                         Number(r.qty)
                         *
                         Number(
@@ -1125,7 +1169,7 @@ Rs ${finalAmount}
                 <h2 style={{
                   margin: 0
                 }}>
-                  Rs {categoryTotal}
+                  {categoryTotal}
                 </h2>
 
               </div>

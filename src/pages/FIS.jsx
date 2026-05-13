@@ -514,7 +514,7 @@ function FIS() {
         }}>
 
           <b>Total:</b>
-          {" "}Rs {total}
+          {" "}{total}
 
           <br/>
 
@@ -524,7 +524,7 @@ function FIS() {
           <br/>
 
           <b>Final:</b>
-          {" "}Rs {final}
+          {" "}{final}
 
           <br/>
 

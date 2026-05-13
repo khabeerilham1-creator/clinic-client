@@ -16,6 +16,8 @@ const conditionsMap = {
   Calculus: "U/S Scaling & Polishing",
   Gingivitis: "Medication",
   Periodontitis: "Deep Scaling",
+ "Class I Moderate Carious": "Composite Filling",
+  "carious": "MTA Pulpotomy",
   Healthy: "None"
 };
 
@@ -32,6 +34,13 @@ function Checkup() {
 
   const [editId, setEditId] = useState(null);
 
+  // 🔥 SOFT TISSUE
+  const [softTissue, setSoftTissue] = useState({
+    details: "",
+    conditions: [],
+    treatments: []
+  });
+
   useEffect(() => {
 
     loadPatients();
@@ -41,19 +50,85 @@ function Checkup() {
 
   const loadPatients = async () => {
 
-    const res =
-      await api.get("/patients/");
+    try {
 
-    setPatients(res.data || []);
+      const res = await api.get("/patients/");
+
+      setPatients(res.data || []);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
 
   };
 
   const loadCheckups = async () => {
 
-    const res =
-      await api.get("/checkups/");
+    try {
 
-    setCheckups(res.data || []);
+      const res = await api.get("/checkups/");
+
+      setCheckups(res.data || []);
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
+  // =========================
+  // SOFT TISSUE CHECKBOX
+  // =========================
+
+  const toggleSoftCondition = (item) => {
+
+    const exists =
+      softTissue.conditions.includes(item);
+
+    setSoftTissue({
+
+      ...softTissue,
+
+      conditions: exists
+
+        ? softTissue.conditions.filter(
+            x => x !== item
+          )
+
+        : [
+            ...softTissue.conditions,
+            item
+          ]
+
+    });
+
+  };
+
+  const toggleSoftTreatment = (item) => {
+
+    const exists =
+      softTissue.treatments.includes(item);
+
+    setSoftTissue({
+
+      ...softTissue,
+
+      treatments: exists
+
+        ? softTissue.treatments.filter(
+            x => x !== item
+          )
+
+        : [
+            ...softTissue.treatments,
+            item
+          ]
+
+    });
 
   };
 
@@ -204,50 +279,62 @@ function Checkup() {
 
   const saveCheckup = async () => {
 
-    const payload = {
+    try {
 
-      patient: patientId,
+      const payload = {
 
-      patient_id: patientId,
+        patient: patientId,
 
-      complaint,
+        patient_id: patientId,
 
-      clinical_tasks:
-        clinicalTasks,
+        complaint,
 
-      lab_tasks:
-        labTasks,
+        soft_tissue: softTissue,
 
-      tasks: [
-        ...clinicalTasks,
-        ...labTasks
-      ]
+        clinical_tasks:
+          clinicalTasks,
 
-    };
+        lab_tasks:
+          labTasks,
 
-    if (editId) {
+        tasks: [
+          ...clinicalTasks,
+          ...labTasks
+        ]
 
-      await api.put(
-        "/checkups/" + editId,
-        payload
-      );
+      };
 
-      alert("Updated ✅");
+      if (editId) {
 
-    } else {
+        await api.put(
+          "/checkups/" + editId,
+          payload
+        );
 
-      await api.post(
-        "/checkups/",
-        payload
-      );
+        alert("Updated ✅");
 
-      alert("Saved ✅");
+      } else {
+
+        await api.post(
+          "/checkups/",
+          payload
+        );
+
+        alert("Saved ✅");
+
+      }
+
+      resetForm();
+
+      loadCheckups();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Save failed ❌");
 
     }
-
-    resetForm();
-
-    loadCheckups();
 
   };
 
@@ -266,6 +353,12 @@ function Checkup() {
     setLabTasks([]);
 
     setEditId(null);
+
+    setSoftTissue({
+      details: "",
+      conditions: [],
+      treatments: []
+    });
 
   };
 
@@ -294,6 +387,14 @@ function Checkup() {
     setLabTasks(
       c.lab_tasks ||
       []
+    );
+
+    setSoftTissue(
+      c.soft_tissue || {
+        details: "",
+        conditions: [],
+        treatments: []
+      }
     );
 
     window.scrollTo({
@@ -424,156 +525,136 @@ function Checkup() {
 
       </div>
 
-      {/* SOFT TISSUE ASSESSMENT */}
+      {/* SOFT TISSUE */}
 
-<div style={card}>
+      <div style={card}>
 
-  <h2 style={{
-    marginBottom: 20
-  }}>
-    Soft Tissue Assessment
-  </h2>
+        <h2 style={{
+          marginBottom: 20
+        }}>
+          Soft Tissue Assessment
+        </h2>
 
-  <div style={{
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: 20
-  }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 20
+        }}>
 
-    {/* DETAILS */}
+          {/* DETAILS */}
 
-    <div>
+          <div>
 
-      <label
-        style={{
-          fontWeight: "600",
-          display: "block",
-          marginBottom: 10
-        }}
-      >
-        Details
-      </label>
+            <label style={label}>
+              Details
+            </label>
 
-      <textarea
-        placeholder="Write details..."
-        style={{
-          width: "100%",
-          minHeight: 180,
-          padding: 12,
-          borderRadius: 10,
-          border: "1px solid #cbd5e1",
-          resize: "vertical"
-        }}
-      />
+            <textarea
+              placeholder="Write details..."
+              value={softTissue.details}
+              onChange={(e)=>
+                setSoftTissue({
+                  ...softTissue,
+                  details: e.target.value
+                })
+              }
+              style={softTextarea}
+            />
 
-    </div>
+          </div>
 
-    {/* CONDITIONS */}
+          {/* CONDITIONS */}
 
-    <div>
+          <div>
 
-      <label
-        style={{
-          fontWeight: "600",
-          display: "block",
-          marginBottom: 10
-        }}
-      >
-        Conditions
-      </label>
+            <label style={label}>
+              Conditions
+            </label>
 
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 10
-      }}>
+            <div style={checkboxWrap}>
 
-        {[
-          "Gingivitis",
-          "Periodontitis",
-          "Gingival Hypertrophy",
-          "Epulis",
-          "Others"
-        ].map((item) => (
+              {[
+                "Gingivitis",
+                "Periodontitis",
+                "Gingival Hypertrophy",
+                "Epulis",
+                "Others"
+              ].map((item) => (
 
-          <label
-            key={item}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10
-            }}
-          >
+                <label
+                  key={item}
+                  style={checkboxLabel}
+                >
 
-            <input type="checkbox" />
+                  <input
+                    type="checkbox"
+                    checked={
+                      softTissue.conditions.includes(item)
+                    }
+                    onChange={() =>
+                      toggleSoftCondition(item)
+                    }
+                  />
 
-            {item}
+                  {item}
 
-          </label>
+                </label>
 
-        ))}
+              ))}
 
-      </div>
+            </div>
 
-    </div>
+          </div>
 
-    {/* TREATMENT */}
+          {/* TREATMENTS */}
 
-    <div>
+          <div>
 
-      <label
-        style={{
-          fontWeight: "600",
-          display: "block",
-          marginBottom: 10
-        }}
-      >
-        Treatment
-      </label>
+            <label style={label}>
+              Treatment
+            </label>
 
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 10
-      }}>
+            <div style={checkboxWrap}>
 
-        {[
-          "U/S Scaling & Polishing",
-          "Medications",
-          "Surgical Intervention",
-          "Manual"
-        ].map((item) => (
+              {[
+                "U/S Scaling & Polishing",
+                "Medications",
+                "Surgical Intervention",
+                "Manual"
+              ].map((item) => (
 
-          <label
-            key={item}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10
-            }}
-          >
+                <label
+                  key={item}
+                  style={checkboxLabel}
+                >
 
-            <input type="checkbox" />
+                  <input
+                    type="checkbox"
+                    checked={
+                      softTissue.treatments.includes(item)
+                    }
+                    onChange={() =>
+                      toggleSoftTreatment(item)
+                    }
+                  />
 
-            {item}
+                  {item}
 
-          </label>
+                </label>
 
-        ))}
+              ))}
+
+            </div>
+
+          </div>
+
+        </div>
 
       </div>
 
-    </div>
+      {/* CHARTS */}
 
-  </div>
-
-</div>
-
-{/* CHARTS */}
-
-<div style={chartsGrid}>
-
-        {/* CLINICAL */}
+      <div style={chartsGrid}>
 
         <div style={card}>
 
@@ -606,8 +687,6 @@ function Checkup() {
           ))}
 
         </div>
-
-        {/* LAB */}
 
         <div style={card}>
 
@@ -643,8 +722,6 @@ function Checkup() {
 
       </div>
 
-      {/* SAVE */}
-
       <button
         onClick={saveCheckup}
         style={saveBtn}
@@ -672,23 +749,11 @@ function Checkup() {
           >
 
             <h3>
-              {
-                getPatientName(
-                  c.patient
-                )
-              }
+              {getPatientName(c.patient)}
             </h3>
 
             <p>
-
-              <b>
-                Complaint:
-              </b>
-
-              {" "}
-
-              {c.complaint}
-
+              <b>Complaint:</b> {c.complaint}
             </p>
 
             {(c.tasks || []).map(
@@ -909,8 +974,6 @@ function DentalChart({
         }}
       />
 
-      {/* UPPER */}
-
       {upper.map((tooth, i) => {
 
         const active =
@@ -927,30 +990,21 @@ function DentalChart({
             }
             style={{
               position: "absolute",
-
               top: "18%",
-
               left:
                 `${2 + (i * 6.1)}%`,
-
               width: 28,
-
               height: 70,
-
               cursor: "pointer",
-
               borderRadius: 10,
-
               background:
                 active
                   ? `${activeColor}66`
                   : "transparent",
-
               border:
                 active
                   ? `2px solid ${activeColor}`
                   : "2px solid transparent",
-
               transition: "0.2s"
             }}
           />
@@ -958,8 +1012,6 @@ function DentalChart({
         );
 
       })}
-
-      {/* LOWER */}
 
       {lower.map((tooth, i) => {
 
@@ -977,30 +1029,21 @@ function DentalChart({
             }
             style={{
               position: "absolute",
-
               top: "54%",
-
               left:
                 `${2 + (i * 6.1)}%`,
-
               width: 28,
-
               height: 82,
-
               cursor: "pointer",
-
               borderRadius: 10,
-
               background:
                 active
                   ? `${activeColor}66`
                   : "transparent",
-
               border:
                 active
                   ? `2px solid ${activeColor}`
                   : "2px solid transparent",
-
               transition: "0.2s"
             }}
           />
@@ -1046,6 +1089,33 @@ const textarea = {
     "1px solid #cbd5e1",
   borderRadius: 8,
   marginTop: 10
+};
+
+const softTextarea = {
+  width: "100%",
+  minHeight: 180,
+  padding: 12,
+  borderRadius: 10,
+  border: "1px solid #cbd5e1",
+  resize: "vertical"
+};
+
+const label = {
+  fontWeight: "600",
+  display: "block",
+  marginBottom: 10
+};
+
+const checkboxWrap = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 10
+};
+
+const checkboxLabel = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10
 };
 
 const grid = {
