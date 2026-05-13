@@ -283,190 +283,203 @@ function Invoice() {
     category
   ) => {
 
-    const categoryRows =
+    const bills =
       rows.map(r => {
 
-        return {
+        const rate =
+          PRICE_LIST[
+            r.treatment
+          ]?.[
+            category
+          ] || 0;
 
-          ...r,
+        return `
+<tr>
+<td>${r.treatment}</td>
+<td>${r.qty}</td>
+<td>Rs ${rate}</td>
+<td>
+Rs ${
+  Number(r.qty)
+  *
+  Number(rate)
+}
+</td>
+</tr>
+`;
 
-          categoryRate:
-            PRICE_LIST[
-              r.treatment
-            ]?.[
-              category
-            ] || 0
+      }).join("");
 
-        };
-
-      });
-
-    const categoryTotal =
-      categoryRows.reduce(
+    const totalAmount =
+      rows.reduce(
         (a, b) =>
           a +
           (
             Number(b.qty)
             *
             Number(
-              b.categoryRate
+              PRICE_LIST[
+                b.treatment
+              ]?.[
+                category
+              ] || 0
             )
           ),
         0
       );
 
+    const finalAmount =
+      totalAmount -
+      Number(discount || 0);
+
     return `
-    <html>
 
-    <head>
+<!DOCTYPE html>
 
-    <title>Invoice</title>
+<html>
 
-    <style>
+<head>
 
-    body{
-      font-family:Arial;
-      padding:40px;
-    }
+<meta charset="UTF-8">
 
-    .header{
-      display:flex;
-      justify-content:space-between;
-      border-bottom:2px solid #2563eb;
-      padding-bottom:15px;
-      margin-bottom:20px;
-    }
+<style>
 
-    .table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:20px;
-    }
+body{
+font-family:Arial;
+padding:25px;
+}
 
-    .table th{
-      background:#2563eb;
-      color:white;
-      padding:12px;
-    }
+h1{
+text-align:center;
+background:#2563eb;
+color:white;
+padding:15px;
+border-radius:10px;
+}
 
-    .table td{
-      padding:12px;
-      border:1px solid #ddd;
-    }
+.section{
+border:2px solid #2563eb;
+margin-top:20px;
+border-radius:10px;
+overflow:hidden;
+}
 
-    .total{
-      margin-top:30px;
-      text-align:right;
-      font-size:24px;
-      font-weight:bold;
-    }
+.title{
+background:#dbeafe;
+padding:10px;
+font-weight:bold;
+color:#2563eb;
+}
 
-    </style>
+table{
+width:100%;
+border-collapse:collapse;
+}
 
-    </head>
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
 
-    <body>
+.badge{
+background:#2563eb;
+color:white;
+padding:6px 14px;
+border-radius:20px;
+display:inline-block;
+font-size:12px;
+font-weight:bold;
+}
 
-    <div class="header">
+</style>
 
-      <div>
+</head>
 
-        <h1>HDC</h1>
+<body>
 
-        <p>
-        Holistic Domain of Creativity
-        </p>
+<h1>HDC Invoice</h1>
 
-      </div>
+<div style="display:flex;justify-content:space-between;">
 
-      <div>
+<div>
+<b>Patient:</b>
+${selectedPatient?.name || "-"}
+</div>
 
-        <h2>INVOICE</h2>
+<div class="badge">
+${category}
+</div>
 
-        <p>${invoiceNo}</p>
+</div>
 
-      </div>
+<div style="margin-top:15px;">
+<b>Date:</b>
+${invoiceDate}
+</div>
 
-    </div>
+<div class="section">
 
-    <p>
-    <b>Patient:</b>
-    ${selectedPatient?.name || "-"}
-    </p>
+<div class="title">
+BILLING DETAILS
+</div>
 
-    <p>
-    <b>Date:</b>
-    ${invoiceDate}
-    </p>
+<table>
 
-    <p>
-    <b>Category:</b>
-    ${category}
-    </p>
+<tr>
+<th>Procedure</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Amount</th>
+</tr>
 
-    <table class="table">
+${bills}
 
-    <thead>
+</table>
 
-    <tr>
+</div>
 
-      <th>Treatment</th>
+<div class="section">
 
-      <th>Doctor</th>
+<div class="title">
+SUMMARY
+</div>
 
-      <th>Qty</th>
+<table>
 
-      <th>Price</th>
+<tr>
+<td>Total</td>
+<td>Rs ${totalAmount}</td>
+</tr>
 
-    </tr>
+<tr>
+<td>Discount</td>
+<td>Rs ${discount || 0}</td>
+</tr>
 
-    </thead>
+<tr>
+<td>Paid</td>
+<td>Rs 0</td>
+</tr>
 
-    <tbody>
+<tr>
+<td><b>Balance</b></td>
+<td>
+<b>
+Rs ${finalAmount}
+</b>
+</td>
+</tr>
 
-    ${categoryRows.map(r => `
+</table>
 
-      <tr>
+</div>
 
-      <td>
-      ${r.treatment}
-      </td>
+</body>
 
-      <td>
-      ${r.doctor || "-"}
-      </td>
+</html>
 
-      <td>
-      ${r.qty}
-      </td>
-
-      <td>
-      Rs ${
-        Number(r.qty)
-        *
-        Number(r.categoryRate)
-      }
-      </td>
-
-      </tr>
-
-    `).join("")}
-
-    </tbody>
-
-    </table>
-
-    <div class="total">
-
-    Total:
-    Rs ${categoryTotal}
-
-    </div>
-
-    </body>
-
-    </html>
-    `;
+`;
 
   };
 
@@ -870,13 +883,11 @@ function Invoice() {
 
           <h2>
             Total:
-            {" "}
             Rs {total}
           </h2>
 
           <h2>
             Final:
-            {" "}
             Rs {final}
           </h2>
 
