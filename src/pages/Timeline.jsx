@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useParams, useNavigate } from "react-router-dom";
-
 import Layout from "../components/Layout";
 
 function Timeline() {
@@ -10,23 +9,30 @@ function Timeline() {
 
   const navigate = useNavigate();
 
-  const [timeline, setTimeline] = useState([]);
+  const [timeline, setTimeline] =
+    useState([]);
 
-  const [file, setFile] = useState(null);
+  const [file, setFile] =
+    useState(null);
 
-  const [visits, setVisits] = useState([]);
+  const [visits, setVisits] =
+    useState([]);
 
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] =
+    useState([]);
 
-  const [checkups, setCheckups] = useState([]);
+  const [checkups, setCheckups] =
+    useState([]);
 
   // =========================
   // LOAD DATA
   // =========================
+
   const load = async () => {
 
     try {
 
+      // TIMELINE
       const t =
         await api.get(
           "/timeline/" + id
@@ -34,6 +40,7 @@ function Timeline() {
 
       setTimeline(t.data || []);
 
+      // PATIENT FILE
       const f =
         await api.get(
           `/patient-files/${id}`
@@ -41,35 +48,45 @@ function Timeline() {
 
       setFile(f.data);
 
+      // VISITS
       const v =
         await api.get("/visits/");
 
       const patientVisits =
         (v.data || []).filter(
-          x => x.patient_id === id
+          x =>
+            x.patient_id === id ||
+            x.patient === id
         );
 
       setVisits(patientVisits);
 
+      // INVOICES
       const i =
         await api.get("/invoice/");
 
       const patientInvoices =
         (i.data || []).filter(
           x =>
+            x.patient_id === id ||
+            x.patient_name ===
+            f.data?.data?.patient_info?.name ||
             x.patient_name ===
             f.data?.patient_info?.name
         );
 
       setInvoices(patientInvoices);
 
+      // CHECKUPS
       const c =
-        await api.get("/checkup/");
+        await api.get("/checkups/");
 
       const patientCheckups =
         (c.data || []).filter(
           x =>
-            x.patient_id === id
+            x.patient === id ||
+            x.patient_id === id ||
+            x.patientId === id
         );
 
       setCheckups(patientCheckups);
@@ -78,8 +95,12 @@ function Timeline() {
 
       console.log(err);
 
-      alert("Failed to load ❌");
+      alert(
+        "Failed to load ❌"
+      );
+
     }
+
   };
 
   useEffect(() => {
@@ -89,13 +110,16 @@ function Timeline() {
   }, []);
 
   const patient =
-    file?.data?.patient_info || {};
+    file?.data?.patient_info ||
+    file?.patient_info ||
+    {};
 
   return (
 
     <Layout>
 
       {/* HEADER */}
+
       <div style={{
         display: "flex",
         justifyContent:
@@ -121,9 +145,8 @@ function Timeline() {
 
       </div>
 
-      {/* ========================= */}
-      {/* PATIENT BIO DATA */}
-      {/* ========================= */}
+      {/* PATIENT */}
+
       <div style={card}>
 
         <h2 style={title}>
@@ -151,12 +174,16 @@ function Timeline() {
 
           <Info
             label="Mobile"
-            value={patient.mobile_number}
+            value={
+              patient.mobile_number
+            }
           />
 
           <Info
             label="Birth Date"
-            value={patient.birth_date}
+            value={
+              patient.birth_date
+            }
           />
 
           <Info
@@ -166,28 +193,38 @@ function Timeline() {
 
           <Info
             label="Occupation"
-            value={patient.occupation}
+            value={
+              patient.occupation
+            }
           />
 
           <Info
             label="Address"
-            value={patient.address}
+            value={
+              patient.address
+            }
           />
 
           <Info
             label="Referred By"
-            value={patient.referred_by}
+            value={
+              patient.referred_by
+            }
           />
 
           <Info
             label="Purpose"
-            value={patient.purpose_of_visit}
+            value={
+              patient.purpose_of_visit
+            }
           />
 
           <Info
             label="Conditions"
             value={
-              Array.isArray(patient.conditions)
+              Array.isArray(
+                patient.conditions
+              )
                 ? patient.conditions.join(", ")
                 : "-"
             }
@@ -197,9 +234,8 @@ function Timeline() {
 
       </div>
 
-      {/* ========================= */}
       {/* CHECKUPS */}
-      {/* ========================= */}
+
       <div style={card}>
 
         <h2 style={title}>
@@ -208,7 +244,9 @@ function Timeline() {
 
         {checkups.length === 0 ? (
 
-          <p>No checkups found</p>
+          <p>
+            No checkups found
+          </p>
 
         ) : (
 
@@ -229,22 +267,46 @@ function Timeline() {
                 </div>
 
                 <p>
-                  <b>Date:</b>
+                  <b>Complaint:</b>
                   {" "}
-                  {c.date || "-"}
+                  {c.complaint || "-"}
                 </p>
 
-                <p>
-                  <b>Diagnosis:</b>
-                  {" "}
-                  {c.diagnosis || "-"}
-                </p>
+                {c.tasks?.map((t, idx) => (
 
-                <p>
-                  <b>Notes:</b>
-                  {" "}
-                  {c.notes || "-"}
-                </p>
+                  <div
+                    key={idx}
+                    style={{
+                      marginTop: 10,
+                      padding: 12,
+                      background: "#f8fafc",
+                      borderRadius: 10,
+                      border:
+                        "1px solid #e2e8f0"
+                    }}
+                  >
+
+                    <p>
+                      <b>Tooth:</b>
+                      {" "}
+                      {t.tooth}
+                    </p>
+
+                    <p>
+                      <b>Condition:</b>
+                      {" "}
+                      {t.condition}
+                    </p>
+
+                    <p>
+                      <b>Treatment:</b>
+                      {" "}
+                      {t.treatment}
+                    </p>
+
+                  </div>
+
+                ))}
 
               </div>
 
@@ -256,9 +318,8 @@ function Timeline() {
 
       </div>
 
-      {/* ========================= */}
       {/* INVOICES */}
-      {/* ========================= */}
+
       <div style={card}>
 
         <h2 style={title}>
@@ -267,7 +328,9 @@ function Timeline() {
 
         {invoices.length === 0 ? (
 
-          <p>No invoices found</p>
+          <p>
+            No invoices found
+          </p>
 
         ) : (
 
@@ -286,7 +349,7 @@ function Timeline() {
               >
 
                 <h3>
-                  Category {i + 1}
+                  Invoice #{i + 1}
                 </h3>
 
                 <p>
@@ -325,10 +388,6 @@ function Timeline() {
 
                   </a>
 
-                  <button style={viewBtn}>
-                    View
-                  </button>
-
                 </div>
 
               </div>
@@ -341,9 +400,8 @@ function Timeline() {
 
       </div>
 
-      {/* ========================= */}
       {/* TREATMENT PLAN */}
-      {/* ========================= */}
+
       <div style={card}>
 
         <h2 style={title}>
@@ -373,11 +431,14 @@ function Timeline() {
                 <div style={{
                   ...badge,
                   background:
-                    v.status === "Completed"
+                    v.status ===
+                    "Completed"
                       ? "#16a34a"
                       : "#2563eb"
                 }}>
+
                   {v.status}
+
                 </div>
 
                 <p>
@@ -415,12 +476,12 @@ function Timeline() {
       </div>
 
     </Layout>
+
   );
+
 }
 
-/* ========================= */
 /* INFO */
-/* ========================= */
 
 function Info({
   label,
@@ -452,12 +513,12 @@ function Info({
       </div>
 
     </div>
+
   );
+
 }
 
-/* ========================= */
 /* STYLES */
-/* ========================= */
 
 const card = {
 
@@ -471,6 +532,7 @@ const card = {
 
   boxShadow:
     "0 2px 8px rgba(0,0,0,0.05)"
+
 };
 
 const title = {
@@ -478,6 +540,7 @@ const title = {
   marginTop: 0,
 
   marginBottom: 18
+
 };
 
 const smallCard = {
@@ -490,6 +553,7 @@ const smallCard = {
   padding: 14,
 
   background: "#fff"
+
 };
 
 const invoiceCard = {
@@ -502,6 +566,7 @@ const invoiceCard = {
   padding: 16,
 
   background: "#f8fafc"
+
 };
 
 const badge = {
@@ -519,6 +584,7 @@ const badge = {
   fontSize: 12,
 
   marginBottom: 10
+
 };
 
 const btn = {
@@ -532,6 +598,7 @@ const btn = {
   background: "#e2e8f0",
 
   cursor: "pointer"
+
 };
 
 const pdfBtn = {
@@ -547,21 +614,7 @@ const pdfBtn = {
   color: "white",
 
   cursor: "pointer"
-};
 
-const viewBtn = {
-
-  padding: "8px 14px",
-
-  border: "none",
-
-  borderRadius: 8,
-
-  background: "#2563eb",
-
-  color: "white",
-
-  cursor: "pointer"
 };
 
 export default Timeline;
