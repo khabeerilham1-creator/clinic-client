@@ -21,17 +21,11 @@ function CheckupModule() {
   const complaints = [
 
     { label: "Tooth Pain", value: "Tooth Pain" },
-
     { label: "Sensitivity", value: "Sensitivity" },
-
     { label: "Bleeding Gums", value: "Bleeding Gums" },
-
     { label: "Swelling", value: "Swelling" },
-
     { label: "Bad Breath", value: "Bad Breath" },
-
     { label: "Loose Tooth", value: "Loose Tooth" },
-
     { label: "Others", value: "Others" }
 
   ];
@@ -134,6 +128,9 @@ function CheckupModule() {
       "",
 
     "Others":
+      "",
+
+    "Manual":
       ""
 
   };
@@ -155,7 +152,8 @@ function CheckupModule() {
       {
         tooth: num,
         condition: "",
-        treatment: ""
+        treatment: "",
+        manual_condition: ""
       }
 
     ]);
@@ -195,6 +193,23 @@ function CheckupModule() {
 
     updated[index]
       .treatment = value;
+
+    setTasks(updated);
+
+  };
+
+  // ---------------- UPDATE MANUAL CONDITION ----------------
+
+  const updateManualCondition = (
+    index,
+    value
+  ) => {
+
+    const updated =
+      [...tasks];
+
+    updated[index]
+      .manual_condition = value;
 
     setTasks(updated);
 
@@ -275,8 +290,6 @@ function CheckupModule() {
 
       };
 
-      console.log(payload);
-
       await api.post(
         "/checkups/",
         payload
@@ -287,13 +300,9 @@ function CheckupModule() {
       );
 
       setTasks([]);
-
       setPatientName("");
-
       setContact("");
-
       setDate("");
-
       setComplaint(null);
 
     } catch (err) {
@@ -406,7 +415,6 @@ function CheckupModule() {
         />
 
         {[
-
           { n:1, x:30, y:25 },
           { n:2, x:70, y:25 },
           { n:3, x:110, y:25 },
@@ -540,38 +548,65 @@ function CheckupModule() {
 
                 {editIndex === i ? (
 
-                  <select
-                    value={t.condition}
-                    onChange={(e)=>
-                      updateCondition(
-                        i,
-                        e.target.value
-                      )
-                    }
-                  >
+                  <div>
 
-                    <option value="">
-                      Select
-                    </option>
+                    <select
+                      value={t.condition}
+                      onChange={(e)=>
+                        updateCondition(
+                          i,
+                          e.target.value
+                        )
+                      }
+                    >
 
-                    {Object.keys(
-                      conditionMap
-                    ).map(c => (
-
-                      <option
-                        key={c}
-                        value={c}
-                      >
-                        {c}
+                      <option value="">
+                        Select
                       </option>
 
-                    ))}
+                      {Object.keys(
+                        conditionMap
+                      ).map(c => (
 
-                  </select>
+                        <option
+                          key={c}
+                          value={c}
+                        >
+                          {c}
+                        </option>
+
+                      ))}
+
+                    </select>
+
+                    {t.condition === "Manual" && (
+
+                      <input
+                        placeholder="Write Condition"
+                        value={
+                          t.manual_condition || ""
+                        }
+                        onChange={(e)=>
+                          updateManualCondition(
+                            i,
+                            e.target.value
+                          )
+                        }
+                        style={{
+                          width: "220px",
+                          marginTop: 6
+                        }}
+                      />
+
+                    )}
+
+                  </div>
 
                 ) : (
 
-                  t.condition || "-"
+                  t.condition === "Manual"
+                    ? t.manual_condition
+                    : t.condition || "-"
 
                 )}
 
@@ -589,6 +624,9 @@ function CheckupModule() {
                         e.target.value
                       )
                     }
+                    style={{
+                      width: "220px"
+                    }}
                   />
 
                 ) : (
