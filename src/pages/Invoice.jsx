@@ -54,6 +54,12 @@ const PRICE_LIST = {
     "Category 3": 3000
   },
 
+  "Ceramic Crowns Veneer": { 
+    "Category 1": 35000,
+    "Category 2": 30000,
+    "Category 3": 25000
+  },	
+
   "Segurical EXT": {
     "Category 1": 15000,
     "Category 2": 10000,
@@ -79,7 +85,7 @@ const PRICE_LIST = {
   },
 
   "MTA pulpotomy": {
-    "Category 1": 15000,
+    "Category 1": 20000,
     "Category 2": 10000,
     "Category 3": 8000
   }
