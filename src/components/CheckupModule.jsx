@@ -233,70 +233,59 @@ function CheckupModule() {
 
   const saveCheckup = async () => {
 
-    if (
-      !patientName ||
-      !contact ||
-      !date
-    ) {
+  if (
+    !patientName ||
+    !contact ||
+    !date
+  ) {
 
-      alert(
-        "Fill all patient info"
-      );
+    alert("Fill all patient info");
 
-      return;
+    return;
 
-    }
+  }
 
-    if (
-      tasks.length === 0
-    ) {
+  if (tasks.length === 0) {
 
-      alert(
-        "Select at least one tooth"
-      );
+    alert("Select at least one tooth");
 
-      return;
+    return;
 
-    }
+  }
 
-    try {
+  try {
 
-      await axios.post(
+    await axios.post(
+      "https://pis-backend-final-1.onrender.com/checkups/",
+      {
 
-        "https://pis-backend-final-1.onrender.com/checkup",
+        patient_name: patientName,
 
-        {
+        contact: contact,
 
-          patient_name:
-            patientName,
+        date: date,
 
-          contact,
+        chief_complaint:
+          complaint?.value || "",
 
-          date,
+        tasks: tasks
 
-          chief_complaint:
-            complaint?.value || "",
+      }
+    );
 
-          tasks
+    alert("Checkup Saved ✅");
 
-        }
+    window.location.reload();
 
-      );
+  } catch (err) {
 
-      alert(
-        "Checkup Saved ✅"
-      );
+    console.log(err);
 
-    } catch (err) {
+    alert("Error saving ❌");
 
-      console.log(err);
+  }
 
-      alert(
-        "Error saving ❌"
-      );
-
-    }
-
+};
   };
 
   return (
