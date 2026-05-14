@@ -146,7 +146,7 @@ function Invoice() {
   const loadPatients = async () => {
 
     const res =
-      await api.get("/patients/");
+      await api.get("/patients");
 
     setPatients(res.data || []);
 
@@ -155,7 +155,7 @@ function Invoice() {
   const loadCheckups = async () => {
 
     const res =
-      await api.get("/checkups/");
+      await api.get("/checkups");
 
     setCheckups(res.data || []);
 
@@ -254,42 +254,84 @@ function Invoice() {
 
   const saveInvoice = async () => {
 
+  try {
+
     if (!selectedPatient) {
 
-      alert(
-        "Select Patient ❌"
-      );
+      alert("Select Patient ❌");
 
       return;
 
     }
 
-    await api.post(
-      "/invoice/",
-      {
-        invoice_no:
-          invoiceNo,
+    const payload = {
 
-        patient_name:
-          selectedPatient.name,
+      invoice_no: invoiceNo,
 
-        patient_id:
-          selectedPatient._id,
+      patient_name:
+        selectedPatient.name || "",
 
-        invoice_date:
-          invoiceDate,
+      patient_id:
+        selectedPatient._id || "",
 
-        rows,
+      invoice_date:
+        invoiceDate || "",
 
-        amount: total,
+      rows: rows || [],
 
-        discount
-      }
+      amount:
+        Number(total || 0),
+
+      discount:
+        Number(discount || 0),
+
+      paid: 0,
+
+      category: "Category 1"
+
+    };
+
+    console.log(
+      "PAYLOAD:",
+      payload
+    );
+
+    const res =
+      await api.post(
+        "/invoice",
+        payload
+      );
+
+    console.log(
+      "SUCCESS:",
+      res.data
     );
 
     alert("Invoice Saved ✅");
 
-  };
+  }
+
+  catch (err) {
+
+    console.log(
+      "FULL ERROR:",
+      err
+    );
+
+    console.log(
+      "RESPONSE:",
+      err?.response?.data
+    );
+
+    alert(
+      JSON.stringify(
+        err?.response?.data || err.message
+      )
+    );
+
+  }
+
+};
 
  const generateHTML = (
   category
@@ -347,7 +389,7 @@ body{
   width:210mm;
   min-height:297mm;
 
-  padding-top:18mm;
+  padding-top:55mm;
   padding-left:18mm;
   padding-right:18mm;
   padding-bottom:18mm;

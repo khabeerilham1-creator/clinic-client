@@ -63,7 +63,7 @@ function Timeline() {
 
       // INVOICES
       const i =
-        await api.get("/invoice/");
+        await api.get("/invoice");
 
       const patientInvoices =
         (i.data || []).filter(
