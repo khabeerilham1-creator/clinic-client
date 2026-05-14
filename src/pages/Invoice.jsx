@@ -537,7 +537,13 @@ Cost
 
 </tr>
 
-${rows.map((r, i) => {
+${(() => {
+
+const grouped = {};
+
+rows.forEach((r) => {
+
+const key = r.treatment;
 
 const rate =
 PRICE_LIST[
@@ -546,9 +552,32 @@ r.treatment
 category
 ] || 0;
 
+if (!grouped[key]) {
+
+grouped[key] = {
+
+treatment:
+r.treatment,
+
+qty: 0,
+
+rate
+
+};
+
+}
+
+grouped[key].qty +=
+Number(r.qty);
+
+});
+
+return Object.values(grouped)
+.map((r, i) => {
+
 const amount =
 Number(r.qty) *
-Number(rate);
+Number(r.rate);
 
 return `
 
@@ -567,7 +596,7 @@ ${r.qty}
 </td>
 
 <td class="center">
-${rate}
+${r.rate}
 </td>
 
 <td class="center">
@@ -578,7 +607,9 @@ ${amount}
 
 `;
 
-}).join("")}
+}).join("");
+
+})()}
 
 </table>
 
