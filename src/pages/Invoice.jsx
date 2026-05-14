@@ -551,25 +551,72 @@ ${finalAmount}
 
   };
 
-  const printInvoice = (
-    category
-  ) => {
+  const printInvoice = async (
+  category
+) => {
 
-    const win =
-      window.open(
-        "",
-        "_blank"
-      );
+  if (!selectedPatient) {
 
-    win.document.write(
-      generateHTML(category)
-    );
+    alert("Select Patient ❌");
 
-    win.document.close();
+    return;
 
-    win.print();
+  }
 
-  };
+  // 🔥 SAVE INVOICE FIRST
+  await api.post(
+    "/invoice/",
+    {
+      invoice_no:
+        invoiceNo,
+
+      patient_name:
+        selectedPatient.name,
+
+      patient_id:
+        selectedPatient._id,
+
+      invoice_date:
+        invoiceDate,
+
+      rows,
+
+      amount:
+        rows.reduce(
+          (a, b) =>
+            a +
+            (
+              Number(b.qty)
+              *
+              Number(
+                PRICE_LIST[
+                  b.treatment
+                ]?.[
+                  category
+                ] || 0
+              )
+            ),
+          0
+        ),
+
+      discount,
+
+      paid: 0,
+
+      category
+    }
+  );
+
+  // 🔥 OPEN BACKEND PDF
+  window.open(
+
+    `http://localhost:8000/invoice/pdf/${selectedPatient._id}`,
+
+    "_blank"
+
+  );
+
+};
 
   return (
 
