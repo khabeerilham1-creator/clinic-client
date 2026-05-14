@@ -16,7 +16,6 @@ const conditionsMap = {
   Calculus: "U/S Scaling & Polishing",
   Gingivitis: "Medication",
   Periodontitis: "Deep Scaling",
- "Pits and Fissure": "Sealents",
  "Class I Moderate Carious": "Composite Filling",
  "Class I Grossly Carious": "Root Canal Treatment under L/A",
  "Class II Moderate Carious": "Composite Filling",
@@ -45,6 +44,7 @@ const conditionsMap = {
  "Dislodged Filling": " ",
  "Unsatisfactory Filling": " ",
  "carious": "MTA Pulpotomy",
+ "Pits Fissure": " ",
   Healthy: "None"
 };
 
