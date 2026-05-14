@@ -551,77 +551,19 @@ ${finalAmount}
 
   };
 
-  const printInvoice = async (
+  const printInvoice = (
   category
 ) => {
 
-  if (!selectedPatient) {
-
-    alert("Select Patient ❌");
-
-    return;
-
-  }
-
-  // 🔥 SAVE INVOICE FIRST
-  const res = await api.post(
-    "/invoice/",
-    {
-      invoice_no:
-        invoiceNo,
-
-      patient_name:
-        selectedPatient.name,
-
-      patient_id:
-        selectedPatient._id,
-
-      invoice_date:
-        invoiceDate,
-
-      rows,
-
-      amount:
-        rows.reduce(
-          (a, b) =>
-            a +
-            (
-              Number(b.qty)
-              *
-              Number(
-                PRICE_LIST[
-                  b.treatment
-                ]?.[
-                  category
-                ] || 0
-              )
-            ),
-          0
-        ),
-
-      discount,
-
-      paid: 0,
-
-      category
-    }
-  );
-
-  // 🔥 GET CREATED INVOICE ID
-  const invoiceId =
-    res.data._id;
-
-  // 🔥 OPEN PDF
   window.open(
 
-    `https://api.drzaffariqbal.com/invoice/pdf/${invoiceId}`,
+    `https://api.drzaffariqbal.com/invoice/pdf/latest`,
 
     "_blank"
 
   );
 
 };
-
   return (
 
     <Layout>
