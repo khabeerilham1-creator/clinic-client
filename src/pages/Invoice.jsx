@@ -614,7 +614,7 @@ ${finalAmount}
   // 🔥 OPEN PDF
   window.open(
 
-    `http://127.0.0.1:8000/invoice/pdf/${invoiceId}`,
+    `https://api.drzaffariqbal.com/invoice/pdf/${invoiceId}`,
 
     "_blank"
 
