@@ -490,7 +490,7 @@ Treatment Details :
 
 <img
 class="tooth-image"
-src="https://api.drzaffariqbal.com/teeth.png"
+src="https://api.drzaffariqbal.com/static/teeth.png"
 />
 
 <table class="main-table">
