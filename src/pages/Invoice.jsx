@@ -295,33 +295,6 @@ function Invoice() {
   category
 ) => {
 
-  const bills =
-    rows.map(r => {
-
-      const rate =
-        PRICE_LIST[
-          r.treatment
-        ]?.[
-          category
-        ] || 0;
-
-      return `
-<tr>
-<td>${r.treatment}</td>
-<td>${r.qty}</td>
-<td>${rate}</td>
-<td>
-${
-  Number(r.qty)
-  *
-  Number(rate)
-}
-</td>
-</tr>
-`;
-
-    }).join("");
-
   const totalAmount =
     rows.reduce(
       (a, b) =>
@@ -358,57 +331,13 @@ ${
 
 @page{
   size:A4;
-  margin:0;
+  margin:20px;
 }
 
 body{
   font-family:Arial;
-  background:white;
-  margin:0;
-  padding:0;
-}
-
-/* 🔥 MAIN PRINT AREA */
-
-.invoice-wrapper{
-
-  width:170mm;
-
-  min-height:140mm;
-
-  margin:auto;
-
-  margin-top:75mm;
-
-  padding:15mm;
-
-  box-sizing:border-box;
-
-}
-
-/* 🔥 HEADER */
-
-h1{
-  text-align:center;
-  color:#2563eb;
-  margin-bottom:25px;
-  font-size:28px;
-}
-
-/* 🔥 SECTION */
-
-.section{
-  border:2px solid #2563eb;
-  margin-top:20px;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-.title{
-  background:#dbeafe;
-  padding:10px;
-  font-weight:bold;
-  color:#2563eb;
+  font-size:14px;
+  color:black;
 }
 
 table{
@@ -416,25 +345,46 @@ table{
   border-collapse:collapse;
 }
 
-th,td{
-  border:1px solid #ddd;
-  padding:10px;
-  text-align:center;
-  font-size:14px;
+td,th{
+  border:1px solid black;
+  padding:6px;
 }
 
-.badge{
-  background:#2563eb;
-  color:white;
-  padding:6px 14px;
-  border-radius:20px;
-  display:inline-block;
-  font-size:12px;
+.no-border td{
+  border:none;
+  padding:4px;
+}
+
+.heading{
+  font-size:26px;
   font-weight:bold;
+  margin-bottom:20px;
 }
 
-.summary td{
-  font-size:15px;
+.section-title{
+  font-size:20px;
+  font-weight:bold;
+  text-decoration:underline;
+  margin-top:20px;
+  margin-bottom:10px;
+}
+
+.tooth-image{
+  width:100%;
+  height:240px;
+  object-fit:contain;
+  margin-top:10px;
+  margin-bottom:20px;
+}
+
+.summary{
+  width:300px;
+  margin-left:auto;
+  margin-top:20px;
+}
+
+.center{
+  text-align:center;
 }
 
 </style>
@@ -443,86 +393,234 @@ th,td{
 
 <body>
 
-<div class="invoice-wrapper">
-
-<h1>HDC Invoice</h1>
-
-<div style="display:flex;justify-content:space-between;">
-
-<div>
-<b>Patient:</b>
-${selectedPatient?.name || "-"}
+<div class="heading">
+Bio-data :
 </div>
 
-<div class="badge">
-${category}
-</div>
+<table class="no-border">
 
-</div>
+<tr>
 
-<div style="margin-top:15px;">
-<b>Date:</b>
+<td>
+<b>Pt. Name :</b>
+${selectedPatient?.name || ""}
+</td>
+
+<td align="right">
+<b>Date :</b>
 ${invoiceDate}
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+<b>Contact :</b>
+${selectedPatient?.mobile_number || ""}
+</td>
+
+<td align="right">
+<b>Category :</b>
+${category}
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+<b>Address :</b>
+${selectedPatient?.address || ""}
+</td>
+
+<td align="right">
+<b>Patient Type :</b>
+${selectedPatient?.patient_type || ""}
+</td>
+
+</tr>
+
+</table>
+
+<div class="section-title">
+Treatment Details :
 </div>
 
-<div class="section">
+<img
+class="tooth-image"
+src="/teeth.png"
+/>
 
-<div class="title">
-BILLING DETAILS
+<table>
+
+<tr>
+
+<th style="width:70px;">
+S No
+</th>
+
+<th>
+Details
+</th>
+
+<th>
+Pre Existing Condition
+</th>
+
+<th>
+Recommended Treatment
+</th>
+
+</tr>
+
+${rows.map((r, i) => `
+
+<tr>
+
+<td class="center">
+${i + 1}
+</td>
+
+<td>
+${r.treatment || ""}
+</td>
+
+<td>
+
+${patientCheckups?.[0]?.tasks?.[i]?.condition || ""}
+
+</td>
+
+<td>
+
+${r.treatment || ""}
+
+</td>
+
+</tr>
+
+`).join("")}
+
+</table>
+
+<br/>
+<br/>
+
+<div class="section-title">
+Invoice:
 </div>
 
 <table>
 
 <tr>
-<th>Procedure</th>
-<th>Qty</th>
-<th>Rate</th>
-<th>Amount</th>
+
+<th>
+S No
+</th>
+
+<th>
+Details
+</th>
+
+<th>
+Qty
+</th>
+
+<th>
+Rate
+</th>
+
+<th>
+Cost
+</th>
+
 </tr>
 
-${bills}
+${rows.map((r, i) => {
+
+const rate =
+PRICE_LIST[
+r.treatment
+]?.[
+category
+] || 0;
+
+const amount =
+Number(r.qty) *
+Number(rate);
+
+return `
+
+<tr>
+
+<td class="center">
+${i + 1}
+</td>
+
+<td>
+${r.treatment || ""}
+</td>
+
+<td class="center">
+${r.qty}
+</td>
+
+<td class="center">
+${rate}
+</td>
+
+<td class="center">
+${amount}
+</td>
+
+</tr>
+
+`;
+
+}).join("")}
 
 </table>
-
-</div>
-
-<div class="section">
-
-<div class="title">
-SUMMARY
-</div>
 
 <table class="summary">
 
 <tr>
-<td>Total</td>
-<td>${totalAmount}</td>
-</tr>
 
-<tr>
-<td>Discount</td>
-<td>${discount || 0}</td>
-</tr>
-
-<tr>
-<td>Paid</td>
-<td>0</td>
-</tr>
-
-<tr>
-<td><b>Balance</b></td>
 <td>
-<b>
-${finalAmount}
-</b>
+<b>Total Amount</b>
 </td>
+
+<td>
+${totalAmount}
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+<b>Discount</b>
+</td>
+
+<td>
+${discount || 0}
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+<b>Net Amount</b>
+</td>
+
+<td>
+${finalAmount}
+</td>
+
 </tr>
 
 </table>
-
-</div>
-
-</div>
 
 </body>
 
@@ -530,9 +628,7 @@ ${finalAmount}
 
 `;
 
-
-  };
-
+};
   const viewInvoice = (
     category
   ) => {
@@ -555,13 +651,23 @@ ${finalAmount}
   category
 ) => {
 
-  window.open(
+  const win =
+    window.open(
+      "",
+      "_blank"
+    );
 
-    `https://api.drzaffariqbal.com/invoice/pdf/latest`,
-
-    "_blank"
-
+  win.document.write(
+    generateHTML(category)
   );
+
+  win.document.close();
+
+  setTimeout(() => {
+
+    win.print();
+
+  }, 500);
 
 };
   return (
