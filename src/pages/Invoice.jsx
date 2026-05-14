@@ -331,14 +331,30 @@ function Invoice() {
 
 @page{
   size:A4;
-  margin:20px;
+  margin:0;
 }
 
 body{
   font-family:Arial;
-  font-size:14px;
+  font-size:13px;
   color:black;
+  margin:0;
+  padding:0;
 }
+
+.print-wrapper{
+
+  width:210mm;
+  min-height:297mm;
+
+  padding-top:18mm;
+  padding-left:18mm;
+  padding-right:18mm;
+  padding-bottom:18mm;
+
+  box-sizing:border-box;
+}
+
 
 table{
   width:100%;
@@ -346,7 +362,32 @@ table{
 }
 
 td,th{
+  padding:4px;
+  font-size:12px;
+}
+
+/* OUTER BORDER ONLY */
+
+.main-table{
   border:1px solid black;
+  border-collapse:collapse;
+}
+
+.main-table th,
+.main-table td{
+  border:none;
+}
+
+.summary{
+  width:300px;
+  margin-left:auto;
+  margin-top:20px;
+  border:1px solid black;
+  border-collapse:collapse;
+}
+
+.summary td{
+  border:none;
   padding:6px;
 }
 
@@ -362,7 +403,7 @@ td,th{
 }
 
 .section-title{
-  font-size:20px;
+  font-size:16px;
   font-weight:bold;
   text-decoration:underline;
   margin-top:20px;
@@ -371,10 +412,10 @@ td,th{
 
 .tooth-image{
   width:100%;
-  height:240px;
+  height:170px;
   object-fit:contain;
-  margin-top:10px;
-  margin-bottom:20px;
+  margin-top:8px;
+  margin-bottom:12px;
 }
 
 .summary{
@@ -449,10 +490,10 @@ Treatment Details :
 
 <img
 class="tooth-image"
-src="/teeth.png"
+src="https://api.drzaffariqbal.com/teeth.png"
 />
 
-<table>
+<table class="main-table">
 
 <tr>
 
@@ -511,7 +552,7 @@ ${r.treatment || ""}
 Invoice:
 </div>
 
-<table>
+<table class="main-table">
 
 <tr>
 
