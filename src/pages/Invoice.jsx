@@ -564,7 +564,7 @@ ${finalAmount}
   }
 
   // 🔥 SAVE INVOICE FIRST
-  await api.post(
+  const res = await api.post(
     "/invoice/",
     {
       invoice_no:
@@ -607,10 +607,14 @@ ${finalAmount}
     }
   );
 
-  // 🔥 OPEN BACKEND PDF
+  // 🔥 GET CREATED INVOICE ID
+  const invoiceId =
+    res.data._id;
+
+  // 🔥 OPEN PDF
   window.open(
 
-    `http://localhost:8000/invoice/pdf/${selectedPatient._id}`,
+    `http://127.0.0.1:8000/invoice/pdf/${invoiceId}`,
 
     "_blank"
 
