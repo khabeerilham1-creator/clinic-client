@@ -135,11 +135,40 @@ function Invoice() {
       }
     ]);
 
+    const [savedInvoices,
+  setSavedInvoices] =
+  useState([]);
+
   useEffect(() => {
 
     loadPatients();
 
     loadCheckups();
+ const loadInvoices = async () => {
+
+  try {
+
+    const res =
+      await api.get(
+        "/invoice/"
+      );
+
+    setSavedInvoices(
+      res.data || []
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+  }
+
+};
+
+
+    loadInvoices();
 
   }, []);
 
@@ -298,7 +327,7 @@ function Invoice() {
 
     const res =
       await api.post(
-        "/invoice",
+        "/invoice/",
         payload
       );
 

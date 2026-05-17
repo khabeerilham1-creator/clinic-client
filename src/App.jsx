@@ -62,6 +62,7 @@ import ToBeExcepted from "./pages/ToBeExcepted";
 // 🔥 PERMISSIONS
 import Permissions from "./pages/Permissions";
 
+import OldPatients from "./pages/OldPatients";
 
 // =========================
 // APP
@@ -241,6 +242,11 @@ export default function App() {
         <Route
           path="/permissions"
           element={<Permissions />}
+        />
+
+        <Route
+         path="/old-patients"
+         element={<OldPatients />}
         />
 
       </Routes>

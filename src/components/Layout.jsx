@@ -161,6 +161,17 @@ export default function Layout({
 
           )}
 
+          {canView("old_patients") && (
+
+            <Nav
+             icon="📁"
+             text="Old Patients"
+             path="/old-patients"
+              current={location.pathname}
+            />
+
+          )}
+
           {canView("checkup") && (
 
             <Nav

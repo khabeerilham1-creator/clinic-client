@@ -8,6 +8,13 @@ function Patients() {
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
+  const [checkups, setCheckups] = useState([]);
+  const [visits, setVisits] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+
+  const [selectedPatient,
+    setSelectedPatient] =
+    useState(null);
 
   const [search, setSearch] = useState("");
 
@@ -52,7 +59,7 @@ function Patients() {
   });
 
   // =========================
-  // LOAD PATIENTS
+  // LOAD
   // =========================
 
   useEffect(() => {
@@ -69,6 +76,9 @@ function Patients() {
     }
 
     loadPatients();
+    loadCheckups();
+    loadVisits();
+    loadInvoices();
 
   }, [navigate]);
 
@@ -90,13 +100,72 @@ function Patients() {
         reg_no: nextNo
       }));
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
       console.log(err);
 
       alert(
         "Failed to load patients ❌"
       );
+
+    }
+
+  };
+
+  const loadCheckups = async () => {
+
+    try {
+
+      const res =
+        await api.get("/checkups/");
+
+      setCheckups(res.data || []);
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
+  const loadVisits = async () => {
+
+    try {
+
+      const res =
+        await api.get("/visits/");
+
+      setVisits(res.data || []);
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
+  const loadInvoices = async () => {
+
+    try {
+
+      const res =
+        await api.get("/invoice/");
+
+      setInvoices(res.data || []);
+
+    }
+
+    catch (err) {
+
+      console.log(err);
 
     }
 
@@ -145,7 +214,9 @@ function Patients() {
 
         setEditId(null);
 
-      } else {
+      }
+
+      else {
 
         res = await api.post(
           "/patients/",
@@ -201,7 +272,9 @@ function Patients() {
 
       });
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
       console.log(err);
 
@@ -231,7 +304,9 @@ function Patients() {
         )
       );
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
       console.log(err);
 
@@ -300,14 +375,14 @@ function Patients() {
 
       </div>
 
-      {/* FORM */}
+      {/* BIOGRAPHY */}
 
       <div style={card}>
 
         <h2 style={{
           marginBottom: 20
         }}>
-          Patient Information
+          Biography
         </h2>
 
         <Grid>
@@ -628,7 +703,504 @@ function Patients() {
 
       </div>
 
-      {/* LIST */}
+{/* AUTO WORKFLOW DASHBOARD */}
+
+{selectedPatient && (
+
+<div style={dashboardCard}>
+
+  <div style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20
+  }}>
+
+    <div>
+
+      <h2 style={{
+        margin: 0,
+        fontSize: 24
+      }}>
+        Patient Workflow Dashboard
+      </h2>
+
+      <p style={{
+        marginTop: 5,
+        color: "#64748b"
+      }}>
+        {selectedPatient.title}
+        {" "}
+        {selectedPatient.name}
+        {" • "}
+        {selectedPatient.reg_no}
+      </p>
+
+    </div>
+
+    <button
+      onClick={()=>
+        navigate(
+          "/timeline/" +
+          selectedPatient._id
+        )
+      }
+      style={timelineBtn}
+    >
+      Full Timeline
+    </button>
+
+  </div>
+
+  {/* STATS */}
+
+  <div style={{
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit,minmax(180px,1fr))",
+    gap: 16,
+    marginBottom: 25
+  }}>
+
+    <div style={statCard}>
+      <h3 style={statTitle}>
+        Checkups
+      </h3>
+
+      <h1 style={statValue}>
+
+        {
+          checkups.filter(
+            c =>
+              c.patient ===
+              selectedPatient._id
+          ).length
+        }
+
+      </h1>
+    </div>
+
+    <div style={statCard}>
+      <h3 style={statTitle}>
+        Visits
+      </h3>
+
+      <h1 style={statValue}>
+
+        {
+          visits.filter(
+            v =>
+              v.patient_id ===
+              selectedPatient._id
+          ).length
+        }
+
+      </h1>
+    </div>
+
+    <div style={statCard}>
+      <h3 style={statTitle}>
+        Invoices
+      </h3>
+
+      <h1 style={statValue}>
+
+        {
+          invoices.filter(
+            inv =>
+              inv.patient_id ===
+              selectedPatient._id
+          ).length
+        }
+
+      </h1>
+    </div>
+
+    <div style={statCard}>
+      <h3 style={statTitle}>
+        Revenue
+      </h3>
+
+      <h1 style={statValue}>
+
+        Rs.
+
+        {
+
+          invoices
+          .filter(
+            inv =>
+              inv.patient_id ===
+              selectedPatient._id
+          )
+          .reduce(
+            (a, b)=>
+              a +
+              Number(
+                b.amount || 0
+              ),
+            0
+          )
+
+        }
+
+      </h1>
+    </div>
+
+  </div>
+
+  {/* WORKFLOW */}
+
+  <div style={{
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit,minmax(320px,1fr))",
+    gap: 18
+  }}>
+
+    {/* CHECKUPS */}
+
+    <div style={workflowBox}>
+
+      <h3 style={workflowTitle}>
+        🦷 Checkups
+      </h3>
+
+      {
+
+        checkups
+        .filter(
+          c =>
+            c.patient ===
+            selectedPatient._id
+        )
+        .slice(0, 5)
+        .map((c, i)=>(
+
+        <div
+          key={i}
+          style={workflowItem}
+        >
+
+          <p>
+            <b>
+              Complaint:
+            </b>
+
+            {" "}
+
+            {c.complaint}
+          </p>
+
+          <small>
+            {c.date}
+          </small>
+
+        </div>
+
+        ))
+
+      }
+
+    </div>
+
+    {/* VISITS */}
+
+    <div style={workflowBox}>
+
+      <h3 style={workflowTitle}>
+        🩺 Treatment Plans
+      </h3>
+
+      {
+
+        visits
+        .filter(
+          v =>
+            v.patient_id ===
+            selectedPatient._id
+        )
+        .slice(0, 5)
+        .map((v, i)=>(
+
+        <div
+          key={i}
+          style={workflowItem}
+        >
+
+          <p>
+
+            <b>
+              {v.treatment}
+            </b>
+
+          </p>
+
+          <small>
+
+            {v.date}
+
+            {" • "}
+
+            {v.status}
+
+          </small>
+
+        </div>
+
+        ))
+
+      }
+
+    </div>
+
+    {/* INVOICES */}
+
+    <div style={workflowBox}>
+
+      <h3 style={workflowTitle}>
+        💰 Financial Activity
+      </h3>
+
+      {
+
+        invoices
+        .filter(
+          inv =>
+            inv.patient_id ===
+            selectedPatient._id
+        )
+        .slice(0, 5)
+        .map((inv, i)=>(
+
+        <div
+          key={i}
+          style={workflowItem}
+        >
+
+          <p>
+
+            <b>
+              Invoice:
+            </b>
+
+            {" "}
+
+            {inv.invoice_no}
+
+          </p>
+
+          <small>
+
+            Rs.
+            {inv.amount}
+
+            {" • "}
+
+            {inv.invoice_date}
+
+          </small>
+
+        </div>
+
+        ))
+
+      }
+
+    </div>
+
+  </div>
+
+</div>
+
+)}
+
+      {/* CHECKUP */}
+
+      <div style={card}>
+
+        <h2>
+          Checkup
+        </h2>
+
+        {selectedPatient &&
+
+        checkups
+        .filter(
+          c =>
+            c.patient ===
+            selectedPatient._id
+        )
+        .map((c, i)=>(
+
+        <div
+          key={i}
+          style={sectionCard}
+        >
+
+          <p
+  style={{
+    cursor: "pointer",
+    color: "#2563eb",
+    fontWeight: "600"
+  }}
+
+  onClick={()=>
+    navigate("/checkup")
+  }
+>
+
+  Complaint:
+  {" "}
+  {c.complaint}
+
+</p>
+          {(c.tasks || []).map(
+            (t, idx)=>(
+
+            <p key={idx}>
+
+              Tooth {t.tooth}
+
+              {" → "}
+
+              {t.condition}
+
+              {" → "}
+
+              {t.treatment}
+
+            </p>
+
+          ))}
+
+        </div>
+
+        ))}
+
+      </div>
+
+      {/* VISITS */}
+
+      <div style={card}>
+
+        <h2>
+          Planned Sequence Of Treatment
+        </h2>
+
+        {selectedPatient &&
+
+        visits
+        .filter(
+          v =>
+            v.patient_id ===
+            selectedPatient._id
+        )
+        .map((v, i)=>(
+
+        <div
+          key={i}
+          style={sectionCard}
+        >
+
+          <p>
+
+            <b>Date:</b>
+
+            {" "}
+
+            {v.date}
+
+          </p>
+
+          <p>
+
+            <b>Treatment:</b>
+
+            {" "}
+
+            {v.treatment}
+
+          </p>
+
+        </div>
+
+        ))}
+
+      </div>
+
+      {/* INVOICE */}
+
+      <div style={card}>
+
+        <h2>
+          Invoice
+        </h2>
+
+        {selectedPatient &&
+
+        invoices
+        .filter(
+          inv =>
+            inv.patient_id ===
+            selectedPatient._id
+        )
+        .map((inv, i)=>(
+
+        <div
+          key={i}
+          style={sectionCard}
+        >
+
+          <p>
+
+            <b>Invoice:</b>
+
+            {" "}
+
+            {inv.invoice_no}
+
+          </p>
+
+          <p>
+
+            <b>Amount:</b>
+
+            {" "}
+
+            {inv.amount}
+
+          </p>
+
+          <p>
+
+            <b>Date:</b>
+
+            {" "}
+
+            {inv.invoice_date}
+
+          </p>
+
+          <a
+            href={`http://127.0.0.1:8000/invoice/pdf/${inv._id}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+
+            <button style={pdfBtn}>
+              PDF
+            </button>
+
+          </a>
+
+        </div>
+
+        ))}
+
+      </div>
+
+      {/* PATIENTS LIST */}
 
       <div style={card}>
 
@@ -719,6 +1291,8 @@ function Patients() {
                   <button
                     onClick={()=>{
 
+                      setSelectedPatient(p);
+
                       setForm({
                         ...p
                       });
@@ -732,7 +1306,7 @@ function Patients() {
                       marginLeft: 8
                     }}
                   >
-                    Edit
+                    Open
                   </button>
 
                   <button
@@ -840,6 +1414,19 @@ const card = {
 
 };
 
+const sectionCard = {
+
+  border:
+    "1px solid #e2e8f0",
+
+  padding: 14,
+
+  borderRadius: 10,
+
+  marginTop: 10
+
+};
+
 const input = {
 
   width: "100%",
@@ -870,6 +1457,130 @@ const saveBtn = {
   border: "none",
 
   borderRadius: 8,
+
+  cursor: "pointer",
+
+  fontWeight: "600"
+
+};
+
+const pdfBtn = {
+
+  marginTop: 10,
+
+  padding: "10px 18px",
+
+  background: "#dc2626",
+
+  color: "white",
+
+  border: "none",
+
+  borderRadius: 8,
+
+  cursor: "pointer"
+
+};
+
+/* AUTO WORKFLOW DASHBOARD STYLES */
+
+const dashboardCard = {
+
+  background: "white",
+
+  padding: 25,
+
+  borderRadius: 16,
+
+  marginBottom: 20,
+
+  boxShadow:
+    "0 2px 12px rgba(0,0,0,0.06)"
+
+};
+
+const statCard = {
+
+  background: "#f8fafc",
+
+  padding: 18,
+
+  borderRadius: 14,
+
+  border:
+    "1px solid #e2e8f0"
+
+};
+
+const statTitle = {
+
+  margin: 0,
+
+  fontSize: 14,
+
+  color: "#64748b"
+
+};
+
+const statValue = {
+
+  margin: "10px 0 0 0",
+
+  fontSize: 30,
+
+  color: "#0f172a"
+
+};
+
+const workflowBox = {
+
+  background: "#f8fafc",
+
+  padding: 18,
+
+  borderRadius: 14,
+
+  border:
+    "1px solid #e2e8f0"
+
+};
+
+const workflowTitle = {
+
+  marginTop: 0,
+
+  marginBottom: 14,
+
+  color: "#0f172a"
+
+};
+
+const workflowItem = {
+
+  padding: 12,
+
+  borderRadius: 10,
+
+  background: "white",
+
+  marginBottom: 10,
+
+  border:
+    "1px solid #e2e8f0"
+
+};
+
+const timelineBtn = {
+
+  padding: "10px 16px",
+
+  border: "none",
+
+  borderRadius: 10,
+
+  background: "#2563eb",
+
+  color: "white",
 
   cursor: "pointer",
 

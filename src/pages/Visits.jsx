@@ -1,280 +1,359 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-
 import Layout from "../components/Layout";
 
-function Visits() {
+function Patients() {
 
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState([]);
-  const [visits, setVisits] = useState([]);
 
-  const [form, setForm] = useState({
-    patient_id: "",
-    patient_name: "",
-    visit_no: "",
-    treatment: "",
-    date: new Date().toISOString().split("T")[0],
-    procedure_doctor: "",
-    status: "Planned"
-  });
+  const [search, setSearch] = useState("");
 
   const [editId, setEditId] = useState(null);
 
+  const [patientCheckups,
+    setPatientCheckups] = useState([]);
+
+  const [patientVisits,
+    setPatientVisits] = useState([]);
+
+  const [patientInvoices,
+    setPatientInvoices] = useState([]);
+
+  const [form, setForm] = useState({
+
+    reg_no: "",
+
+    date: new Date()
+      .toISOString()
+      .split("T")[0],
+
+    title: "Mr.",
+
+    name: "",
+
+    husband_name: "",
+
+    birth_year: "",
+
+    age: "",
+
+    occupation: "",
+
+    address: "",
+
+    email: "",
+
+    ptcl_number: "",
+
+    mobile_number: "",
+
+    emergency_number: "",
+
+    referred_by: "",
+
+    category: "Referred",
+
+    consultation_fee_paid: "No"
+
+  });
+
   // =========================
-  // AUTH
+  // LOAD
   // =========================
+
   useEffect(() => {
 
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token");
 
     if (!token) {
+
       navigate("/");
+
       return;
+
     }
 
     loadPatients();
-    loadVisits();
 
-  }, []);
+  }, [navigate]);
 
-  // =========================
-  // LOAD PATIENTS
-  // =========================
   const loadPatients = async () => {
 
     try {
 
-      const res = await api.get("/patients/");
+      const res =
+        await api.get("/patients/");
 
       setPatients(res.data || []);
 
-    } catch (err) {
+      const nextNo = String(
+        (res.data?.length || 0) + 1
+      ).padStart(5, "0");
+
+      setForm(prev => ({
+        ...prev,
+        reg_no: nextNo
+      }));
+
+    }
+
+    catch (err) {
 
       console.log(err);
+
+      alert(
+        "Failed to load patients ❌"
+      );
+
     }
+
   };
 
   // =========================
-  // LOAD VISITS
+  // LOAD WORKFLOW
   // =========================
-  const loadVisits = async () => {
+
+  const loadPatientWorkflow = async (
+    patientId
+  ) => {
 
     try {
 
-      const res = await api.get("/visits/");
+      const [
+        checkupRes,
+        visitRes,
+        invoiceRes
+      ] = await Promise.all([
 
-      setVisits(res.data || []);
+        api.get("/checkups/"),
+        api.get("/visits/"),
+        api.get("/invoice/")
 
-    } catch (err) {
+      ]);
+
+      setPatientCheckups(
+
+        (checkupRes.data || [])
+        .filter(
+          x =>
+            x.patient === patientId ||
+            x.patient_id === patientId
+        )
+
+      );
+
+      setPatientVisits(
+
+        (visitRes.data || [])
+        .filter(
+          x =>
+            x.patient_id === patientId
+        )
+
+      );
+
+      setPatientInvoices(
+
+        (invoiceRes.data || [])
+        .filter(
+          x =>
+            x.patient_id === patientId
+        )
+
+      );
+
+    }
+
+    catch (err) {
 
       console.log(err);
+
     }
+
   };
 
   // =========================
   // INPUT
   // =========================
+
   const handleChange = (e) => {
-
-    const value = e.target.value;
-
-    if (e.target.name === "patient_id") {
-
-      const selectedPatient =
-        patients.find(
-          p => p._id === value
-        );
-
-      setForm({
-        ...form,
-        patient_id: value,
-        patient_name:
-          selectedPatient?.name || ""
-      });
-
-      return;
-    }
 
     setForm({
       ...form,
-      [e.target.name]: value
+      [e.target.name]:
+        e.target.value
     });
+
   };
 
   // =========================
   // SAVE
   // =========================
-  const saveVisit = async () => {
+
+  const savePatient = async () => {
 
     try {
 
-      if (!form.patient_id)
-        return alert("Select patient ❗");
-
-      const payload = {
-        ...form
-      };
+      let res;
 
       if (editId) {
 
-        await api.put(
-          "/visits/" + editId,
-          payload
+        res = await api.put(
+          "/patients/" + editId,
+          form
         );
-
-        // AUTO UPDATE APPOINTMENT
-        if (
-          form.status === "Planned"
-        ) {
-
-          try {
-
-            await api.post("/afi/", {
-
-              patient_name:
-              form.patient_name,
-
-              doctor:
-              form.procedure_doctor,
-
-              procedure:
-              form.treatment,
-
-              appointment_date:
-              form.date,
-
-              appointment_time: "",
-
-              chair: "",
-
-              source: "Visit Auto",
-
-              status: "Planned"
-            });
-
-          } catch (err) {
-
-            console.log(
-              "AUTO AFI ERROR",
-              err
-            );
-          }
-        }
 
         alert("Updated ✅");
 
-      } else {
-
-        await api.post(
-          "/visits/",
-          payload
+        setPatients(prev =>
+          prev.map(p =>
+            p._id === editId
+              ? res.data
+              : p
+          )
         );
 
-        // AUTO CREATE APPOINTMENT
-        if (
-          form.status === "Planned"
-        ) {
+        setEditId(null);
 
-          try {
+      }
 
-            await api.post("/afi/", {
+      else {
 
-              patient_name:
-              form.patient_name,
-
-              doctor:
-              form.procedure_doctor,
-
-              procedure:
-              form.treatment,
-
-              appointment_date:
-              form.date,
-
-              appointment_time: "",
-
-              chair: "",
-
-              source: "Visit Auto",
-
-              status: "Planned"
-            });
-
-          } catch (err) {
-
-            console.log(
-              "AUTO AFI ERROR",
-              err
-            );
-          }
-        }
+        res = await api.post(
+          "/patients/",
+          form
+        );
 
         alert("Saved ✅");
+
+        setPatients(prev => [
+          res.data,
+          ...prev
+        ]);
+
       }
 
       setForm({
-        patient_id: "",
-        patient_name: "",
-        visit_no: "",
-        treatment: "",
-        date: new Date().toISOString().split("T")[0],
-        procedure_doctor: "",
-        status: "Planned"
+
+        reg_no: String(
+          (patients.length || 0) + 1
+        ).padStart(5, "0"),
+
+        date: new Date()
+          .toISOString()
+          .split("T")[0],
+
+        title: "Mr.",
+
+        name: "",
+
+        husband_name: "",
+
+        birth_year: "",
+
+        age: "",
+
+        occupation: "",
+
+        address: "",
+
+        email: "",
+
+        ptcl_number: "",
+
+        mobile_number: "",
+
+        emergency_number: "",
+
+        referred_by: "",
+
+        category: "Referred",
+
+        consultation_fee_paid: "No"
+
       });
 
-      setEditId(null);
+      setPatientCheckups([]);
+      setPatientVisits([]);
+      setPatientInvoices([]);
 
-      loadVisits();
+    }
 
-    } catch (err) {
+    catch (err) {
 
       console.log(err);
 
-      alert("Error ❌");
+      alert(
+        "Backend save error ❌"
+      );
+
     }
-  };
 
-  // =========================
-  // EDIT
-  // =========================
-  const handleEdit = (v) => {
-
-    setForm({
-      patient_id: v.patient_id || "",
-      patient_name: v.patient_name || "",
-      visit_no: v.visit_no || "",
-      treatment: v.treatment || "",
-      date: v.date || "",
-      procedure_doctor:
-      v.procedure_doctor || "",
-      status:
-      v.status || "Planned"
-    });
-
-    setEditId(v._id);
   };
 
   // =========================
   // DELETE
   // =========================
-  const handleDelete = async (id) => {
+
+  const deletePatient = async (id) => {
 
     try {
 
       await api.delete(
-        "/visits/" + id
+        "/patients/" + id
       );
 
-      loadVisits();
+      setPatients(prev =>
+        prev.filter(
+          p => p._id !== id
+        )
+      );
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
       console.log(err);
+
     }
+
   };
+
+  // =========================
+  // SEARCH
+  // =========================
+
+  const filteredPatients =
+    patients.filter((p) => {
+
+      const q =
+        search.toLowerCase();
+
+      return (
+
+        p.name
+          ?.toLowerCase()
+          .includes(q)
+
+        ||
+
+        p.mobile_number
+          ?.toLowerCase()
+          .includes(q)
+
+        ||
+
+        p.reg_no
+          ?.toLowerCase()
+          .includes(q)
+
+      );
+
+    });
 
   return (
 
@@ -282,226 +361,375 @@ function Visits() {
 
       <h1 style={{
         marginBottom: 20,
-        fontSize: 26
+        fontSize: 28
       }}>
-        Planned Sequence Of Treatment
+        Patient Entry
       </h1>
 
-      {/* FORM */}
-      <div style={{
-        background: "white",
-        padding: 18,
-        borderRadius: 14,
-        marginBottom: 20,
-        boxShadow:
-          "0 2px 8px rgba(0,0,0,0.05)"
-      }}>
+      {/* SEARCH */}
 
-        <h3 style={{
-          marginBottom: 15
-        }}>
-          {editId
-            ? "Edit Treatment Plan"
-            : "Add Treatment Plan"}
-        </h3>
+      <div style={card}>
 
-        <select
-          name="patient_id"
-          value={form.patient_id}
-          onChange={handleChange}
+        <input
+          type="text"
+          placeholder="🔍 Search by Name / Mobile / Reg No"
+          value={search}
+          onChange={(e)=>
+            setSearch(
+              e.target.value
+            )
+          }
           style={input}
-        >
+        />
 
-          <option value="">
-            Select Patient
-          </option>
+      </div>
 
-          {patients.map(p => (
+      {/* BIOGRAPHY */}
 
-            <option
-              key={p._id}
-              value={p._id}
-            >
-              {p.name}
-            </option>
+      <div style={card}>
 
-          ))}
-
-        </select>
-
-        <br />
-        <br />
+        <h2 style={{
+          marginBottom: 20
+        }}>
+          Biography
+        </h2>
 
         <Grid>
 
-          <input
-            name="visit_no"
-            value={form.visit_no}
-            onChange={handleChange}
-            placeholder="Visit No"
-            style={input}
-          />
+          <Row label="Date">
 
-          <input
-            name="treatment"
-            value={form.treatment}
-            onChange={handleChange}
-            placeholder="Treatment"
-            style={input}
-          />
+            <input
+              name="date"
+              type="date"
+              value={form.date}
+              onChange={handleChange}
+              style={input}
+            />
 
-          <input
-            type="date"
-            name="date"
-            value={form.date}
-            onChange={handleChange}
-            style={input}
-          />
+          </Row>
 
-          <input
-            name="procedure_doctor"
-            value={form.procedure_doctor}
-            onChange={handleChange}
-            placeholder="Procedure Doctor"
-            style={input}
-          />
+          <Row label="Reg No">
 
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            style={input}
-          >
+            <input
+              name="reg_no"
+              value={form.reg_no}
+              readOnly
+              style={{
+                ...input,
+                background:
+                  "#f1f5f9"
+              }}
+            />
 
-            <option value="Planned">
-              Planned
-            </option>
+          </Row>
 
-            <option value="In Progress">
-              In Progress
-            </option>
+          <Row label="Title">
 
-            <option value="Completed">
-              Completed
-            </option>
+            <select
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              style={input}
+            >
 
-            <option value="Cancelled">
-              Cancelled
-            </option>
+              <option>
+                Mr.
+              </option>
 
-          </select>
+              <option>
+                Mrs.
+              </option>
+
+              <option>
+                Miss
+              </option>
+
+              <option>
+                Dr.
+              </option>
+
+            </select>
+
+          </Row>
+
+          <Row label="Patient Name">
+
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              style={input}
+            />
+
+          </Row>
+
+          {form.title ===
+            "Mrs." && (
+
+            <Row label="Husband Name">
+
+              <input
+                name="husband_name"
+                value={
+                  form.husband_name
+                }
+                onChange={
+                  handleChange
+                }
+                style={input}
+              />
+
+            </Row>
+
+          )}
+
+          <Row label="Birth Year">
+
+            <input
+              type="number"
+              name="birth_year"
+              placeholder="1990"
+              value={
+                form.birth_year
+              }
+              onChange={(e)=>{
+
+                const year =
+                  e.target.value;
+
+                const currentYear =
+                  new Date()
+                    .getFullYear();
+
+                const age =
+                  year
+                    ? currentYear -
+                      Number(year)
+                    : "";
+
+                setForm({
+                  ...form,
+                  birth_year:
+                    year,
+                  age:
+                    age.toString()
+                });
+
+              }}
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="Age">
+
+            <input
+              value={form.age}
+              readOnly
+              style={{
+                ...input,
+                background:
+                  "#f1f5f9"
+              }}
+            />
+
+          </Row>
+
+          <Row label="Occupation">
+
+            <input
+              name="occupation"
+              value={
+                form.occupation
+              }
+              onChange={
+                handleChange
+              }
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="Address">
+
+            <textarea
+              name="address"
+              value={
+                form.address
+              }
+              onChange={
+                handleChange
+              }
+              style={{
+                ...input,
+                minHeight: 80
+              }}
+            />
+
+          </Row>
+
+          <Row label="Email">
+
+            <input
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="PTCL Number">
+
+            <input
+              name="ptcl_number"
+              value={
+                form.ptcl_number
+              }
+              onChange={
+                handleChange
+              }
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="Mobile Number">
+
+            <input
+              name="mobile_number"
+              value={
+                form.mobile_number
+              }
+              onChange={
+                handleChange
+              }
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="Emergency Number">
+
+            <input
+              name="emergency_number"
+              value={
+                form.emergency_number
+              }
+              onChange={
+                handleChange
+              }
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="Referred By">
+
+            <input
+              name="referred_by"
+              value={
+                form.referred_by
+              }
+              onChange={
+                handleChange
+              }
+              style={input}
+            />
+
+          </Row>
+
+          <Row label="Category">
+
+            <select
+              name="category"
+              value={
+                form.category
+              }
+              onChange={
+                handleChange
+              }
+              style={input}
+            >
+
+              <option>
+                Referred
+              </option>
+
+              <option>
+                Relatives
+              </option>
+
+              <option>
+                Neighbours
+              </option>
+
+              <option>
+                Friends
+              </option>
+
+            </select>
+
+          </Row>
 
         </Grid>
 
         <button
-          onClick={saveVisit}
+          onClick={savePatient}
           style={saveBtn}
         >
+
           {editId
-            ? "Update Plan"
-            : "Save Plan"}
+            ? "Update"
+            : "Save"}
+
         </button>
 
       </div>
 
-      {/* LIST */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(auto-fit,minmax(240px,1fr))",
-        gap: 14
-      }}>
+      {/* CHECKUP */}
 
-        {visits.map(v => (
+      <div style={card}>
+
+        <h2>
+          Checkup
+        </h2>
+
+        {patientCheckups.length === 0 && (
+
+          <p>
+            No Checkups Found
+          </p>
+
+        )}
+
+        {patientCheckups.map((c, i) => (
 
           <div
-            key={v._id}
-            style={card}
+            key={i}
+            style={workflowCard}
           >
 
-            <div style={{
-              display: "flex",
-              justifyContent:
-                "space-between",
-              alignItems: "center",
-              marginBottom: 10
-            }}>
-
-              <h2 style={{
-                margin: 0,
-                fontSize: 18
-              }}>
-                {v.patient_name}
-              </h2>
-
-              <span style={{
-                padding: "4px 10px",
-                borderRadius: 20,
-                fontSize: 11,
-                color: "white",
-                background:
-                  v.status === "Completed"
-                    ? "#16a34a"
-                    : v.status === "Cancelled"
-                    ? "#dc2626"
-                    : v.status === "In Progress"
-                    ? "#ca8a04"
-                    : "#2563eb"
-              }}>
-                {v.status}
-              </span>
-
-            </div>
-
-            <p style={text}>
-              🆔 Visit No:
+            <p>
+              <b>Complaint:</b>
               {" "}
-              {v.visit_no}
+              {c.complaint}
             </p>
 
-            <p style={text}>
-              🩺 Treatment:
-              {" "}
-              {v.treatment}
-            </p>
+            {(c.tasks || []).map(
+              (t, idx) => (
 
-            <p style={text}>
-              📅 Date:
-              {" "}
-              {v.date}
-            </p>
+              <p key={idx}>
 
-            <p style={text}>
-              👨‍⚕️ Doctor:
-              {" "}
-              {v.procedure_doctor}
-            </p>
+                Tooth {t.tooth}
+                {" → "}
+                {t.condition}
+                {" → "}
+                {t.treatment}
 
-            <div style={{
-              display: "flex",
-              gap: 10,
-              marginTop: 14
-            }}>
+              </p>
 
-              <button
-                onClick={() =>
-                  handleEdit(v)
-                }
-                style={editBtn}
-              >
-                Edit
-              </button>
-
-              <button
-                onClick={() =>
-                  handleDelete(v._id)
-                }
-                style={deleteBtn}
-              >
-                Delete
-              </button>
-
-            </div>
+            ))}
 
           </div>
 
@@ -509,26 +737,344 @@ function Visits() {
 
       </div>
 
+      {/* VISITS */}
+
+      <div style={card}>
+
+        <h2>
+          Planned Sequence Of Treatment
+        </h2>
+
+        {patientVisits.length === 0 && (
+
+          <p>
+            No Treatment Plans
+          </p>
+
+        )}
+
+        {patientVisits.map((v, i) => (
+
+          <div
+            key={i}
+            style={workflowCard}
+          >
+
+            <p>
+              <b>Visit:</b>
+              {" "}
+              {v.visit_no}
+            </p>
+
+            <p>
+              <b>Treatment:</b>
+              {" "}
+              {v.treatment}
+            </p>
+
+            <p>
+              <b>Date:</b>
+              {" "}
+              {v.date}
+            </p>
+
+            <p>
+              <b>Status:</b>
+              {" "}
+              {v.status}
+            </p>
+
+          </div>
+
+        ))}
+
+      </div>
+
+      {/* INVOICE */}
+
+      <div style={card}>
+
+        <h2>
+          Invoice
+        </h2>
+
+        {patientInvoices.length === 0 && (
+
+          <p>
+            No Invoices
+          </p>
+
+        )}
+
+        {patientInvoices.map((inv, i) => (
+
+          <div
+            key={i}
+            style={workflowCard}
+          >
+
+            <p>
+              <b>Invoice No:</b>
+              {" "}
+              {inv.invoice_no}
+            </p>
+
+            <p>
+              <b>Date:</b>
+              {" "}
+              {inv.invoice_date}
+            </p>
+
+            <p>
+              <b>Amount:</b>
+              {" "}
+              Rs.
+              {inv.amount}
+            </p>
+
+            <p>
+              <b>Discount:</b>
+              {" "}
+              Rs.
+              {inv.discount}
+            </p>
+
+          </div>
+
+        ))}
+
+      </div>
+
+      {/* PATIENT LIST */}
+
+      <div style={card}>
+
+        <h2>
+          Patients List
+        </h2>
+
+        <table style={{
+          width: "100%",
+          marginTop: 10
+        }}>
+
+          <thead>
+
+            <tr>
+
+              <th align="left">
+                Reg No
+              </th>
+
+              <th align="left">
+                Name
+              </th>
+
+              <th align="left">
+                Mobile
+              </th>
+
+              <th align="left">
+                Category
+              </th>
+
+              <th align="right">
+                Actions
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {filteredPatients.map((p)=> (
+
+              <tr
+                key={p._id}
+                style={{
+                  borderTop:
+                    "1px solid #eee"
+                }}
+              >
+
+                <td>
+                  {p.reg_no}
+                </td>
+
+                <td>
+
+                  {p.title}
+
+                  {" "}
+
+                  {p.name}
+
+                </td>
+
+                <td>
+                  {p.mobile_number}
+                </td>
+
+                <td>
+                  {p.category}
+                </td>
+
+                <td align="right">
+
+                  <button
+                    onClick={()=>
+                      navigate(
+                        "/timeline/" +
+                        p._id
+                      )
+                    }
+                  >
+                    History
+                  </button>
+
+                  <button
+                    onClick={()=>{
+
+                      setForm({
+                        ...p
+                      });
+
+                      setEditId(
+                        p._id
+                      );
+
+                      loadPatientWorkflow(
+                        p._id
+                      );
+
+                    }}
+                    style={{
+                      marginLeft: 8
+                    }}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={()=>
+                      deletePatient(
+                        p._id
+                      )
+                    }
+                    style={{
+                      marginLeft: 8
+                    }}
+                  >
+                    Delete
+                  </button>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
     </Layout>
+
   );
+
 }
 
 /* GRID */
-function Grid({ children }) {
+
+function Grid({
+  children
+}) {
 
   return (
+
     <div style={{
       display: "grid",
       gridTemplateColumns:
-        "repeat(2,1fr)",
-      gap: 12
+        "1fr",
+      gap: 14
     }}>
+
       {children}
+
     </div>
+
   );
+
+}
+
+/* ROW */
+
+function Row({
+  label,
+  children
+}) {
+
+  return (
+
+    <div style={{
+      display: "grid",
+      gridTemplateColumns:
+        "220px 1fr",
+      alignItems: "center",
+      gap: 14
+    }}>
+
+      <label style={{
+        fontWeight: "600",
+        color: "#334155"
+      }}>
+
+        {label}
+
+      </label>
+
+      {children}
+
+    </div>
+
+  );
+
 }
 
 /* STYLES */
+
+const card = {
+
+  background: "white",
+
+  padding: 25,
+
+  borderRadius: 14,
+
+  marginBottom: 20,
+
+  boxShadow:
+    "0 2px 8px rgba(0,0,0,0.06)"
+
+};
+
+const workflowCard = {
+
+  padding: 14,
+
+  border:
+    "1px solid #e2e8f0",
+
+  borderRadius: 10,
+
+  marginBottom: 12,
+
+  background: "#f8fafc"
+
+};
 
 const input = {
 
@@ -536,20 +1082,22 @@ const input = {
 
   padding: 10,
 
-  borderRadius: 10,
+  borderRadius: 8,
 
-  border: "1px solid #cbd5e1",
+  border:
+    "1px solid #cbd5e1",
 
-  boxSizing: "border-box",
+  outline: "none",
 
-  fontSize: 13
+  boxSizing: "border-box"
+
 };
 
 const saveBtn = {
 
-  marginTop: 16,
+  marginTop: 25,
 
-  padding: "10px 18px",
+  padding: "12px 24px",
 
   background: "#2563eb",
 
@@ -557,70 +1105,12 @@ const saveBtn = {
 
   border: "none",
 
-  borderRadius: 10,
-
-  cursor: "pointer",
-
-  fontSize: 13
-};
-
-const card = {
-
-  background: "white",
-
-  padding: 14,
-
-  borderRadius: 14,
-
-  boxShadow:
-    "0 2px 8px rgba(0,0,0,0.05)"
-};
-
-const text = {
-
-  fontSize: 13,
-
-  margin: "6px 0",
-
-  color: "#334155"
-};
-
-const editBtn = {
-
-  flex: 1,
-
-  padding: 8,
-
-  border: "none",
-
   borderRadius: 8,
 
-  background: "#f59e0b",
-
-  color: "white",
-
   cursor: "pointer",
 
-  fontSize: 12
+  fontWeight: "600"
+
 };
 
-const deleteBtn = {
-
-  flex: 1,
-
-  padding: 8,
-
-  border: "none",
-
-  borderRadius: 8,
-
-  background: "#dc2626",
-
-  color: "white",
-
-  cursor: "pointer",
-
-  fontSize: 12
-};
-
-export default Visits;
+export default Patients;
