@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout"
+import Checkup from "./Checkup";
+import Visits from "./Visits";
+import Invoice from "./Invoice";;
 
 function Patients() {
 
@@ -11,6 +14,7 @@ function Patients() {
   const [checkups, setCheckups] = useState([]);
   const [visits, setVisits] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  
 
   const [selectedPatient,
     setSelectedPatient] =
@@ -702,10 +706,7 @@ function Patients() {
         </button>
 
       </div>
-
-{/* AUTO WORKFLOW DASHBOARD */}
-
-{selectedPatient && (
+      
 
 <div style={dashboardCard}>
 
@@ -749,6 +750,8 @@ function Patients() {
     >
       Full Timeline
     </button>
+
+  </div>
 
   </div>
 
@@ -849,6 +852,7 @@ function Patients() {
 
   </div>
 
+
   {/* WORKFLOW */}
 
   <div style={{
@@ -860,160 +864,270 @@ function Patients() {
 
     {/* CHECKUPS */}
 
-    <div style={workflowBox}>
+<div style={workflowBox}>
 
-      <h3 style={workflowTitle}>
-        🦷 Checkups
-      </h3>
+  <div style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15
+  }}>
 
-      {
+    <h3 style={workflowTitle}>
+      🦷 Checkups
+    </h3>
 
-        checkups
-        .filter(
-          c =>
-            c.patient ===
-            selectedPatient._id
-        )
-        .slice(0, 5)
-        .map((c, i)=>(
-
-        <div
-          key={i}
-          style={workflowItem}
-        >
-
-          <p>
-            <b>
-              Complaint:
-            </b>
-
-            {" "}
-
-            {c.complaint}
-          </p>
-
-          <small>
-            {c.date}
-          </small>
-
-        </div>
-
-        ))
-
+    <button
+      onClick={()=>
+        navigate("/checkup")
       }
-
-    </div>
-
-    {/* VISITS */}
-
-    <div style={workflowBox}>
-
-      <h3 style={workflowTitle}>
-        🩺 Treatment Plans
-      </h3>
-
-      {
-
-        visits
-        .filter(
-          v =>
-            v.patient_id ===
-            selectedPatient._id
-        )
-        .slice(0, 5)
-        .map((v, i)=>(
-
-        <div
-          key={i}
-          style={workflowItem}
-        >
-
-          <p>
-
-            <b>
-              {v.treatment}
-            </b>
-
-          </p>
-
-          <small>
-
-            {v.date}
-
-            {" • "}
-
-            {v.status}
-
-          </small>
-
-        </div>
-
-        ))
-
-      }
-
-    </div>
-
-    {/* INVOICES */}
-
-    <div style={workflowBox}>
-
-      <h3 style={workflowTitle}>
-        💰 Financial Activity
-      </h3>
-
-      {
-
-        invoices
-        .filter(
-          inv =>
-            inv.patient_id ===
-            selectedPatient._id
-        )
-        .slice(0, 5)
-        .map((inv, i)=>(
-
-        <div
-          key={i}
-          style={workflowItem}
-        >
-
-          <p>
-
-            <b>
-              Invoice:
-            </b>
-
-            {" "}
-
-            {inv.invoice_no}
-
-          </p>
-
-          <small>
-
-            Rs.
-            {inv.amount}
-
-            {" • "}
-
-            {inv.invoice_date}
-
-          </small>
-
-        </div>
-
-        ))
-
-      }
-
-    </div>
+      style={moduleBtn}
+    >
+      Open Module
+    </button>
 
   </div>
 
+  <table style={{
+    width: "100%",
+    borderCollapse: "collapse"
+  }}>
+
+    <thead>
+
+      <tr>
+
+        <th style={th}>
+          Complaint
+        </th>
+
+        <th style={th}>
+          Tooth
+        </th>
+
+        <th style={th}>
+          Condition
+        </th>
+
+        <th style={th}>
+          Treatment
+        </th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      {
+  checkups
+    .filter(
+      c =>
+        c.patient ===
+        selectedPatient?._id
+    )
+    .flatMap((c, i) =>
+      (c.tasks || []).map(
+        (t, idx) => (
+
+          <tr
+            key={`${i}-${idx}`}
+          >
+
+            <td style={td}>
+              {c.complaint}
+            </td>
+
+            <td style={td}>
+              {t.tooth}
+            </td>
+
+            <td style={td}>
+              {t.condition}
+            </td>
+
+            <td style={td}>
+              {t.treatment}
+            </td>
+
+          </tr>
+
+        )
+      )
+    )
+}
+
+</tbody>
+    
+  </table>
+
 </div>
 
-)}
+    {/* VISITS */}
+
+<div style={card}>
+
+  <h2>
+    Planned Sequence Of Treatment
+  </h2>
+
+  <table style={{
+    width: "100%",
+    marginTop: 15,
+    borderCollapse: "collapse"
+  }}>
+
+    <thead>
+
+      <tr>
+
+        <th style={th}>
+          Visit No
+        </th>
+
+        <th style={th}>
+          Treatment
+        </th>
+
+        <th style={th}>
+          Date
+        </th>
+
+        <th style={th}>
+          Doctor
+        </th>
+
+        <th style={th}>
+          Status
+        </th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      {
+        visits
+          .filter(
+            v =>
+              v.patient_id ===
+              selectedPatient?._id
+          )
+          .map((v, i)=>(
+
+            <tr key={i}>
+
+              <td style={td}>
+                {v.visit_no}
+              </td>
+
+              <td style={td}>
+                {v.treatment}
+              </td>
+
+              <td style={td}>
+                {v.date}
+              </td>
+
+              <td style={td}>
+                {v.procedure_doctor}
+              </td>
+
+              <td style={td}>
+                {v.status}
+              </td>
+
+            </tr>
+
+          ))
+      }
+
+    </tbody>
+
+  </table>
+
+</div>
+
+    {/* INVOICE */}
+
+<div style={card}>
+
+  <h2>
+    Invoice
+  </h2>
+
+  <table style={{
+    width: "100%",
+    marginTop: 15,
+    borderCollapse: "collapse"
+  }}>
+
+    <thead>
+
+      <tr>
+
+        <th style={th}>
+          Invoice No
+        </th>
+
+        <th style={th}>
+          Amount
+        </th>
+
+        <th style={th}>
+          Discount
+        </th>
+
+        <th style={th}>
+          Date
+        </th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      {
+        invoices
+          .filter(
+            inv =>
+              inv.patient_id ===
+              selectedPatient?._id
+          )
+          .map((inv, i)=>(
+
+            <tr key={i}>
+
+              <td style={td}>
+                {inv.invoice_no}
+              </td>
+
+              <td style={td}>
+                {inv.amount}
+              </td>
+
+              <td style={td}>
+                {inv.discount}
+              </td>
+
+              <td style={td}>
+                {inv.invoice_date}
+              </td>
+
+            </tr>
+
+          ))
+      }
+
+    </tbody>
+
+  </table>
+
+ </div>
+ 
+ </div>
 
       {/* CHECKUP */}
 
@@ -1079,6 +1193,7 @@ function Patients() {
         ))}
 
       </div>
+  
 
       {/* VISITS */}
 
@@ -1332,11 +1447,11 @@ function Patients() {
 
         </table>
 
-      </div>
+</div>
 
-    </Layout>
+</Layout>
 
-  );
+);
 
 }
 
@@ -1585,6 +1700,53 @@ const timelineBtn = {
   cursor: "pointer",
 
   fontWeight: "600"
+
+};
+
+const moduleBtn = {
+
+  padding: "8px 14px",
+
+  border: "none",
+
+  borderRadius: 8,
+
+  background: "#2563eb",
+
+  color: "white",
+
+  cursor: "pointer",
+
+  fontSize: 12,
+
+  fontWeight: "600"
+
+};
+
+const th = {
+
+  textAlign: "left",
+
+  padding: 10,
+
+  background: "#e2e8f0",
+
+  fontSize: 13,
+
+  color: "#0f172a"
+
+};
+
+const td = {
+
+  padding: 10,
+
+  borderBottom:
+    "1px solid #e2e8f0",
+
+  fontSize: 13,
+
+  color: "#334155"
 
 };
 
