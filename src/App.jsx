@@ -1,16 +1,22 @@
 import React from "react";
 
+import Login from "./pages/Login";
 import Patients from "./pages/Patients";
 
 function App() {
 
-  return (
-    <div>
+  const token =
+    localStorage.getItem("token");
 
-      <Patients />
+  // IF NOT LOGGED IN
+  if (!token) {
 
-    </div>
-  );
+    return <Login />;
+
+  }
+
+  // IF LOGGED IN
+  return <Patients />;
 
 }
 

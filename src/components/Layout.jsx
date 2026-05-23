@@ -1,553 +1,256 @@
-import {
-  Link,
-  useNavigate,
-  useLocation
-} from "react-router-dom";
+import React from "react";
 
-export default function Layout({
-  children
-}) {
-
-  const navigate =
-    useNavigate();
-
-  const location =
-    useLocation();
-
-  const role =
-    localStorage.getItem("role");
-
-  const permissions =
-    JSON.parse(
-
-      localStorage.getItem(
-        "permissions"
-      ) || "{}"
-    );
-
-  // =========================
-  // CHECK ACCESS
-  // =========================
-  const canView = (module) => {
-
-    // CEO / ADMIN FULL ACCESS
-    if (
-
-      role === "CEO" ||
-
-      role === "admin"
-
-    ) {
-
-      return true;
-    }
-
-    // IF NO PERMISSIONS
-    // SHOW DASHBOARD ONLY
-    if (
-
-      !permissions ||
-
-      Object.keys(
-        permissions
-      ).length === 0
-
-    ) {
-
-      return module === "dashboard";
-    }
-
-    // STAFF ACCESS
-    return (
-
-      permissions[module] ===
-      "enabled"
-    );
-  };
+function Layout({ children }) {
 
   return (
-
-    <div style={{
-
-      display: "flex",
-
-      minHeight: "100vh",
-
-      background: "#f8fafc"
-
-    }}>
+    <div className="flex h-screen bg-[#f4f7fb] overflow-hidden">
 
       {/* SIDEBAR */}
-      <div style={{
+      <div className="w-[280px] bg-gradient-to-b from-[#02152d] to-[#01214d] text-white flex flex-col justify-between shadow-2xl">
 
-        width: 270,
+        {/* TOP */}
+        <div>
 
-        background: "#0f172a",
+          {/* LOGO */}
+          <div className="h-[90px] border-b border-white/10 flex items-center px-7">
 
-        color: "white",
+            <div className="flex items-center gap-4">
 
-        padding: 20,
+              {/* ICON */}
+              <div className="w-14 h-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
 
-        display: "flex",
+                🦷
 
-        flexDirection: "column",
+              </div>
 
-        position: "sticky",
+              {/* TITLE */}
+              <div>
 
-        top: 0,
+                <h1 className="text-[34px] font-bold tracking-tight leading-none">
+                  HDC Dental
+                </h1>
 
-        height: "100vh",
+              </div>
 
-        overflowY: "auto",
+            </div>
 
-        borderRight:
-          "1px solid #1e293b"
+          </div>
 
-      }}>
+          {/* NAVIGATION */}
+          <div className="px-4 py-6 space-y-2">
 
-        {/* LOGO */}
-        <div style={{
-          marginBottom: 25
-        }}>
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
 
-          <h1 style={{
+              <span className="text-[24px]">
+                🏠
+              </span>
 
-            margin: 0,
+              <span className="text-[18px] font-medium">
+                Dashboard
+              </span>
 
-            fontSize: 28,
+            </button>
 
-            fontWeight: "bold"
+            {/* ACTIVE */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 bg-[#176bff] shadow-xl">
 
-          }}>
-            HDC
-          </h1>
+              <span className="text-[24px]">
+                👨‍⚕️
+              </span>
 
-          <div style={{
+              <span className="text-[18px] font-semibold">
+                Patient Entry
+              </span>
 
-            fontSize: 12,
+            </button>
 
-            color: "#94a3b8",
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
 
-            marginTop: 4
+              <span className="text-[24px]">
+                📅
+              </span>
 
-          }}>
-            Holistic Domain of Creativity
+              <span className="text-[18px] font-medium">
+                Appointments
+              </span>
+
+            </button>
+
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+
+              <span className="text-[24px]">
+                🧾
+              </span>
+
+              <span className="text-[18px] font-medium">
+                Invoices
+              </span>
+
+            </button>
+
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+
+              <span className="text-[24px]">
+                👥
+              </span>
+
+              <span className="text-[18px] font-medium">
+                Patients
+              </span>
+
+            </button>
+
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+
+              <span className="text-[24px]">
+                🦷
+              </span>
+
+              <span className="text-[18px] font-medium">
+                Treatments
+              </span>
+
+            </button>
+
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+
+              <span className="text-[24px]">
+                📊
+              </span>
+
+              <span className="text-[18px] font-medium">
+                Reports
+              </span>
+
+            </button>
+
+            {/* ITEM */}
+            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+
+              <span className="text-[24px]">
+                ⚙️
+              </span>
+
+              <span className="text-[18px] font-medium">
+                Settings
+              </span>
+
+            </button>
+
           </div>
 
         </div>
 
-        {/* CORE */}
-        <Section title="CORE">
+        {/* BOTTOM USER */}
+        <div className="p-4 border-t border-white/10">
 
-          {canView("dashboard") && (
+          <div className="h-[82px] rounded-2xl bg-white/5 flex items-center justify-between px-5">
 
-            <Nav
-              icon="🏠"
-              text="Dashboard"
-              path="/dashboard"
-              current={location.pathname}
-            />
+            <div className="flex items-center gap-4">
 
-          )}
+              {/* AVATAR */}
+              <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-[20px] font-bold">
 
-          {canView("patients") && (
+                A
 
-            <Nav
-              icon="👤"
-              text="Patients Entry"
-              path="/patients"
-              current={location.pathname}
-            />
+              </div>
 
-          )}
+              {/* USER */}
+              <div>
 
-          {canView("old_patients") && (
+                <h3 className="font-semibold text-[18px]">
+                  HDC Clinic
+                </h3>
 
-            <Nav
-             icon="📁"
-             text="Old Patients"
-             path="/old-patients"
-              current={location.pathname}
-            />
+                <p className="text-white/60 text-sm">
+                  Admin
+                </p>
 
-          )}
+              </div>
 
-          {canView("checkup") && (
+            </div>
 
-            <Nav
-              icon="🦷"
-              text="Checkup"
-              path="/checkup"
-              current={location.pathname}
-            />
+            <span className="text-xl">
+              ⌄
+            </span>
 
-          )}
+          </div>
 
-          {canView("visits") && (
-
-            <Nav
-              icon="🩺"
-              text="Planned Sequence Of Treatment"
-              path="/visits"
-              current={location.pathname}
-            />
-
-          )}
-
-           {canView("invoice") && (
-
-            <Nav
-              icon="🧾"
-              text="Invoice"
-              path="/invoice"
-              current={location.pathname}
-            />
-
-          )}
-
-
-        </Section>
-
-        {/* CLINICAL */}
-        <Section title="CLINICAL">
-
-          {canView("afi") && (
-
-            <Nav
-              icon="📋"
-              text="APPOINTMENT"
-              path="/afi"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("prescription") && (
-
-            <Nav
-              icon="💊"
-              text="Prescription"
-              path="/prescription"
-              current={location.pathname}
-            />
-
-          )}
-
-        </Section>
-
-        {/* FINANCE */}
-        <Section title="FINANCE">
-
-          {canView("fis") && (
-
-            <Nav
-              icon="💰"
-              text="Financial System"
-              path="/fis"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("invoice") && (
-
-            <Nav
-              icon="🧾"
-              text="Invoice"
-              path="/invoice"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("lab Intelligence System") && (
-
-            <Nav
-              icon="🏭"
-              text="lab Intelligence System"
-              path="/lvi"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("patient_account_status") && (
-
-            <Nav
-              icon="💳"
-              text="Patient Account Status"
-              path="/patient-account-status"
-              current={location.pathname}
-            />
-
-          )}
-
-        </Section>
-
-        {/* INTELLIGENCE */}
-        <Section title="INTELLIGENCE">
-
-          {canView("acc") && (
-
-            <Nav
-              icon="📊"
-              text="Analytics & Command Center"
-              path="/acc"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("hai") && (
-
-            <Nav
-              icon="👨‍⚕️"
-              text="Staff & accountability intelligence"
-              path="/hai"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("ars") && (
-
-           <Nav
-              icon="🚨"
-              text="Alert & Reminder System"
-              path="/ars"
-              current={location.pathname}
-            />
-
-          )}
-
-        </Section>
-
-        {/* CONTROL */}
-        <Section title="CONTROL">
-
-          {canView("debtors") && (
-
-            <Nav
-              icon="📉"
-              text="ACCOUNT RECEIVABLE"
-              path="/debtors"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("creditors") && (
-
-            <Nav
-              icon="📈"
-              text="ACCOUNT PAYABLE"
-              path="/creditors"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("bills") && (
-
-            <Nav
-              icon="💸"
-              text="Bills"
-              path="/bills"
-              current={location.pathname}
-            />
-
-          )}
-
-        </Section>
-
-        {/* SYSTEM */}
-        <Section title="SYSTEM">
-
-          {canView("reports") && (
-
-            <Nav
-              icon="📄"
-              text="Reports"
-              path="/reports"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("patient_files") && (
-
-            <Nav
-              icon="📁"
-              text="Patient Files"
-              path="/patient-files"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("city_patients") && (
-
-            <Nav
-              icon="🌍"
-              text="City Patients"
-              path="/city-patients"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("completed_cases") && (
-
-            <Nav
-              icon="✅"
-              text="Completed Cases"
-              path="/completed-cases"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("pending_cases") && (
-
-            <Nav
-              icon="⏳"
-              text="Pending Cases"
-              path="/pending-cases"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("to_be_appointed") && (
-
-            <Nav
-              icon="📅"
-              text="To Be Appointed"
-              path="/to-be-appointed"
-              current={location.pathname}
-            />
-
-          )}
-
-          {canView("to_be_excepted") && (
-
-            <Nav
-              icon="🚫"
-              text="To Be Excepted"
-              path="/to-be-excepted"
-              current={location.pathname}
-            />
-
-          )}
-
-          {(role === "CEO" ||
-            role === "admin") && (
-
-            <Nav
-              icon="🔐"
-              text="Permissions"
-              path="/permissions"
-              current={location.pathname}
-            />
-
-          )}
-
-        </Section>
-
-        {/* LOGOUT */}
-        <button
-
-          onClick={() => {
-
-            localStorage.clear();
-
-            navigate("/");
-          }}
-
-          style={{
-
-            marginTop: "auto",
-
-            padding: 12,
-
-            background: "#ef4444",
-
-            border: "none",
-
-            borderRadius: 8,
-
-            color: "white",
-
-            cursor: "pointer",
-
-            fontWeight: "bold",
-
-            fontSize: 14
-
-          }}
-        >
-          Logout
-        </button>
+        </div>
 
       </div>
 
       {/* MAIN */}
-      <div style={{
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-        flex: 1,
+        {/* TOPBAR */}
+        <div className="h-[90px] bg-white border-b border-gray-200 px-10 flex items-center justify-between">
 
-        display: "flex",
+          {/* LEFT */}
+          <div className="flex items-center gap-8">
 
-        flexDirection: "column"
+            <button className="text-[30px] text-gray-700">
+              ☰
+            </button>
 
-      }}>
+            <h2 className="text-[34px] font-bold text-gray-800 tracking-tight">
+              Patient Entry
+            </h2>
 
-        {/* HEADER */}
-        <div style={{
+          </div>
 
-          background: "white",
+          {/* RIGHT */}
+          <div className="flex items-center gap-8">
 
-          padding: "16px 24px",
+            {/* BELL */}
+            <div className="relative">
 
-          borderBottom:
-            "1px solid #e5e7eb",
+              <button className="text-[28px] text-gray-700">
+                🔔
+              </button>
 
-          display: "flex",
+              <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
 
-          alignItems: "center",
+                3
 
-          justifyContent:
-            "space-between"
+              </div>
 
-        }}>
+            </div>
 
-          <h3 style={{
+            {/* PROFILE */}
+            <div className="flex items-center gap-4">
 
-            margin: 0,
+              <div className="w-14 h-14 rounded-full bg-[#02152d] text-white flex items-center justify-center text-lg font-bold">
 
-            fontSize: 20,
+                A
 
-            fontWeight: "600",
+              </div>
 
-            color: "#0f172a"
+              <div>
 
-          }}>
-            Holistic Domain of Creativity
-          </h3>
+                <h3 className="text-[18px] font-semibold text-gray-800">
+                  Admin
+                </h3>
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
-        {/* CONTENT */}
-        <div style={{
+        {/* PAGE CONTENT */}
+        <div className="flex-1 overflow-y-auto p-8">
 
-          flex: 1,
-
-          padding: 20,
-
-          overflowY: "auto"
-
-        }}>
           {children}
+
         </div>
 
       </div>
@@ -556,107 +259,4 @@ export default function Layout({
   );
 }
 
-/* SECTION */
-
-function Section({
-  title,
-  children
-}) {
-
-  return (
-
-    <div style={{
-      marginBottom: 20
-    }}>
-
-      <p style={{
-
-        fontSize: 11,
-
-        color: "#64748b",
-
-        marginBottom: 8,
-
-        letterSpacing: "1px",
-
-        fontWeight: "bold"
-
-      }}>
-        {title}
-      </p>
-
-      {children}
-
-    </div>
-  );
-}
-
-/* NAV */
-
-function Nav({
-  icon,
-  text,
-  path,
-  current
-}) {
-
-  const active =
-    current.startsWith(path);
-
-  return (
-
-    <Link
-
-      to={path}
-
-      style={{
-
-        display: "flex",
-
-        alignItems: "center",
-
-        gap: 10,
-
-        padding: "11px 12px",
-
-        marginBottom: 6,
-
-        borderRadius: 8,
-
-        background:
-          active
-            ? "#1e293b"
-            : "transparent",
-
-        color:
-          active
-            ? "white"
-            : "#cbd5e1",
-
-        textDecoration: "none",
-
-        fontSize: 14,
-
-        transition: "0.2s",
-
-        fontWeight:
-          active
-            ? "600"
-            : "400"
-
-      }}
-    >
-
-      <span style={{
-        fontSize: 16
-      }}>
-        {icon}
-      </span>
-
-      <span>
-        {text}
-      </span>
-
-    </Link>
-  );
-}
+export default Layout;
