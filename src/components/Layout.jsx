@@ -1,6 +1,20 @@
 import React from "react";
 
-function Layout({ children }) {
+function Layout({
+  children,
+  activePage,
+  setActivePage,
+}) {
+
+  const handleLogout = () => {
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("role");
+
+    window.location.reload();
+
+  };
 
   return (
     <div className="flex h-screen bg-[#f4f7fb] overflow-hidden">
@@ -16,31 +30,43 @@ function Layout({ children }) {
 
             <div className="flex items-center gap-4">
 
-              {/* ICON */}
               <div className="w-14 h-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
-
                 🦷
-
               </div>
 
-              {/* TITLE */}
-              <div>
-
-                <h1 className="text-[34px] font-bold tracking-tight leading-none">
-                  HDC Dental
-                </h1>
-
-              </div>
+              <h1 className="text-[34px] font-bold">
+                HDC Dental
+              </h1>
 
             </div>
 
           </div>
 
-          {/* NAVIGATION */}
+          {/* MENU */}
           <div className="px-4 py-6 space-y-2">
 
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+            {/* DASHBOARD */}
+            <button
+              onClick={() =>
+                setActivePage("dashboard")
+              }
+              className={`
+                w-full
+                h-[62px]
+                rounded-2xl
+                flex
+                items-center
+                gap-4
+                px-5
+                transition-all
+
+                ${
+                  activePage === "dashboard"
+                    ? "bg-[#176bff] shadow-xl"
+                    : "hover:bg-white/10"
+                }
+              `}
+            >
 
               <span className="text-[24px]">
                 🏠
@@ -52,21 +78,61 @@ function Layout({ children }) {
 
             </button>
 
-            {/* ACTIVE */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 bg-[#176bff] shadow-xl">
+            {/* PATIENT ENTRY */}
+            <button
+              onClick={() =>
+                setActivePage("patients")
+              }
+              className={`
+                w-full
+                h-[62px]
+                rounded-2xl
+                flex
+                items-center
+                gap-4
+                px-5
+                transition-all
+
+                ${
+                  activePage === "patients"
+                    ? "bg-[#176bff] shadow-xl"
+                    : "hover:bg-white/10"
+                }
+              `}
+            >
 
               <span className="text-[24px]">
                 👨‍⚕️
               </span>
 
-              <span className="text-[18px] font-semibold">
+              <span className="text-[18px] font-medium">
                 Patient Entry
               </span>
 
             </button>
 
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+            {/* APPOINTMENTS */}
+            <button
+              onClick={() =>
+                setActivePage("appointments")
+              }
+              className={`
+                w-full
+                h-[62px]
+                rounded-2xl
+                flex
+                items-center
+                gap-4
+                px-5
+                transition-all
+
+                ${
+                  activePage === "appointments"
+                    ? "bg-[#176bff] shadow-xl"
+                    : "hover:bg-white/10"
+                }
+              `}
+            >
 
               <span className="text-[24px]">
                 📅
@@ -78,67 +144,35 @@ function Layout({ children }) {
 
             </button>
 
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+            {/* PATIENTS RECORDS */}
+            <button
+              onClick={() =>
+                setActivePage("patients-list")
+              }
+              className={`
+                w-full
+                h-[62px]
+                rounded-2xl
+                flex
+                items-center
+                gap-4
+                px-5
+                transition-all
 
-              <span className="text-[24px]">
-                🧾
-              </span>
-
-              <span className="text-[18px] font-medium">
-                Invoices
-              </span>
-
-            </button>
-
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
+                ${
+                  activePage === "patients-list"
+                    ? "bg-[#176bff] shadow-xl"
+                    : "hover:bg-white/10"
+                }
+              `}
+            >
 
               <span className="text-[24px]">
                 👥
               </span>
 
               <span className="text-[18px] font-medium">
-                Patients
-              </span>
-
-            </button>
-
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
-
-              <span className="text-[24px]">
-                🦷
-              </span>
-
-              <span className="text-[18px] font-medium">
-                Treatments
-              </span>
-
-            </button>
-
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
-
-              <span className="text-[24px]">
-                📊
-              </span>
-
-              <span className="text-[18px] font-medium">
-                Reports
-              </span>
-
-            </button>
-
-            {/* ITEM */}
-            <button className="w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 hover:bg-white/10 transition-all">
-
-              <span className="text-[24px]">
-                ⚙️
-              </span>
-
-              <span className="text-[18px] font-medium">
-                Settings
+                Patients Records
               </span>
 
             </button>
@@ -147,38 +181,44 @@ function Layout({ children }) {
 
         </div>
 
-        {/* BOTTOM USER */}
+        {/* BOTTOM */}
         <div className="p-4 border-t border-white/10">
 
-          <div className="h-[82px] rounded-2xl bg-white/5 flex items-center justify-between px-5">
+          <div className="bg-white/5 rounded-2xl p-5">
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-5">
 
-              {/* AVATAR */}
-              <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-[20px] font-bold">
-
+              <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-xl font-bold">
                 A
-
               </div>
 
-              {/* USER */}
               <div>
 
-                <h3 className="font-semibold text-[18px]">
-                  HDC Clinic
+                <h3 className="font-semibold text-lg">
+                  Admin
                 </h3>
 
                 <p className="text-white/60 text-sm">
-                  Admin
+                  HDC Clinic
                 </p>
 
               </div>
 
             </div>
 
-            <span className="text-xl">
-              ⌄
-            </span>
+            <button
+              onClick={handleLogout}
+              className="
+                w-full
+                bg-red-500
+                hover:bg-red-600
+                py-3
+                rounded-xl
+                font-semibold
+              "
+            >
+              Logout
+            </button>
 
           </div>
 
@@ -192,61 +232,34 @@ function Layout({ children }) {
         {/* TOPBAR */}
         <div className="h-[90px] bg-white border-b border-gray-200 px-10 flex items-center justify-between">
 
-          {/* LEFT */}
           <div className="flex items-center gap-8">
 
             <button className="text-[30px] text-gray-700">
               ☰
             </button>
 
-            <h2 className="text-[34px] font-bold text-gray-800 tracking-tight">
-              Patient Entry
+            <h2 className="text-[34px] font-bold text-gray-800">
+
+              {
+                activePage === "dashboard"
+                  ? "Dashboard"
+
+                  : activePage === "patients"
+                  ? "Patient Entry"
+
+                  : activePage === "appointments"
+                  ? "Appointments"
+
+                  : "Patients Records"
+              }
+
             </h2>
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="flex items-center gap-8">
-
-            {/* BELL */}
-            <div className="relative">
-
-              <button className="text-[28px] text-gray-700">
-                🔔
-              </button>
-
-              <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-
-                3
-
-              </div>
-
-            </div>
-
-            {/* PROFILE */}
-            <div className="flex items-center gap-4">
-
-              <div className="w-14 h-14 rounded-full bg-[#02152d] text-white flex items-center justify-center text-lg font-bold">
-
-                A
-
-              </div>
-
-              <div>
-
-                <h3 className="text-[18px] font-semibold text-gray-800">
-                  Admin
-                </h3>
-
-              </div>
-
-            </div>
 
           </div>
 
         </div>
 
-        {/* PAGE CONTENT */}
+        {/* CONTENT */}
         <div className="flex-1 overflow-y-auto p-8">
 
           {children}

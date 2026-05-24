@@ -9,45 +9,55 @@ import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
 
-function Patients() {
+function Patients({
+  activePage,
+  setActivePage,
+}) {
 
-  const [patientData, setPatientData] = useState({
+  const [patientData, setPatientData] =
+    useState({
 
-    biography: {},
+      biography: {},
 
-    checkup: {},
+      checkup: {},
 
-    plannedSequence: [],
+      plannedSequence: [],
 
-    invoice: [],
+      invoice: [],
 
-    discount: 0,
+      discount: 0,
 
-  });
+    });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  /* SAVE PATIENT */
+  /* SAVE */
   const handleSave = async () => {
 
     try {
 
       setLoading(true);
 
-      const response = await api.post(
-        "/patients",
-        patientData
-      );
+      const response =
+        await api.post(
+          "/patients",
+          patientData
+        );
 
       console.log(response.data);
 
-      alert("Patient Saved Successfully");
+      alert(
+        "Patient Saved Successfully"
+      );
 
     } catch (error) {
 
       console.error(error);
 
-      alert("Error Saving Patient");
+      alert(
+        "Error Saving Patient"
+      );
 
     } finally {
 
@@ -58,65 +68,500 @@ function Patients() {
   };
 
   /* PRINT */
-  const handlePrint = () => {
+ const handlePrint = (
+  patient
+) => {
 
-    window.print();
+  const printWindow =
+    window.open(
+      "",
+      "",
+      "width=1400,height=1000"
+    );
 
-  };
+  const invoice =
+    patient?.invoice || [];
 
+  const planned =
+    patient?.plannedSequence || [];
+
+  const totalAmount =
+    invoice.reduce(
+      (sum,item)=>
+        sum +
+        Number(item.cost || 0),
+      0
+    );
+
+  const discount =
+    Number(
+      patient?.discount || 0
+    );
+
+  const netAmount =
+    totalAmount - discount;
+
+  printWindow.document.write(`
+
+  <html>
+
+    <head>
+
+      <title>
+        HDC Dental Print
+      </title>
+
+      <style>
+
+        body{
+          font-family:Arial;
+          margin:0;
+          padding:30px;
+          color:#000;
+        }
+
+        .section{
+          font-size:22px;
+          font-weight:bold;
+          margin-top:20px;
+          margin-bottom:12px;
+          text-decoration:underline;
+        }
+
+        .bio{
+          width:100%;
+          margin-bottom:20px;
+        }
+
+        .bio td{
+          border:none !important;
+          padding:2px 0;
+          font-size:18px;
+          text-align:left;
+        }
+
+        .tooth{
+          text-align:center;
+          margin-bottom:20px;
+        }
+
+        .tooth img{
+          width:760px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:10px;
+          margin-bottom:30px;
+        }
+
+        /* HEADERS */
+        th{
+          border:2px solid #000;
+          padding:8px;
+          font-size:18px;
+          text-align:center;
+        }
+
+        /* BODY */
+        td{
+          padding:8px;
+          font-size:18px;
+          text-align:center;
+        }
+
+        /* ONLY OUTSIDE BORDERS */
+        td:first-child{
+          border-left:2px solid #000;
+        }
+
+        td:last-child{
+          border-right:2px solid #000;
+        }
+
+        tbody tr:last-child td{
+          border-bottom:2px solid #000;
+        }
+
+        .totals{
+          width:350px;
+          margin-left:auto;
+          margin-top:20px;
+        }
+
+        .totals td{
+          border:none !important;
+          padding:4px;
+          font-size:22px;
+          font-weight:bold;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <!-- BIO -->
+      <div class="section">
+        Bio-data :
+      </div>
+
+      <table class="bio">
+
+        <tr>
+
+          <td>
+
+            <b>
+              Pt. Name :
+            </b>
+
+            ${
+              patient?.biography
+                ?.patientName || ""
+            }
+
+          </td>
+
+          <td
+  style="
+    text-align:right;
+    width:300px;
+    vertical-align:top;
+  "
+>
+
+            <b>
+              Date :
+            </b>
+
+            ${
+              patient?.biography
+                ?.date || ""
+            }
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>
+
+            <b>
+              Contact :
+            </b>
+
+            ${
+              patient?.biography
+                ?.mobileNumber || ""
+            }
+
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>
+
+            <b>
+              Address :
+            </b>
+
+            ${
+              patient?.biography
+                ?.address || ""
+            }
+
+          </td>
+
+        </tr>
+
+      </table>
+
+      <!-- TREATMENT -->
+      <div class="section">
+        Treatment Details :
+      </div>
+
+      <!-- TOOTH -->
+      <div class="tooth">
+
+        <img
+          src="https://raw.githubusercontent.com/mustafadalga/dental-chart/main/chart.png"
+        />
+
+      </div>
+
+      <!-- CHECKUP -->
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              S No
+            </th>
+
+            <th>
+              Details
+            </th>
+
+            <th>
+              Pre Existing Condition
+            </th>
+
+            <th>
+              Recommended Treatment
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+
+            <td>
+              1
+            </td>
+
+            <td>
+              ${
+                patient?.checkup
+                  ?.details || ""
+              }
+            </td>
+
+            <td>
+              ${
+                patient?.checkup
+                  ?.condition || ""
+              }
+            </td>
+
+            <td>
+              ${
+                patient?.checkup
+                  ?.treatment || ""
+              }
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      ${
+        planned.length > 0
+        ?
+        `
+          <div class="section">
+            Planned Sequence Treatment :
+          </div>
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Visit No
+                </th>
+
+                <th>
+                  Date
+                </th>
+
+                <th>
+                  Procedure
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              ${planned.map((visit,index)=>
+
+                `
+                  <tr>
+
+                    <td>
+                      ${index + 1}
+                    </td>
+
+                    <td>
+                      ${visit.date || ""}
+                    </td>
+
+                    <td>
+                      ${visit.procedure || ""}
+                    </td>
+
+                  </tr>
+                `
+
+              ).join("")}
+
+            </tbody>
+
+          </table>
+        `
+        :
+        ""
+      }
+
+      <!-- INVOICE -->
+      <div class="section">
+        Invoice:
+      </div>
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              S No
+            </th>
+
+            <th>
+              Details
+            </th>
+
+            <th>
+              Qty
+            </th>
+
+            <th>
+              Rate
+            </th>
+
+            <th>
+              Cost
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${invoice.map((item,index)=>
+
+            `
+              <tr>
+
+                <td>
+                  ${index + 1}
+                </td>
+
+                <td>
+                  ${item.details || ""}
+                </td>
+
+                <td>
+                  ${item.qty || ""}
+                </td>
+
+                <td>
+                  ${item.rate || ""}
+                </td>
+
+                <td>
+                  ${item.cost || ""}
+                </td>
+
+              </tr>
+            `
+
+          ).join("")}
+
+        </tbody>
+
+      </table>
+
+      <!-- TOTAL -->
+      <table class="totals">
+
+        <tr>
+
+          <td>
+            Total Amount
+          </td>
+
+          <td align="right">
+            ${totalAmount}
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>
+            Discount
+          </td>
+
+          <td align="right">
+            ${discount}
+          </td>
+
+        </tr>
+
+        <tr>
+
+          <td>
+            Net Cost
+          </td>
+
+          <td align="right">
+            ${netAmount}
+          </td>
+
+        </tr>
+
+      </table>
+
+    </body>
+
+  </html>
+
+  `);
+
+  printWindow.document.close();
+
+  printWindow.print();
+
+};
   return (
 
-    <Layout>
+    <Layout
+      activePage={activePage}
+      setActivePage={setActivePage}
+    >
 
       <div className="space-y-6">
 
-        {/* PAGE HEADER */}
+        {/* HEADER */}
         <div className="bg-white rounded-3xl shadow-sm p-8 border">
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <h1 className="text-4xl font-bold text-gray-800">
+            Patient Entry
+          </h1>
 
-            <div>
-
-              <h1 className="text-4xl font-bold text-gray-800">
-                Patient Entry
-              </h1>
-
-              <p className="text-gray-500 mt-2 text-lg">
-                Dental Patient Management System
-              </p>
-
-            </div>
-
-            {/* QUICK INFO */}
-            <div className="grid grid-cols-2 gap-4">
-
-              <div className="bg-gray-100 rounded-2xl px-6 py-4">
-
-                <p className="text-gray-500 text-sm">
-                  Module
-                </p>
-
-                <h3 className="text-xl font-bold">
-                  Patient Entry
-                </h3>
-
-              </div>
-
-              <div className="bg-gray-100 rounded-2xl px-6 py-4">
-
-                <p className="text-gray-500 text-sm">
-                  Status
-                </p>
-
-                <h3 className="text-xl font-bold text-green-600">
-                  Active
-                </h3>
-
-              </div>
-
-            </div>
-
-          </div>
+          <p className="text-gray-500 mt-2 text-lg">
+            Dental Patient Management System
+          </p>
 
         </div>
 
@@ -140,7 +585,7 @@ function Patients() {
 
         </div>
 
-        {/* PLANNED SEQUENCE */}
+        {/* PLANNED */}
         <div className="bg-white rounded-3xl shadow-sm border p-8">
 
           <PlannedSequence
@@ -162,10 +607,9 @@ function Patients() {
 
       </div>
 
-      {/* STICKY ACTION BUTTONS */}
+      {/* BUTTONS */}
       <div className="fixed bottom-6 right-6 flex gap-4 z-50">
 
-        {/* SAVE */}
         <button
           onClick={handleSave}
           disabled={loading}
@@ -179,7 +623,6 @@ function Patients() {
             shadow-2xl
             text-lg
             font-semibold
-            transition
           "
         >
 
@@ -191,9 +634,12 @@ function Patients() {
 
         </button>
 
-        {/* PRINT */}
         <button
-          onClick={handlePrint}
+          onClick={() =>
+            handlePrint(
+              patientData
+            )
+          }
           className="
             bg-blue-600
             hover:bg-blue-700
@@ -204,7 +650,6 @@ function Patients() {
             shadow-2xl
             text-lg
             font-semibold
-            transition
           "
         >
           Print
