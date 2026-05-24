@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import Login from "./pages/Login";
 
@@ -9,16 +9,58 @@ import PatientsList from "./pages/PatientsList";
 
 function App() {
 
-  const token =
-    localStorage.getItem("token");
+  // LOGIN STATE
+  const [token, setToken] = useState(
+    localStorage.getItem("token")
+  );
 
+  // ACTIVE PAGE
   const [activePage, setActivePage] =
     useState("dashboard");
 
-  // LOGIN
+  // CHECK TOKEN ON LOAD
+  useEffect(() => {
+
+    const savedToken =
+      localStorage.getItem("token");
+
+    if (savedToken) {
+
+      setToken(savedToken);
+
+    }
+
+  }, []);
+
+  // LOGIN SUCCESS FUNCTION
+  const handleLogin = (newToken) => {
+
+    localStorage.setItem(
+      "token",
+      newToken
+    );
+
+    setToken(newToken);
+
+  };
+
+  // LOGOUT FUNCTION
+  const handleLogout = () => {
+
+    localStorage.removeItem("token");
+
+    setToken(null);
+
+  };
+
+  // SHOW LOGIN PAGE FIRST
   if (!token) {
 
-    return <Login />;
+    return (
+      <Login
+        onLogin={handleLogin}
+      />
+    );
 
   }
 
@@ -29,6 +71,7 @@ function App() {
       <Dashboard
         activePage={activePage}
         setActivePage={setActivePage}
+        handleLogout={handleLogout}
       />
     );
 
@@ -41,6 +84,7 @@ function App() {
       <Patients
         activePage={activePage}
         setActivePage={setActivePage}
+        handleLogout={handleLogout}
       />
     );
 
@@ -53,6 +97,7 @@ function App() {
       <Appointments
         activePage={activePage}
         setActivePage={setActivePage}
+        handleLogout={handleLogout}
       />
     );
 
@@ -65,12 +110,14 @@ function App() {
       <PatientsList
         activePage={activePage}
         setActivePage={setActivePage}
+        handleLogout={handleLogout}
       />
     );
 
   }
 
   return null;
+
 }
 
 export default App;

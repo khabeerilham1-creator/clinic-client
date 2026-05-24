@@ -2,13 +2,16 @@ import React, { useState } from "react";
 
 import api from "../api";
 
-function Login() {
+function Login({ onLogin }) {
 
   const [username, setUsername] =
     useState("");
 
   const [password, setPassword] =
     useState("");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   const [loading, setLoading] =
     useState(false);
@@ -23,10 +26,15 @@ function Login() {
         await api.post(
           "/login",
           {
-            username,
-            password,
+            username:
+              username.trim(),
+
+            password:
+              password.trim(),
           }
         );
+
+      console.log(response.data);
 
       localStorage.setItem(
         "token",
@@ -38,13 +46,27 @@ function Login() {
         response.data.role
       );
 
-      window.location.reload();
+      if (onLogin) {
+
+        onLogin(
+          response.data.token
+        );
+
+      } else {
+
+        window.location.reload();
+
+      }
 
     } catch (error) {
 
-      console.error(error);
+      console.log(error);
 
-      alert("Invalid Credentials");
+      alert(
+        error.response?.data?.detail
+        ||
+        "Login Failed"
+      );
 
     } finally {
 
@@ -55,6 +77,7 @@ function Login() {
   };
 
   return (
+
     <div className="min-h-screen bg-[#f4f7fb] flex items-center justify-center p-6">
 
       <div className="w-full max-w-md bg-white rounded-[35px] shadow-2xl overflow-hidden border">
@@ -118,26 +141,59 @@ function Login() {
                 Password
               </label>
 
-              <input
-                type="password"
-                placeholder="Enter Password"
-                value={password}
-                onChange={(e)=>
-                  setPassword(
-                    e.target.value
-                  )
-                }
-                className="
-                  w-full
-                  border
-                  border-gray-300
-                  rounded-2xl
-                  p-4
-                  text-lg
-                  outline-none
-                  focus:border-[#176bff]
-                "
-              />
+              <div className="relative">
+
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  placeholder="Enter Password"
+                  value={password}
+                  onChange={(e)=>
+                    setPassword(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    border
+                    border-gray-300
+                    rounded-2xl
+                    p-4
+                    pr-16
+                    text-lg
+                    outline-none
+                    focus:border-[#176bff]
+                  "
+                />
+
+                <button
+                  type="button"
+                  onClick={()=>
+                    setShowPassword(
+                      !showPassword
+                    )
+                  }
+                  className="
+                    absolute
+                    right-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-2xl
+                  "
+                >
+
+                  {
+                    showPassword
+                      ? "🙈"
+                      : "👁️"
+                  }
+
+                </button>
+
+              </div>
 
             </div>
 
@@ -174,7 +230,9 @@ function Login() {
       </div>
 
     </div>
+
   );
+
 }
 
 export default Login;
