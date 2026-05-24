@@ -8,6 +8,7 @@ import Biography from "../components/patient/Biography";
 import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
+import toothChart from "../assets/tooth-chart.png";
 
 function Patients({
   activePage,
@@ -288,14 +289,19 @@ function Patients({
       </div>
 
       <!-- TOOTH -->
-      <div class="tooth">
+<div class="tooth">
 
-        <img
-          src="https://raw.githubusercontent.com/mustafadalga/dental-chart/main/chart.png"
-        />
+  <img
+    src="${
+      window.location.origin +
+      toothChart
+    }"
+    style="
+      width:760px;
+    "
+  />
 
-      </div>
-
+</div>
       <!-- CHECKUP -->
       <table>
 
