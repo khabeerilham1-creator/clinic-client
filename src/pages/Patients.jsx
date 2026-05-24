@@ -115,14 +115,14 @@ function Patients({
       <style>
 
         body{
-          font-family:Arial;
-          margin:0;
-          padding:30px;
-          color:#000;
-        }
+  font-family:Arial;
+  margin:0;
+  padding:12px;
+  color:#000;
+}
 
         .section{
-          font-size:22px;
+  font-size:16px;
           font-weight:bold;
           margin-top:20px;
           margin-bottom:12px;
@@ -137,8 +137,8 @@ function Patients({
         .bio td{
           border:none !important;
           padding:2px 0;
-          font-size:18px;
-          text-align:left;
+  font-size:14px;
+            text-align:left;
         }
 
         .tooth{
@@ -147,8 +147,8 @@ function Patients({
         }
 
         .tooth img{
-          width:760px;
-        }
+  width:520px;
+}
 
         table{
           width:100%;
@@ -160,15 +160,15 @@ function Patients({
         /* HEADERS */
         th{
           border:2px solid #000;
-          padding:8px;
-          font-size:18px;
+          padding:4px;
+  font-size:13px;
           text-align:center;
         }
 
         /* BODY */
         td{
-          padding:8px;
-          font-size:18px;
+         padding:4px;
+  font-size:13px;
           text-align:center;
         }
 
@@ -194,7 +194,7 @@ function Patients({
         .totals td{
   border:none !important;
   padding:4px;
-  font-size:22px;
+  font-size:15px;
   font-weight:bold;
   white-space:nowrap;
 }
