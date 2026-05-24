@@ -186,17 +186,18 @@ function Patients({
         }
 
         .totals{
-          width:350px;
-          margin-left:auto;
-          margin-top:20px;
-        }
-
+  width:350px;
+  margin-left:auto;
+  margin-top:20px;
+  page-break-inside: avoid;
+}
         .totals td{
-          border:none !important;
-          padding:4px;
-          font-size:22px;
-          font-weight:bold;
-        }
+  border:none !important;
+  padding:4px;
+  font-size:22px;
+  font-weight:bold;
+  white-space:nowrap;
+}
 
       </style>
 
