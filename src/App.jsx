@@ -11,7 +11,7 @@ function App() {
 
   // LOGIN STATE
   const [token, setToken] = useState(
-    localStorage.getItem("token")
+    sessionStorage.getItem("token")
   );
 
   // ACTIVE PAGE
@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
 
     const savedToken =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (savedToken) {
 
@@ -47,10 +47,11 @@ function App() {
   // LOGOUT FUNCTION
   const handleLogout = () => {
 
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
 
-    setToken(null);
+sessionStorage.removeItem("role");
 
+setToken(null);
   };
 
   // SHOW LOGIN PAGE FIRST

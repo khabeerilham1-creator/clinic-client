@@ -36,15 +36,15 @@ function Login({ onLogin }) {
 
       console.log(response.data);
 
-      localStorage.setItem(
-        "token",
-        response.data.token
-      );
+      sessionStorage.setItem(
+  "token",
+  response.data.token
+);
 
-      localStorage.setItem(
-        "role",
-        response.data.role
-      );
+sessionStorage.setItem(
+  "role",
+  response.data.role
+);
 
       if (onLogin) {
 
