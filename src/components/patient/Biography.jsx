@@ -1,44 +1,86 @@
 import React, { useEffect } from "react";
+import api from "../../api";
 
-function Biography({ patientData, setPatientData }) {
+function Biography({
+  patientData,
+  setPatientData
+}) {
 
-  const formData = patientData.biography || {};
+  const formData =
+    patientData.biography || {};
 
   useEffect(() => {
 
-    const today = new Date()
-      .toISOString()
-      .split("T")[0];
+    const today =
+      new Date()
+        .toISOString()
+        .split("T")[0];
 
-    setPatientData((prev) => ({
-      ...prev,
+    const loadRegNo = async () => {
 
-      biography: {
-        ...prev.biography,
+      try {
 
-        date: today,
+        const response =
+          await api.get("/patients");
 
-        regNo:
-          prev.biography?.regNo || "00001",
+        const totalPatients =
+          response.data.length;
 
-        title:
-          prev.biography?.title || "Mr.",
+        const nextRegNo =
+          String(
+            totalPatients + 1
+          ).padStart(5, "0");
 
-        category:
-          prev.biography?.category || "Elite",
+        setPatientData((prev) => ({
 
-        patientType:
-          prev.biography?.patientType || "Affording",
-      },
-    }));
+          ...prev,
+
+          biography: {
+
+            ...prev.biography,
+
+            date:
+              prev.biography?.date ||
+              today,
+
+           regNo: nextRegNo,
+
+            title:
+              prev.biography?.title ||
+              "Mr.",
+
+            category:
+              prev.biography?.category ||
+              "Elite",
+
+            patientType:
+              prev.biography?.patientType ||
+              "Affording",
+
+          },
+
+        }));
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+    loadRegNo();
 
   }, []);
 
+  // AGE
   const calculateAge = (dob) => {
 
-    const birth = new Date(dob);
+    const birth =
+      new Date(dob);
 
-    const today = new Date();
+    const today =
+      new Date();
 
     let age =
       today.getFullYear() -
@@ -56,23 +98,34 @@ function Biography({ patientData, setPatientData }) {
         birth.getDate()
       )
     ) {
+
       age--;
+
     }
 
     return age;
 
   };
 
+  // INPUT CHANGE
   const handleChange = (e) => {
 
-    const { name, value } = e.target;
+    const {
+      name,
+      value
+    } = e.target;
 
     let updatedData = {
+
       ...formData,
+
       [name]: value,
+
     };
 
-    if (name === "birthDate") {
+    if (
+      name === "birthDate"
+    ) {
 
       updatedData.age =
         calculateAge(value);
@@ -80,34 +133,60 @@ function Biography({ patientData, setPatientData }) {
     }
 
     setPatientData((prev) => ({
+
       ...prev,
-      biography: updatedData,
+
+      biography:
+        updatedData,
+
     }));
 
   };
 
   return (
+
     <div>
 
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+      <h2 className="
+        text-2xl
+        font-bold
+        mb-6
+        text-gray-800
+      ">
         Biography Section
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="
+        grid
+        grid-cols-1
+        md:grid-cols-2
+        gap-4
+      ">
 
         {/* DATE */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Date
           </label>
 
           <input
             type="date"
             name="date"
-            value={formData.date || ""}
+            value={
+              formData.date || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -115,16 +194,28 @@ function Biography({ patientData, setPatientData }) {
         {/* REG NO */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Registration No
           </label>
 
           <input
             type="text"
             name="regNo"
-            value={formData.regNo || ""}
+            value={
+              formData.regNo || ""
+            }
             readOnly
-            className="w-full border rounded-lg p-3 bg-gray-100"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+              bg-gray-100
+            "
           />
 
         </div>
@@ -132,19 +223,40 @@ function Biography({ patientData, setPatientData }) {
         {/* TITLE */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Title
           </label>
 
           <select
             name="title"
-            value={formData.title || ""}
+            value={
+              formData.title || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           >
-            <option>Mr.</option>
-            <option>Mrs.</option>
-            <option>Miss.</option>
+
+            <option>
+              Mr.
+            </option>
+
+            <option>
+              Mrs.
+            </option>
+
+            <option>
+              Miss.
+            </option>
+
           </select>
 
         </div>
@@ -152,16 +264,27 @@ function Biography({ patientData, setPatientData }) {
         {/* NAME */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Patient Name
           </label>
 
           <input
             type="text"
             name="patientName"
-            value={formData.patientName || ""}
+            value={
+              formData.patientName || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -169,16 +292,27 @@ function Biography({ patientData, setPatientData }) {
         {/* BIRTH DATE */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Birth Date
           </label>
 
           <input
             type="date"
             name="birthDate"
-            value={formData.birthDate || ""}
+            value={
+              formData.birthDate || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -186,16 +320,28 @@ function Biography({ patientData, setPatientData }) {
         {/* AGE */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Age
           </label>
 
           <input
             type="text"
             name="age"
-            value={formData.age || ""}
+            value={
+              formData.age || ""
+            }
             readOnly
-            className="w-full border rounded-lg p-3 bg-gray-100"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+              bg-gray-100
+            "
           />
 
         </div>
@@ -203,16 +349,27 @@ function Biography({ patientData, setPatientData }) {
         {/* OCCUPATION */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Occupation
           </label>
 
           <input
             type="text"
             name="occupation"
-            value={formData.occupation || ""}
+            value={
+              formData.occupation || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -220,16 +377,27 @@ function Biography({ patientData, setPatientData }) {
         {/* EMAIL */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Email
           </label>
 
           <input
             type="email"
             name="email"
-            value={formData.email || ""}
+            value={
+              formData.email || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -237,16 +405,27 @@ function Biography({ patientData, setPatientData }) {
         {/* PTCL */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             PTCL Number
           </label>
 
           <input
             type="text"
             name="ptclNumber"
-            value={formData.ptclNumber || ""}
+            value={
+              formData.ptclNumber || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -254,16 +433,27 @@ function Biography({ patientData, setPatientData }) {
         {/* MOBILE */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Mobile Number
           </label>
 
           <input
             type="text"
             name="mobileNumber"
-            value={formData.mobileNumber || ""}
+            value={
+              formData.mobileNumber || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -271,16 +461,27 @@ function Biography({ patientData, setPatientData }) {
         {/* EMERGENCY */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Emergency Number
           </label>
 
           <input
             type="text"
             name="emergencyNumber"
-            value={formData.emergencyNumber || ""}
+            value={
+              formData.emergencyNumber || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           />
 
         </div>
@@ -288,18 +489,36 @@ function Biography({ patientData, setPatientData }) {
         {/* CATEGORY */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Category
           </label>
 
           <select
             name="category"
-            value={formData.category || ""}
+            value={
+              formData.category || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           >
-            <option>Elite</option>
-            <option>Mediocre</option>
+
+            <option>
+              Elite
+            </option>
+
+            <option>
+              Mediocre
+            </option>
+
           </select>
 
         </div>
@@ -307,19 +526,40 @@ function Biography({ patientData, setPatientData }) {
         {/* PATIENT TYPE */}
         <div>
 
-          <label className="block mb-1 font-medium">
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Patient Type
           </label>
 
           <select
             name="patientType"
-            value={formData.patientType || ""}
+            value={
+              formData.patientType || ""
+            }
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
           >
-            <option>Compassionate</option>
-            <option>Non-Affording</option>
-            <option>Affording</option>
+
+            <option>
+              Compassionate
+            </option>
+
+            <option>
+              Non-Affording
+            </option>
+
+            <option>
+              Affording
+            </option>
+
           </select>
 
         </div>
@@ -329,22 +569,35 @@ function Biography({ patientData, setPatientData }) {
       {/* ADDRESS */}
       <div className="mt-4">
 
-        <label className="block mb-1 font-medium">
+        <label className="
+          block
+          mb-1
+          font-medium
+        ">
           Address
         </label>
 
         <textarea
           name="address"
-          value={formData.address || ""}
+          value={
+            formData.address || ""
+          }
           onChange={handleChange}
           rows="4"
-          className="w-full border rounded-lg p-3"
+          className="
+            w-full
+            border
+            rounded-lg
+            p-3
+          "
         />
 
       </div>
 
     </div>
+
   );
+
 }
 
 export default Biography;

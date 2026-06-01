@@ -22,50 +22,110 @@ function ToothChart({
   const chartData =
     patientData.checkup?.[chartKey] || {};
 
-  const selectedTooth =
-    chartData.selectedTooth || null;
+  // ARRAY OF TOOTH ENTRIES
+  const toothEntries =
+    chartData.toothEntries || [];
 
-  const condition =
-    chartData.condition || "";
+  // ADD NEW TOOTH BLOCK
+  const handleToothSelect = (
+    tooth
+  ) => {
 
-  const treatment =
-    chartData.treatment || "";
-
-  const handleToothSelect = (tooth) => {
+    const newEntry = {
+      id: Date.now(),
+      tooth,
+      condition: "",
+      treatment: "",
+    };
 
     setPatientData((prev) => ({
+
       ...prev,
 
       checkup: {
+
         ...prev.checkup,
 
         [chartKey]: {
+
           ...prev.checkup?.[chartKey],
 
-          selectedTooth: tooth,
+          toothEntries: [
+            ...toothEntries,
+            newEntry
+          ],
         },
       },
     }));
 
   };
 
-  const handleChange = (
+  // UPDATE ENTRY
+  const handleEntryChange = (
+    id,
     field,
     value
   ) => {
 
+    const updatedEntries =
+      toothEntries.map((entry) => {
+
+        if (entry.id === id) {
+
+          return {
+            ...entry,
+            [field]: value,
+          };
+
+        }
+
+        return entry;
+
+      });
+
     setPatientData((prev) => ({
+
       ...prev,
 
       checkup: {
+
         ...prev.checkup,
 
         [chartKey]: {
+
           ...prev.checkup?.[chartKey],
 
-          selectedTooth,
+          toothEntries:
+            updatedEntries,
+        },
+      },
+    }));
 
-          [field]: value,
+  };
+
+  // DELETE ENTRY
+  const removeEntry = (id) => {
+
+    const updatedEntries =
+      toothEntries.filter(
+        (entry) =>
+          entry.id !== id
+      );
+
+    setPatientData((prev) => ({
+
+      ...prev,
+
+      checkup: {
+
+        ...prev.checkup,
+
+        [chartKey]: {
+
+          ...prev.checkup?.[chartKey],
+
+          toothEntries:
+            updatedEntries,
         },
       },
     }));
@@ -73,13 +133,14 @@ function ToothChart({
   };
 
   return (
+
     <div>
 
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
         {title}
       </h2>
 
-      {/* IMAGE */}
+      {/* TOOTH IMAGE */}
       <div className="mb-8 flex justify-center">
 
         <img
@@ -90,7 +151,7 @@ function ToothChart({
 
       </div>
 
-      {/* UPPER */}
+      {/* UPPER TEETH */}
       <div className="flex flex-wrap justify-center gap-2 mb-4">
 
         {upperTeeth.map((tooth) => (
@@ -100,15 +161,17 @@ function ToothChart({
             onClick={() =>
               handleToothSelect(tooth)
             }
-            className={`
-              w-12 h-12 rounded-lg border font-semibold transition
-
-              ${
-                selectedTooth === tooth
-                  ? "bg-black text-white"
-                  : "bg-white hover:bg-gray-100"
-              }
-            `}
+            className="
+              w-12
+              h-12
+              rounded-lg
+              border
+              font-semibold
+              bg-white
+              hover:bg-black
+              hover:text-white
+              transition
+            "
           >
             {tooth}
           </button>
@@ -117,7 +180,7 @@ function ToothChart({
 
       </div>
 
-      {/* LOWER */}
+      {/* LOWER TEETH */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
 
         {lowerTeeth.map((tooth) => (
@@ -127,15 +190,17 @@ function ToothChart({
             onClick={() =>
               handleToothSelect(tooth)
             }
-            className={`
-              w-12 h-12 rounded-lg border font-semibold transition
-
-              ${
-                selectedTooth === tooth
-                  ? "bg-black text-white"
-                  : "bg-white hover:bg-gray-100"
-              }
-            `}
+            className="
+              w-12
+              h-12
+              rounded-lg
+              border
+              font-semibold
+              bg-white
+              hover:bg-black
+              hover:text-white
+              transition
+            "
           >
             {tooth}
           </button>
@@ -144,68 +209,135 @@ function ToothChart({
 
       </div>
 
-      {/* DETAILS */}
-      {selectedTooth && (
+      {/* TOOTH BLOCKS */}
+      <div className="space-y-6">
 
-        <div className="border rounded-2xl p-6 bg-gray-50">
+        {toothEntries.map((entry,index) => (
 
-          <h3 className="text-xl font-bold mb-6">
-            Selected Tooth:
-            {" "}
-            {selectedTooth}
-          </h3>
+          <div
+            key={entry.id}
+            className="
+              border
+              rounded-2xl
+              p-6
+              bg-gray-50
+            "
+          >
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* HEADER */}
+            <div className="
+              flex
+              justify-between
+              items-center
+              mb-4
+            ">
 
-            {/* CONDITION */}
-            <div>
+              <h3 className="text-xl font-bold">
 
-              <label className="block mb-2 font-medium">
-                Pre-existing Condition
-              </label>
+                Tooth {entry.tooth}
 
-              <textarea
-                rows="4"
-                value={condition}
-                onChange={(e) =>
-                  handleChange(
-                    "condition",
-                    e.target.value
-                  )
+                {" "}
+
+                #{index + 1}
+
+              </h3>
+
+              <button
+                onClick={() =>
+                  removeEntry(entry.id)
                 }
-                className="w-full border rounded-lg p-3"
-              />
+                className="
+                  bg-red-500
+                  text-white
+                  px-4
+                  py-2
+                  rounded-lg
+                "
+              >
+                Remove
+              </button>
 
             </div>
 
-            {/* TREATMENT */}
-            <div>
+            <div className="
+              grid
+              grid-cols-1
+              md:grid-cols-2
+              gap-4
+            ">
 
-              <label className="block mb-2 font-medium">
-                Treatment
-              </label>
+              {/* CONDITION */}
+              <div>
 
-              <textarea
-                rows="4"
-                value={treatment}
-                onChange={(e) =>
-                  handleChange(
-                    "treatment",
-                    e.target.value
-                  )
-                }
-                className="w-full border rounded-lg p-3"
-              />
+                <label className="
+                  block
+                  mb-2
+                  font-medium
+                ">
+                  Pre-existing Condition
+                </label>
+
+                <textarea
+                  rows="4"
+                  value={entry.condition}
+                  onChange={(e) =>
+                    handleEntryChange(
+                      entry.id,
+                      "condition",
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    border
+                    rounded-lg
+                    p-3
+                  "
+                />
+
+              </div>
+
+              {/* TREATMENT */}
+              <div>
+
+                <label className="
+                  block
+                  mb-2
+                  font-medium
+                ">
+                  Treatment
+                </label>
+
+                <textarea
+                  rows="4"
+                  value={entry.treatment}
+                  onChange={(e) =>
+                    handleEntryChange(
+                      entry.id,
+                      "treatment",
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    border
+                    rounded-lg
+                    p-3
+                  "
+                />
+
+              </div>
 
             </div>
 
           </div>
 
-        </div>
+        ))}
 
-      )}
+      </div>
 
     </div>
+
   );
 }
 

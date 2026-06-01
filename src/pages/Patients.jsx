@@ -8,6 +8,7 @@ import Biography from "../components/patient/Biography";
 import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
+
 import toothChart from "../assets/tooth-chart.png";
 
 function Patients({
@@ -46,6 +47,22 @@ function Patients({
           patientData
         );
 
+      // UPDATE REG NO LIVE
+      setPatientData((prev) => ({
+
+        ...prev,
+
+        biography: {
+
+          ...prev.biography,
+
+          regNo:
+            response.data.reg_no
+
+        }
+
+      }));
+
       console.log(response.data);
 
       alert(
@@ -69,487 +86,304 @@ function Patients({
   };
 
   /* PRINT */
- const handlePrint = (
-  patient
-) => {
+  const handlePrint = (
+    patient
+  ) => {
 
-  const printWindow =
-    window.open(
-      "",
-      "",
-      "width=1400,height=1000"
-    );
+    const printWindow =
+      window.open(
+        "",
+        "",
+        "width=1400,height=1000"
+      );
 
-  const invoice =
-    patient?.invoice || [];
+    const invoice =
+      patient?.invoice || [];
 
-  const planned =
-    patient?.plannedSequence || [];
+    const planned =
+      patient?.plannedSequence || [];
 
-  const totalAmount =
-    invoice.reduce(
-      (sum,item)=>
-        sum +
-        Number(item.cost || 0),
-      0
-    );
+    const totalAmount =
+      invoice.reduce(
+        (sum,item)=>
+          sum +
+          Number(item.cost || 0),
+        0
+      );
 
-  const discount =
-    Number(
-      patient?.discount || 0
-    );
+    const discount =
+      Number(
+        patient?.discount || 0
+      );
 
-  const netAmount =
-    totalAmount - discount;
+    const netAmount =
+      totalAmount - discount;
 
-  printWindow.document.write(`
+    printWindow.document.write(`
 
-  <html>
+    <html>
 
-    <head>
+      <head>
 
-      <title>
-        HDC Dental Print
-      </title>
+        <title>
+          HDC Dental Print
+        </title>
 
-      <style>
+        <style>
 
-        body{
-  font-family:Arial;
-  margin:0;
-  padding:12px;
-  color:#000;
-}
+          body{
+            font-family:Arial;
+            margin:0;
+            padding:12px;
+            color:#000;
+          }
 
-        .section{
-  font-size:16px;
-          font-weight:bold;
-          margin-top:20px;
-          margin-bottom:12px;
-          text-decoration:underline;
-        }
+          .section{
+            font-size:16px;
+            font-weight:bold;
+            margin-top:20px;
+            margin-bottom:12px;
+            text-decoration:underline;
+          }
 
-        .bio{
-          width:100%;
-          margin-bottom:20px;
-        }
+          .bio{
+            width:100%;
+            margin-bottom:20px;
+          }
 
-        .bio td{
-          border:none !important;
-          padding:2px 0;
-  font-size:14px;
+          .bio td{
+            border:none !important;
+            padding:2px 0;
+            font-size:14px;
             text-align:left;
-        }
+          }
 
-        .tooth{
-          text-align:center;
-          margin-bottom:20px;
-        }
+          .tooth{
+            text-align:center;
+            margin-bottom:20px;
+          }
 
-        .tooth img{
-  width:520px;
-}
+          .tooth img{
+            width:520px;
+          }
 
-        table{
-          width:100%;
-          border-collapse:collapse;
-          margin-top:10px;
-          margin-bottom:30px;
-        }
+          table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:10px;
+            margin-bottom:30px;
+          }
 
-        /* HEADERS */
-        th{
-          border:2px solid #000;
-          padding:4px;
-  font-size:13px;
-          text-align:center;
-        }
+          th{
+            border:2px solid #000;
+            padding:4px;
+            font-size:13px;
+            text-align:center;
+          }
 
-        /* BODY */
-        td{
-         padding:4px;
-  font-size:13px;
-          text-align:center;
-        }
+          td{
+            padding:4px;
+            font-size:13px;
+            text-align:center;
+          }
 
-        /* ONLY OUTSIDE BORDERS */
-        td:first-child{
-          border-left:2px solid #000;
-        }
+          td:first-child{
+            border-left:2px solid #000;
+          }
 
-        td:last-child{
-          border-right:2px solid #000;
-        }
+          td:last-child{
+            border-right:2px solid #000;
+          }
 
-        tbody tr:last-child td{
-          border-bottom:2px solid #000;
-        }
+          tbody tr:last-child td{
+            border-bottom:2px solid #000;
+          }
 
-        .totals{
-  width:350px;
-  margin-left:auto;
-  margin-top:20px;
-  page-break-inside: avoid;
-}
-        .totals td{
-  border:none !important;
-  padding:4px;
-  font-size:15px;
-  font-weight:bold;
-  white-space:nowrap;
-}
+          .totals{
+            width:350px;
+            margin-left:auto;
+            margin-top:20px;
+            page-break-inside: avoid;
+          }
 
-      </style>
+          .totals td{
+            border:none !important;
+            padding:4px;
+            font-size:15px;
+            font-weight:bold;
+            white-space:nowrap;
+          }
 
-    </head>
+        </style>
 
-    <body>
+      </head>
 
-      <!-- BIO -->
-      <div class="section">
-        Bio-data :
-      </div>
+      <body>
 
-      <table class="bio">
+        <!-- BIO -->
+        <div class="section">
+          Bio-data :
+        </div>
 
-        <tr>
-
-          <td>
-
-            <b>
-              Pt. Name :
-            </b>
-
-            ${
-              patient?.biography
-                ?.patientName || ""
-            }
-
-          </td>
-
-          <td
-  style="
-    text-align:right;
-    width:300px;
-    vertical-align:top;
-  "
->
-
-            <b>
-              Date :
-            </b>
-
-            ${
-              patient?.biography
-                ?.date || ""
-            }
-
-          </td>
-
-        </tr>
-
-        <tr>
-
-          <td>
-
-            <b>
-              Contact :
-            </b>
-
-            ${
-              patient?.biography
-                ?.mobileNumber || ""
-            }
-
-          </td>
-
-        </tr>
-
-        <tr>
-
-          <td>
-
-            <b>
-              Address :
-            </b>
-
-            ${
-              patient?.biography
-                ?.address || ""
-            }
-
-          </td>
-
-        </tr>
-
-      </table>
-
-      <!-- TREATMENT -->
-      <div class="section">
-        Treatment Details :
-      </div>
-
-      <!-- TOOTH -->
-<div class="tooth">
-
-  <img
-    src="${
-      window.location.origin +
-      toothChart
-    }"
-    style="
-      width:760px;
-    "
-  />
-
-</div>
-      <!-- CHECKUP -->
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>
-              S No
-            </th>
-
-            <th>
-              Details
-            </th>
-
-            <th>
-              Pre Existing Condition
-            </th>
-
-            <th>
-              Recommended Treatment
-            </th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
+        <table class="bio">
 
           <tr>
 
             <td>
-              1
+
+              <b>
+                Reg No :
+              </b>
+
+              ${
+                patient?.biography
+                  ?.regNo || ""
+              }
+
             </td>
 
-            <td>
-              ${
-                patient?.checkup
-                  ?.details || ""
-              }
-            </td>
+            <td
+              style="
+                text-align:right;
+                width:300px;
+                vertical-align:top;
+              "
+            >
 
-            <td>
-              ${
-                patient?.checkup
-                  ?.condition || ""
-              }
-            </td>
+              <b>
+                Date :
+              </b>
 
-            <td>
               ${
-                patient?.checkup
-                  ?.treatment || ""
+                patient?.biography
+                  ?.date || ""
               }
+
             </td>
 
           </tr>
-
-        </tbody>
-
-      </table>
-
-      ${
-        planned.length > 0
-        ?
-        `
-          <div class="section">
-            Planned Sequence Treatment :
-          </div>
-
-          <table>
-
-            <thead>
-
-              <tr>
-
-                <th>
-                  Visit No
-                </th>
-
-                <th>
-                  Date
-                </th>
-
-                <th>
-                  Procedure
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              ${planned.map((visit,index)=>
-
-                `
-                  <tr>
-
-                    <td>
-                      ${index + 1}
-                    </td>
-
-                    <td>
-                      ${visit.date || ""}
-                    </td>
-
-                    <td>
-                      ${visit.procedure || ""}
-                    </td>
-
-                  </tr>
-                `
-
-              ).join("")}
-
-            </tbody>
-
-          </table>
-        `
-        :
-        ""
-      }
-
-      <!-- INVOICE -->
-      <div class="section">
-        Invoice:
-      </div>
-
-      <table>
-
-        <thead>
 
           <tr>
 
-            <th>
-              S No
-            </th>
+            <td>
 
-            <th>
-              Details
-            </th>
+              <b>
+                Pt. Name :
+              </b>
 
-            <th>
-              Qty
-            </th>
+              ${
+                patient?.biography
+                  ?.patientName || ""
+              }
 
-            <th>
-              Rate
-            </th>
-
-            <th>
-              Cost
-            </th>
+            </td>
 
           </tr>
 
-        </thead>
+          <tr>
 
-        <tbody>
+            <td>
 
-          ${invoice.map((item,index)=>
+              <b>
+                Contact :
+              </b>
 
-            `
-              <tr>
+              ${
+                patient?.biography
+                  ?.mobileNumber || ""
+              }
 
-                <td>
-                  ${index + 1}
-                </td>
+            </td>
 
-                <td>
-                  ${item.details || ""}
-                </td>
+          </tr>
 
-                <td>
-                  ${item.qty || ""}
-                </td>
+          <tr>
 
-                <td>
-                  ${item.rate || ""}
-                </td>
+            <td>
 
-                <td>
-                  ${item.cost || ""}
-                </td>
+              <b>
+                Address :
+              </b>
 
-              </tr>
-            `
+              ${
+                patient?.biography
+                  ?.address || ""
+              }
 
-          ).join("")}
+            </td>
 
-        </tbody>
+          </tr>
 
-      </table>
+        </table>
 
-      <!-- TOTAL -->
-      <table class="totals">
+        <!-- TOOTH -->
+        <div class="tooth">
 
-        <tr>
+          <img
+            src="${
+              window.location.origin +
+              toothChart
+            }"
+            style="
+              width:760px;
+            "
+          />
 
-          <td>
-            Total Amount
-          </td>
+        </div>
 
-          <td align="right">
-            ${totalAmount}
-          </td>
+        <!-- TOTAL -->
+        <table class="totals">
 
-        </tr>
+          <tr>
 
-        <tr>
+            <td>
+              Total Amount
+            </td>
 
-          <td>
-            Discount
-          </td>
+            <td align="right">
+              ${totalAmount}
+            </td>
 
-          <td align="right">
-            ${discount}
-          </td>
+          </tr>
 
-        </tr>
+          <tr>
 
-        <tr>
+            <td>
+              Discount
+            </td>
 
-          <td>
-            Net Cost
-          </td>
+            <td align="right">
+              ${discount}
+            </td>
 
-          <td align="right">
-            ${netAmount}
-          </td>
+          </tr>
 
-        </tr>
+          <tr>
 
-      </table>
+            <td>
+              Net Cost
+            </td>
 
-    </body>
+            <td align="right">
+              ${netAmount}
+            </td>
 
-  </html>
+          </tr>
 
-  `);
+        </table>
 
-  printWindow.document.close();
+      </body>
 
-  printWindow.print();
+    </html>
 
-};
+    `);
+
+    printWindow.document.close();
+
+    printWindow.print();
+
+  };
+
   return (
 
     <Layout
@@ -560,20 +394,40 @@ function Patients({
       <div className="space-y-6">
 
         {/* HEADER */}
-        <div className="bg-white rounded-3xl shadow-sm p-8 border">
+        <div className="
+          bg-white
+          rounded-3xl
+          shadow-sm
+          p-8
+          border
+        ">
 
-          <h1 className="text-4xl font-bold text-gray-800">
+          <h1 className="
+            text-4xl
+            font-bold
+            text-gray-800
+          ">
             Patient Entry
           </h1>
 
-          <p className="text-gray-500 mt-2 text-lg">
+          <p className="
+            text-gray-500
+            mt-2
+            text-lg
+          ">
             Dental Patient Management System
           </p>
 
         </div>
 
         {/* BIOGRAPHY */}
-        <div className="bg-white rounded-3xl shadow-sm border p-8">
+        <div className="
+          bg-white
+          rounded-3xl
+          shadow-sm
+          border
+          p-8
+        ">
 
           <Biography
             patientData={patientData}
@@ -583,7 +437,13 @@ function Patients({
         </div>
 
         {/* CHECKUP */}
-        <div className="bg-white rounded-3xl shadow-sm border p-8">
+        <div className="
+          bg-white
+          rounded-3xl
+          shadow-sm
+          border
+          p-8
+        ">
 
           <Checkup
             patientData={patientData}
@@ -593,7 +453,13 @@ function Patients({
         </div>
 
         {/* PLANNED */}
-        <div className="bg-white rounded-3xl shadow-sm border p-8">
+        <div className="
+          bg-white
+          rounded-3xl
+          shadow-sm
+          border
+          p-8
+        ">
 
           <PlannedSequence
             patientData={patientData}
@@ -603,7 +469,14 @@ function Patients({
         </div>
 
         {/* INVOICE */}
-        <div className="bg-white rounded-3xl shadow-sm border p-8 mb-32">
+        <div className="
+          bg-white
+          rounded-3xl
+          shadow-sm
+          border
+          p-8
+          mb-32
+        ">
 
           <Invoice
             patientData={patientData}
@@ -615,7 +488,14 @@ function Patients({
       </div>
 
       {/* BUTTONS */}
-      <div className="fixed bottom-6 right-6 flex gap-4 z-50">
+      <div className="
+        fixed
+        bottom-6
+        right-6
+        flex
+        gap-4
+        z-50
+      ">
 
         <button
           onClick={handleSave}
@@ -667,6 +547,7 @@ function Patients({
     </Layout>
 
   );
+
 }
 
 export default Patients;
