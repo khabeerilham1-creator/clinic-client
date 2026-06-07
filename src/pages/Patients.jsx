@@ -16,20 +16,22 @@ function Patients({
   setActivePage,
 }) {
 
-  const [patientData, setPatientData] =
-    useState({
+ const [patientData, setPatientData] =
+  useState({
 
-      biography: {},
+    biography: {},
 
-      checkup: {},
+    checkup: {},
 
-      plannedSequence: [],
+    plannedSequence: [],
 
-      invoice: [],
+    invoice: [],
 
-      discount: 0,
+    discount: 0,
 
-    });
+    accountLedger: [],
+
+  });
 
   const [loading, setLoading] =
     useState(false);
