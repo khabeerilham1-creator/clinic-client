@@ -212,16 +212,34 @@ function AccountStatus({
               ">
 
                 <button
-                  className="
-                    bg-[#176bff]
-                    text-white
-                    px-5
-                    py-2
-                    rounded-xl
-                  "
-                >
-                  Edit
-                </button>
+  onClick={() => {
+
+    const updatedName = prompt(
+      "Patient Name",
+      selectedPatient?.biography?.patientName || ""
+    );
+
+    if (!updatedName) return;
+
+    setSelectedPatient({
+      ...selectedPatient,
+      biography: {
+        ...selectedPatient.biography,
+        patientName: updatedName,
+      },
+    });
+
+  }}
+  className="
+    bg-[#176bff]
+    text-white
+    px-5
+    py-2
+    rounded-xl
+  "
+>
+  Edit
+</button>
 
                 <button
                   onClick={handlePrint}
