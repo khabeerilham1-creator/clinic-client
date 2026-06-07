@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, {
+  useState,
+  useEffect,
+} from "react";
 
 import api from "../api";
 
@@ -33,11 +36,38 @@ function Patients({
 
   });
 
+useEffect(() => {
+
+  const patient =
+    localStorage.getItem(
+      "editPatient"
+    );
+
+  if (patient) {
+
+    setPatientData(
+      JSON.parse(patient)
+    );
+
+  }
+
+}, []);
+
   const [loading, setLoading] =
     useState(false);
 
   /* SAVE */
   const handleSave = async () => {
+
+    if (patientData?.isEditing) {
+
+  alert(
+    "Editing Mode - Save Disabled Until Update Route Is Connected"
+  );
+
+  return;
+
+}
 
     try {
 
@@ -166,7 +196,7 @@ function Patients({
           }
 
           .tooth img{
-            width:520px;
+            width:850px;
           }
 
           table{
@@ -184,10 +214,11 @@ function Patients({
           }
 
           td{
-            padding:4px;
-            font-size:13px;
-            text-align:center;
-          }
+  border:1px solid #000;
+  padding:4px;
+  font-size:13px;
+  text-align:center;
+}
 
           td:first-child{
             border-left:2px solid #000;
@@ -333,46 +364,83 @@ function Patients({
 
         </div>
 
-        <!-- TOTAL -->
-        <table class="totals">
+       <!-- TREATMENT DETAILS -->
+<div class="section">
+  Treatment Details :
+</div>
 
-          <tr>
+<table>
 
-            <td>
-              Total Amount
-            </td>
+  <tr>
+    <th>S No</th>
+    <th>Details</th>
+    <th>Pre Existing Condition</th>
+    <th>Recommended Treatment</th>
+  </tr>
 
-            <td align="right">
-              ${totalAmount}
-            </td>
+  <tr>
+    <td>1</td>
+    <td>Clinical</td>
+    <td>${patient?.checkup?.clinicalTasks?.treatment || ""}</td>
+    <td>${patient?.checkup?.clinicalTasks?.treatment || ""}</td>
+  </tr>
 
-          </tr>
+  <tr><td>2</td><td></td><td></td><td></td></tr>
+  <tr><td>3</td><td></td><td></td><td></td></tr>
+  <tr><td>4</td><td></td><td></td><td></td></tr>
+  <tr><td>5</td><td></td><td></td><td></td></tr>
+  <tr><td>6</td><td></td><td></td><td></td></tr>
 
-          <tr>
+</table>
 
-            <td>
-              Discount
-            </td>
+<div class="section">
+  Invoice :
+</div>
 
-            <td align="right">
-              ${discount}
-            </td>
+<table>
 
-          </tr>
+  <tr>
+    <th>S No</th>
+    <th>Details</th>
+    <th>Qty</th>
+    <th>Rate</th>
+    <th>Cost</th>
+  </tr>
 
-          <tr>
+  ${
+    invoice.map(
+      (item,index)=>`
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.details || ""}</td>
+        <td>${item.qty || ""}</td>
+        <td>${item.rate || ""}</td>
+        <td>${item.cost || ""}</td>
+      </tr>
+      `
+    ).join("")
+  }
 
-            <td>
-              Net Cost
-            </td>
+</table>
 
-            <td align="right">
-              ${netAmount}
-            </td>
+<table class="totals">
 
-          </tr>
+  <tr>
+    <td>Total Amount</td>
+    <td align="right">${totalAmount}</td>
+  </tr>
 
-        </table>
+  <tr>
+    <td>Discount</td>
+    <td align="right">${discount}</td>
+  </tr>
+
+  <tr>
+    <td>Net Amount</td>
+    <td align="right">${netAmount}</td>
+  </tr>
+
+</table>
 
       </body>
 

@@ -5,6 +5,7 @@ import React, {
 
 import api from "../api";
 import Layout from "../components/Layout";
+import toothChart from "../assets/tooth-chart.png";
 
 function PatientsList({
   activePage,
@@ -148,6 +149,10 @@ function PatientsList({
 
     const planned =
       patient?.plannedSequence || [];
+      
+      const toothImage =
+  window.location.origin +
+  toothChart;
 
     printWindow.document.write(`
 
@@ -228,7 +233,14 @@ function PatientsList({
             Treatment Details
           </h3>
 
-          <img src="/tooth-chart.png" />
+          <img
+  src="${toothImage}"
+  style="
+    width:760px;
+    display:block;
+    margin:auto;
+  "
+/>
 
           <table>
 

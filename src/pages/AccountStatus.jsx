@@ -214,20 +214,19 @@ function AccountStatus({
                 <button
   onClick={() => {
 
-    const updatedName = prompt(
-      "Patient Name",
-      selectedPatient?.biography?.patientName || ""
-    );
-
-    if (!updatedName) return;
-
-    setSelectedPatient({
+    localStorage.setItem(
+  "editPatient",
+  JSON.stringify(
+    {
       ...selectedPatient,
-      biography: {
-        ...selectedPatient.biography,
-        patientName: updatedName,
-      },
-    });
+      isEditing: true
+    }
+  )
+);
+
+    setActivePage(
+      "patients"
+    );
 
   }}
   className="
