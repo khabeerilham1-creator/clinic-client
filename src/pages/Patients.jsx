@@ -207,31 +207,26 @@ useEffect(() => {
           }
 
           th{
-            border:2px solid #000;
+            border:1px solid #000;
             padding:4px;
             font-size:13px;
             text-align:center;
           }
 
-          td{
+          th{
   border:1px solid #000;
   padding:4px;
   font-size:13px;
   text-align:center;
 }
 
-          td:first-child{
-            border-left:2px solid #000;
-          }
+td{
+  padding:4px;
+  font-size:13px;
+  text-align:center;
+}
 
-          td:last-child{
-            border-right:2px solid #000;
-          }
-
-          tbody tr:last-child td{
-            border-bottom:2px solid #000;
-          }
-
+  
           .totals{
             width:350px;
             margin-left:auto;
@@ -369,7 +364,11 @@ useEffect(() => {
   Treatment Details :
 </div>
 
-<table>
+<table style="
+width:100%;
+border:1px solid #000;
+border-collapse:collapse;
+">
 
   <tr>
     <th>S No</th>
@@ -379,17 +378,21 @@ useEffect(() => {
   </tr>
 
   <tr>
-    <td>1</td>
-    <td>Clinical</td>
-    <td>${patient?.checkup?.clinicalTasks?.treatment || ""}</td>
-    <td>${patient?.checkup?.clinicalTasks?.treatment || ""}</td>
-  </tr>
+  <td style="border:none;">1</td>
+  <td style="border:none;">Clinical</td>
+  <td style="border:none;">
+    ${patient?.checkup?.clinicalTasks?.condition || ""}
+  </td>
+  <td style="border:none;">
+    ${patient?.checkup?.clinicalTasks?.treatment || ""}
+  </td>
+</tr>
 
-  <tr><td>2</td><td></td><td></td><td></td></tr>
-  <tr><td>3</td><td></td><td></td><td></td></tr>
-  <tr><td>4</td><td></td><td></td><td></td></tr>
-  <tr><td>5</td><td></td><td></td><td></td></tr>
-  <tr><td>6</td><td></td><td></td><td></td></tr>
+<tr><td style="border:none;">2</td><td style="border:none;"></td><td style="border:none;"></td><td style="border:none;"></td></tr>
+<tr><td style="border:none;">3</td><td style="border:none;"></td><td style="border:none;"></td><td style="border:none;"></td></tr>
+<tr><td style="border:none;">4</td><td style="border:none;"></td><td style="border:none;"></td><td style="border:none;"></td></tr>
+<tr><td style="border:none;">5</td><td style="border:none;"></td><td style="border:none;"></td><td style="border:none;"></td></tr>
+<tr><td style="border:none;">6</td><td style="border:none;"></td><td style="border:none;"></td><td style="border:none;"></td></tr>
 
 </table>
 
@@ -397,7 +400,11 @@ useEffect(() => {
   Invoice :
 </div>
 
-<table>
+<table style="
+width:100%;
+border:1px solid #000;
+border-collapse:collapse;
+">
 
   <tr>
     <th>S No</th>
