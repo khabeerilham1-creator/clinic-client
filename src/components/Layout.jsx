@@ -5,15 +5,10 @@ function Layout({
   activePage,
   setActivePage,
 }) {
-
   const handleLogout = () => {
-
     localStorage.removeItem("token");
-
     localStorage.removeItem("role");
-
     window.location.reload();
-
   };
 
   return (
@@ -27,9 +22,7 @@ function Layout({
 
           {/* LOGO */}
           <div className="h-[90px] border-b border-white/10 flex items-center px-7">
-
             <div className="flex items-center gap-4">
-
               <div className="w-14 h-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
                 🦷
               </div>
@@ -37,9 +30,7 @@ function Layout({
               <h1 className="text-[34px] font-bold">
                 HDC Dental
               </h1>
-
             </div>
-
           </div>
 
           {/* MENU */}
@@ -47,19 +38,9 @@ function Layout({
 
             {/* DASHBOARD */}
             <button
-              onClick={() =>
-                setActivePage("dashboard")
-              }
+              onClick={() => setActivePage("dashboard")}
               className={`
-                w-full
-                h-[62px]
-                rounded-2xl
-                flex
-                items-center
-                gap-4
-                px-5
-                transition-all
-
+                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
                 ${
                   activePage === "dashboard"
                     ? "bg-[#176bff] shadow-xl"
@@ -67,32 +48,17 @@ function Layout({
                 }
               `}
             >
-
-              <span className="text-[24px]">
-                🏠
-              </span>
-
+              <span className="text-[24px]">🏠</span>
               <span className="text-[18px] font-medium">
                 Dashboard
               </span>
-
             </button>
 
             {/* PATIENT ENTRY */}
             <button
-              onClick={() =>
-                setActivePage("patients")
-              }
+              onClick={() => setActivePage("patients")}
               className={`
-                w-full
-                h-[62px]
-                rounded-2xl
-                flex
-                items-center
-                gap-4
-                px-5
-                transition-all
-
+                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
                 ${
                   activePage === "patients"
                     ? "bg-[#176bff] shadow-xl"
@@ -100,32 +66,17 @@ function Layout({
                 }
               `}
             >
-
-              <span className="text-[24px]">
-                👨‍⚕️
-              </span>
-
+              <span className="text-[24px]">👨‍⚕️</span>
               <span className="text-[18px] font-medium">
                 Patient Entry
               </span>
-
             </button>
 
             {/* APPOINTMENTS */}
             <button
-              onClick={() =>
-                setActivePage("appointments")
-              }
+              onClick={() => setActivePage("appointments")}
               className={`
-                w-full
-                h-[62px]
-                rounded-2xl
-                flex
-                items-center
-                gap-4
-                px-5
-                transition-all
-
+                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
                 ${
                   activePage === "appointments"
                     ? "bg-[#176bff] shadow-xl"
@@ -133,32 +84,17 @@ function Layout({
                 }
               `}
             >
-
-              <span className="text-[24px]">
-                📅
-              </span>
-
+              <span className="text-[24px]">📅</span>
               <span className="text-[18px] font-medium">
                 Appointments
               </span>
-
             </button>
 
             {/* PATIENTS RECORDS */}
             <button
-              onClick={() =>
-                setActivePage("patients-list")
-              }
+              onClick={() => setActivePage("patients-list")}
               className={`
-                w-full
-                h-[62px]
-                rounded-2xl
-                flex
-                items-center
-                gap-4
-                px-5
-                transition-all
-
+                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
                 ${
                   activePage === "patients-list"
                     ? "bg-[#176bff] shadow-xl"
@@ -166,34 +102,43 @@ function Layout({
                 }
               `}
             >
-
-              <span className="text-[24px]">
-                👥
-              </span>
-
+              <span className="text-[24px]">👥</span>
               <span className="text-[18px] font-medium">
                 Patients Records
               </span>
+            </button>
 
+            {/* ACCOUNT STATUS */}
+            <button
+              onClick={() => setActivePage("account-status")}
+              className={`
+                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
+                ${
+                  activePage === "account-status"
+                    ? "bg-[#176bff] shadow-xl"
+                    : "hover:bg-white/10"
+                }
+              `}
+            >
+              <span className="text-[24px]">💰</span>
+              <span className="text-[18px] font-medium">
+                Account Status
+              </span>
             </button>
 
           </div>
-
         </div>
 
         {/* BOTTOM */}
         <div className="p-4 border-t border-white/10">
-
           <div className="bg-white/5 rounded-2xl p-5">
 
             <div className="flex items-center gap-4 mb-5">
-
               <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-xl font-bold">
                 A
               </div>
 
               <div>
-
                 <h3 className="font-semibold text-lg">
                   Admin
                 </h3>
@@ -201,9 +146,7 @@ function Layout({
                 <p className="text-white/60 text-sm">
                   HDC Clinic
                 </p>
-
               </div>
-
             </div>
 
             <button
@@ -221,7 +164,6 @@ function Layout({
             </button>
 
           </div>
-
         </div>
 
       </div>
@@ -239,20 +181,19 @@ function Layout({
             </button>
 
             <h2 className="text-[34px] font-bold text-gray-800">
-
               {
                 activePage === "dashboard"
                   ? "Dashboard"
-
                   : activePage === "patients"
                   ? "Patient Entry"
-
                   : activePage === "appointments"
                   ? "Appointments"
-
-                  : "Patients Records"
+                  : activePage === "patients-list"
+                  ? "Patients Records"
+                  : activePage === "account-status"
+                  ? "Account Status"
+                  : ""
               }
-
             </h2>
 
           </div>
@@ -261,9 +202,7 @@ function Layout({
 
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto p-8">
-
           {children}
-
         </div>
 
       </div>

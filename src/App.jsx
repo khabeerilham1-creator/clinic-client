@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
 import PatientsList from "./pages/PatientsList";
+import AccountStatus from "./pages/AccountStatus";
 
 function App() {
 
@@ -48,10 +49,10 @@ function App() {
   const handleLogout = () => {
 
     sessionStorage.removeItem("token");
+    sessionStorage.removeItem("role");
 
-sessionStorage.removeItem("role");
+    setToken(null);
 
-setToken(null);
   };
 
   // SHOW LOGIN PAGE FIRST
@@ -109,6 +110,19 @@ setToken(null);
 
     return (
       <PatientsList
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+
+  }
+
+  // ACCOUNT STATUS
+  if (activePage === "account-status") {
+
+    return (
+      <AccountStatus
         activePage={activePage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
