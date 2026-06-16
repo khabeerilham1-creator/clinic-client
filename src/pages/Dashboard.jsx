@@ -1,592 +1,312 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
-
 import Layout from "../components/Layout";
+import {
+  balanceDue,
+  formatCurrency,
+  invoiceTotal,
+  mobileNumber,
+  patientArray,
+  patientName,
+  regNo,
+  upcomingVisits,
+} from "../utils/patientHelpers";
 
-function Dashboard({
-  activePage,
-  setActivePage,
-}) {
+function StatCard({ label, value, detail, accent }) {
+  return (
+    <div className="metric-card">
+      <div className={`metric-accent ${accent}`} />
+      <div className="metric-label">{label}</div>
+      <div className="metric-value">{value}</div>
+      <div className="metric-detail">{detail}</div>
+    </div>
+  );
+}
 
-  const [patients, setPatients] =
-    useState([]);
+function Dashboard({ activePage, setActivePage, handleLogout }) {
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [todayAppointments, setTodayAppointments] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
+  const today = new Date().toISOString().split("T")[0];
+  const dateLabel = new Date().toLocaleDateString("en-PK", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await api.get("/patients", {
+          params: { limit: 100, sort: "createdAt", order: -1 },
+        });
 
-    fetchDashboardData();
+        setPatients(patientArray(response.data));
+      } catch (requestError) {
+        console.error(requestError);
+        setError("Dashboard data could not be loaded. Please check the API connection.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchDashboard();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const metrics = useMemo(() => {
+    const todayPatients = patients.filter((patient) => {
+      const date = patient?.createdAt || patient?.biography?.date || "";
+      return String(date).startsWith(today);
+    }).length;
 
-    try {
+    const totalRevenue = patients.reduce((sum, patient) => sum + invoiceTotal(patient), 0);
+    const pendingBalance = patients.reduce((sum, patient) => sum + balanceDue(patient), 0);
+    const plannedVisits = patients.reduce(
+      (sum, patient) => sum + upcomingVisits(patient).length,
+      0
+    );
 
-      const patientResponse =
-        await api.get("/patients");
+    return {
+      totalPatients: patients.length,
+      todayPatients,
+      totalRevenue,
+      pendingBalance,
+      plannedVisits,
+    };
+  }, [patients, today]);
 
-      const patientData =
-        patientResponse.data;
+  const todayAppointments = useMemo(() => {
+    return patients
+      .flatMap((patient) =>
+        upcomingVisits(patient)
+          .filter((visit) => visit.date === today)
+          .map((visit) => ({
+            patient,
+            visit,
+          }))
+      )
+      .slice(0, 6);
+  }, [patients, today]);
 
-      setPatients(patientData);
+  const recentPatients = patients.slice(0, 6);
 
-      /* TODAY APPOINTMENTS */
-      const today =
-        new Date()
-          .toISOString()
-          .split("T")[0];
-
-      const appointments = [];
-
-      patientData.forEach(
-        (patient) => {
-
-          const planned =
-            patient.plannedSequence || [];
-
-          planned.forEach(
-            (visit) => {
-
-              if (
-                visit.date === today
-              ) {
-
-                appointments.push({
-                  patientName:
-                    patient
-                      ?.biography
-                      ?.patientName,
-
-                  registrationNo:
-                    patient
-                      ?.biography
-                      ?.registrationNo,
-
-                  procedure:
-                    visit.procedure,
-
-                  date:
-                    visit.date,
-                });
-
-              }
-
-            }
-          );
-
-        }
-      );
-
-      setTodayAppointments(
-        appointments
-      );
-
-      setLoading(false);
-
-    } catch (error) {
-
-      console.error(error);
-
-      setLoading(false);
-
-    }
-
-  };
-
-  /* TOTAL REVENUE */
-  const totalRevenue =
-    patients.reduce((total, patient) => {
-
-      const invoice =
-        patient.invoice || [];
-
-      const invoiceTotal =
-        invoice.reduce(
-          (sum, item) =>
-            sum +
-            Number(item.cost || 0),
-          0
-        );
-
-      return total + invoiceTotal;
-
-    }, 0);
-
-  /* PENDING TREATMENTS */
-  const pendingTreatments =
-    patients.reduce((total, patient) => {
-
-      const planned =
-        patient.plannedSequence || [];
-
-      return total + planned.length;
-
-    }, 0);
+  const dueAccounts = patients
+    .filter((patient) => balanceDue(patient) > 0)
+    .sort((a, b) => balanceDue(b) - balanceDue(a))
+    .slice(0, 4);
 
   return (
-
     <Layout
       activePage={activePage}
       setActivePage={setActivePage}
+      handleLogout={handleLogout}
     >
-
-      <div className="space-y-8">
-
-        {/* HEADER */}
-        <div>
-
-          <h1 className="text-5xl font-bold text-gray-800">
-            Dashboard
-          </h1>
-
-          <p className="text-gray-500 mt-2 text-lg">
-            Welcome to HDC Dental Management System
-          </p>
-
-        </div>
-
-        {/* LOADING */}
-        {loading && (
-
-          <div className="bg-white rounded-3xl p-10 shadow-sm border text-center text-2xl font-semibold">
-
-            Loading Dashboard...
-
+      <div className="page">
+        <section className="page-hero">
+          <div>
+            <div className="eyebrow">Clinic overview</div>
+            <h1>Executive Dashboard</h1>
+            <p>{dateLabel}. Patient flow, treatment plans and account health at a glance.</p>
           </div>
 
-        )}
+          <div className="hero-actions no-print">
+            <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
+              <span className="btn-icon">+</span>
+              New patient
+            </button>
+            <button className="btn" onClick={() => setActivePage("appointments")}>
+              Appointments
+            </button>
+          </div>
+        </section>
 
-        {/* CONTENT */}
-        {!loading && (
+        {error && <div className="notice danger">{error}</div>}
 
-          <>
+        <section className="metrics-grid">
+          <StatCard
+            label="Total patients"
+            value={loading ? "..." : metrics.totalPatients}
+            detail="Complete patient records"
+            accent="blue"
+          />
+          <StatCard
+            label="Today"
+            value={loading ? "..." : metrics.todayPatients}
+            detail="New records opened today"
+            accent="green"
+          />
+          <StatCard
+            label="Revenue"
+            value={loading ? "..." : formatCurrency(metrics.totalRevenue)}
+            detail="Invoice value in records"
+            accent="gold"
+          />
+          <StatCard
+            label="Balance due"
+            value={loading ? "..." : formatCurrency(metrics.pendingBalance)}
+            detail={`${metrics.plannedVisits} planned visits tracked`}
+            accent="rose"
+          />
+        </section>
 
-            {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-
-              {/* TOTAL PATIENTS */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm border">
-
-                <p className="text-gray-500 text-lg">
-                  Total Patients
-                </p>
-
-                <h2 className="text-6xl font-bold mt-5 text-[#02152d]">
-                  {patients.length}
-                </h2>
-
+        <section className="dashboard-grid">
+          <div className="panel xl">
+            <div className="panel-heading">
+              <div>
+                <h2>Today's Appointments</h2>
+                <p>{todayAppointments.length} planned visits found for today.</p>
               </div>
-
-              {/* APPOINTMENTS */}
-              <button
-                onClick={() =>
-                  setActivePage(
-                    "appointments"
-                  )
-                }
-                className="
-                  bg-white
-                  rounded-3xl
-                  p-8
-                  shadow-sm
-                  border
-                  hover:shadow-2xl
-                  transition
-                  text-left
-                "
-              >
-
-                <p className="text-gray-500 text-lg">
-                  Today Appointments
-                </p>
-
-                <h2 className="text-6xl font-bold mt-5 text-[#02152d]">
-                  {
-                    todayAppointments.length
-                  }
-                </h2>
-
+              <button className="btn btn-sm" onClick={() => setActivePage("appointments")}>
+                View all
               </button>
-
-              {/* REVENUE */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm border">
-
-                <p className="text-gray-500 text-lg">
-                  Total Revenue
-                </p>
-
-                <h2 className="text-5xl font-bold mt-5 text-green-600">
-                  Rs {totalRevenue}
-                </h2>
-
-              </div>
-
-              {/* PENDING */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm border">
-
-                <p className="text-gray-500 text-lg">
-                  Pending Treatments
-                </p>
-
-                <h2 className="text-6xl font-bold mt-5 text-[#02152d]">
-                  {pendingTreatments}
-                </h2>
-
-              </div>
-
             </div>
 
-            {/* MODULES */}
-            <div>
+            <div className="appointment-list">
+              {loading && <div className="empty-state">Loading appointments...</div>}
 
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">
-                Available Modules
-              </h2>
+              {!loading && todayAppointments.length === 0 && (
+                <div className="empty-state">
+                  No appointments today. Use planned sequence dates to fill this schedule.
+                </div>
+              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-                {/* PATIENT ENTRY */}
-                <button
-                  onClick={() =>
-                    setActivePage(
-                      "patients"
-                    )
-                  }
-                  className="
-                    bg-white
-                    rounded-3xl
-                    p-8
-                    border
-                    shadow-sm
-                    hover:shadow-2xl
-                    transition
-                    text-left
-                  "
-                >
-
-                  <div className="text-6xl mb-6">
-                    👨‍⚕️
+              {todayAppointments.map(({ patient, visit }, index) => (
+                <div className="appointment-item" key={`${regNo(patient)}-${index}`}>
+                  <div className="appointment-time">{visit.time || "Today"}</div>
+                  <div className="appointment-main">
+                    <strong>{patientName(patient)}</strong>
+                    <span>{visit.procedure || visit.treatment || "Treatment visit"}</span>
                   </div>
-
-                  <h2 className="text-2xl font-bold mb-3">
-                    Patient Entry
-                  </h2>
-
-                  <p className="text-gray-500">
-                    Manage patient records, treatments and invoices
-                  </p>
-
-                </button>
-
-                {/* APPOINTMENTS */}
-                <button
-                  onClick={() =>
-                    setActivePage(
-                      "appointments"
-                    )
-                  }
-                  className="
-                    bg-white
-                    rounded-3xl
-                    p-8
-                    border
-                    shadow-sm
-                    hover:shadow-2xl
-                    transition
-                    text-left
-                  "
-                >
-
-                  <div className="text-6xl mb-6">
-                    📅
+                  <div className="appointment-meta">
+                    <span>{mobileNumber(patient)}</span>
+                    <span>Visit {visit.visitNo || index + 1}</span>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                  <h2 className="text-2xl font-bold mb-3">
-                    Appointments
-                  </h2>
-
-                  <p className="text-gray-500">
-                    Manage clinic appointments and visits
-                  </p>
-
-                </button>
-
-                {/* PATIENTS RECORDS */}
-                <button
-                  onClick={() =>
-                    setActivePage(
-                      "patients-list"
-                    )
-                  }
-                  className="
-                    bg-white
-                    rounded-3xl
-                    p-8
-                    border
-                    shadow-sm
-                    hover:shadow-2xl
-                    transition
-                    text-left
-                  "
-                >
-
-                  <div className="text-6xl mb-6">
-                    👥
-                  </div>
-
-                  <h2 className="text-2xl font-bold mb-3">
-                    Patients Records
-                  </h2>
-
-                  <p className="text-gray-500">
-                    View all saved patient records and details
-                  </p>
-
-                </button>
-
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Quick Actions</h2>
+                <p>Fast paths for reception and chairside work.</p>
               </div>
-
             </div>
 
-            {/* TODAY APPOINTMENTS */}
-            <div className="bg-white rounded-3xl shadow-sm border p-8">
+            <div className="quick-grid">
+              <button onClick={() => setActivePage("patients")} className="quick-action">
+                <span>+</span>
+                New record
+              </button>
+              <button onClick={() => setActivePage("patients-list")} className="quick-action">
+                <span>R</span>
+                Records
+              </button>
+              <button onClick={() => setActivePage("account-status")} className="quick-action">
+                <span>$</span>
+                Accounts
+              </button>
+              <button onClick={() => window.print()} className="quick-action">
+                <span>P</span>
+                Print view
+              </button>
+            </div>
+          </div>
 
-              <div className="flex items-center justify-between mb-8">
-
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Today Appointments
-                </h2>
-
-                <button
-                  onClick={() =>
-                    setActivePage(
-                      "appointments"
-                    )
-                  }
-                  className="
-                    bg-[#176bff]
-                    text-white
-                    px-5
-                    py-3
-                    rounded-2xl
-                    font-semibold
-                  "
-                >
-                  Open Appointments
-                </button>
-
+          <div className="panel xl">
+            <div className="panel-heading">
+              <div>
+                <h2>Recent Patients</h2>
+                <p>Newest records saved in the clinic database.</p>
               </div>
+              <button className="btn btn-sm" onClick={() => setActivePage("patients-list")}>
+                Open records
+              </button>
+            </div>
 
-              <div className="overflow-x-auto">
-
-                <table className="w-full">
-
-                  <thead>
-
-                    <tr className="border-b">
-
-                      <th className="text-left p-4">
-                        Reg No
-                      </th>
-
-                      <th className="text-left p-4">
-                        Patient Name
-                      </th>
-
-                      <th className="text-left p-4">
-                        Procedure
-                      </th>
-
-                      <th className="text-left p-4">
-                        Date
-                      </th>
-
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Reg No</th>
+                    <th>Mobile</th>
+                    <th>Total</th>
+                    <th>Due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan="5">Loading recent patients...</td>
                     </tr>
+                  )}
 
-                  </thead>
-
-                  <tbody>
-
-                    {todayAppointments.map(
-                      (
-                        appointment,
-                        index
-                      ) => (
-
-                        <tr
-                          key={index}
-                          className="border-b hover:bg-gray-50"
-                        >
-
-                          <td className="p-4 font-semibold">
-                            {
-                              appointment.registrationNo
-                            }
-                          </td>
-
-                          <td className="p-4">
-                            {
-                              appointment.patientName
-                            }
-                          </td>
-
-                          <td className="p-4">
-                            {
-                              appointment.procedure
-                            }
-                          </td>
-
-                          <td className="p-4">
-                            {
-                              appointment.date
-                            }
-                          </td>
-
-                        </tr>
-
-                      )
-                    )}
-
-                  </tbody>
-
-                </table>
-
-              </div>
-
-            </div>
-
-            {/* RECENT PATIENTS */}
-            <div className="bg-white rounded-3xl shadow-sm border p-8">
-
-              <div className="flex items-center justify-between mb-8">
-
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Recent Patients
-                </h2>
-
-                <button
-                  onClick={() =>
-                    setActivePage(
-                      "patients-list"
-                    )
-                  }
-                  className="
-                    bg-[#176bff]
-                    text-white
-                    px-5
-                    py-3
-                    rounded-2xl
-                    font-semibold
-                  "
-                >
-                  Open Records
-                </button>
-
-              </div>
-
-              <div className="overflow-x-auto">
-
-                <table className="w-full">
-
-                  <thead>
-
-                    <tr className="border-b">
-
-                      <th className="text-left p-4">
-                        Reg No
-                      </th>
-
-                      <th className="text-left p-4">
-                        Name
-                      </th>
-
-                      <th className="text-left p-4">
-                        Mobile
-                      </th>
-
-                      <th className="text-left p-4">
-                        Category
-                      </th>
-
+                  {!loading && recentPatients.length === 0 && (
+                    <tr>
+                      <td colSpan="5">No patients saved yet.</td>
                     </tr>
+                  )}
 
-                  </thead>
+                  {recentPatients.map((patient) => (
+                    <tr key={patient._id || regNo(patient)}>
+                      <td>
+                        <strong>{patientName(patient)}</strong>
+                      </td>
+                      <td>
+                        <span className="pill">{regNo(patient) || "-"}</span>
+                      </td>
+                      <td>{mobileNumber(patient)}</td>
+                      <td>{formatCurrency(invoiceTotal(patient))}</td>
+                      <td>
+                        <span className={balanceDue(patient) > 0 ? "pill warning" : "pill success"}>
+                          {formatCurrency(balanceDue(patient))}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-                  <tbody>
-
-                    {patients.map(
-                      (
-                        patient,
-                        index
-                      ) => (
-
-                        <tr
-                          key={index}
-                          className="border-b hover:bg-gray-50"
-                        >
-
-                          <td className="p-4 font-semibold">
-                            {
-                              patient
-                                ?.biography
-                                ?.registrationNo
-                            }
-                          </td>
-
-                          <td className="p-4">
-                            {
-                              patient
-                                ?.biography
-                                ?.patientName
-                            }
-                          </td>
-
-                          <td className="p-4">
-                            {
-                              patient
-                                ?.biography
-                                ?.mobileNumber
-                            }
-                          </td>
-
-                          <td className="p-4">
-                            {
-                              patient
-                                ?.biography
-                                ?.category
-                            }
-                          </td>
-
-                        </tr>
-
-                      )
-                    )}
-
-                  </tbody>
-
-                </table>
-
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Account Alerts</h2>
+                <p>Highest pending balances.</p>
               </div>
-
             </div>
 
-          </>
+            <div className="alert-list">
+              {loading && <div className="empty-state compact">Loading alerts...</div>}
 
-        )}
+              {!loading && dueAccounts.length === 0 && (
+                <div className="empty-state compact">No pending balances found.</div>
+              )}
 
+              {dueAccounts.map((patient) => (
+                <button
+                  key={patient._id || regNo(patient)}
+                  className="alert-row"
+                  onClick={() => setActivePage("account-status")}
+                >
+                  <span>
+                    <strong>{patientName(patient)}</strong>
+                    <small>{regNo(patient) || mobileNumber(patient)}</small>
+                  </span>
+                  <b>{formatCurrency(balanceDue(patient))}</b>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
-
     </Layout>
-
   );
 }
 

@@ -12,7 +12,8 @@ function App() {
 
   // LOGIN STATE
   const [token, setToken] = useState(
-    sessionStorage.getItem("token")
+    sessionStorage.getItem("token") ||
+    localStorage.getItem("token")
   );
 
   // ACTIVE PAGE
@@ -23,7 +24,8 @@ function App() {
   useEffect(() => {
 
     const savedToken =
-      sessionStorage.getItem("token");
+      sessionStorage.getItem("token") ||
+      localStorage.getItem("token");
 
     if (savedToken) {
 
@@ -36,10 +38,8 @@ function App() {
   // LOGIN SUCCESS FUNCTION
   const handleLogin = (newToken) => {
 
-    localStorage.setItem(
-      "token",
-      newToken
-    );
+    sessionStorage.setItem("token", newToken);
+    localStorage.setItem("token", newToken);
 
     setToken(newToken);
 
@@ -50,6 +50,8 @@ function App() {
 
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
     setToken(null);
 

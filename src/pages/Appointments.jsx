@@ -1,397 +1,277 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
-
 import Layout from "../components/Layout";
+import {
+  initials,
+  mobileNumber,
+  patientArray,
+  patientName,
+  regNo,
+} from "../utils/patientHelpers";
 
-function Appointments({
-  activePage,
-  setActivePage,
-}) {
+const toDateKey = (date) => new Date(date).toISOString().split("T")[0];
 
-  const [appointments, setAppointments] =
-    useState([]);
+function AppointmentCard({ appointment, tone }) {
+  return (
+    <div className={`schedule-card ${tone}`}>
+      <div className="schedule-date">
+        <strong>{appointment.dateLabel}</strong>
+        <span>Visit {appointment.visitNo || "-"}</span>
+      </div>
 
-  const [loading, setLoading] =
-    useState(true);
+      <div className="patient-cell">
+        <span className="patient-avatar">{initials(appointment.patientName)}</span>
+        <div>
+          <strong>{appointment.patientName}</strong>
+          <small>{appointment.procedure || "Treatment visit"}</small>
+        </div>
+      </div>
+
+      <div className="schedule-meta">
+        <span>{appointment.mobileNumber}</span>
+        <span>Reg {appointment.registrationNo || "-"}</span>
+      </div>
+    </div>
+  );
+}
+
+function Appointments({ activePage, setActivePage, handleLogout }) {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-
     fetchAppointments();
-
   }, []);
 
   const fetchAppointments = async () => {
+    setLoading(true);
+    setError("");
 
     try {
-
-      const response =
-        await api.get("/patients");
-
-      const patients =
-        response.data;
-
-      let allAppointments = [];
-
-      patients.forEach((patient) => {
-
-        const planned =
-          patient.plannedSequence || [];
-
-        planned.forEach((visit) => {
-
-          allAppointments.push({
-
-            patientName:
-              patient?.biography
-                ?.patientName || "",
-
-            mobileNumber:
-              patient?.biography
-                ?.mobileNumber || "",
-
-            registrationNo:
-              patient?.biography
-                ?.registrationNo || "",
-
-            visitNo:
-              visit.visitNo,
-
-            date:
-              visit.date,
-
-            procedure:
-              visit.procedure,
-
-            status:
-              "Pending",
-
-          });
-
-        });
-
+      const response = await api.get("/patients", {
+        params: { limit: 100, sort: "createdAt", order: -1 },
       });
 
-      setAppointments(
-        allAppointments
-      );
+      const allAppointments = patientArray(response.data)
+        .flatMap((patient) =>
+          (patient.plannedSequence || []).map((visit) => ({
+            patientId: patient._id,
+            patientName: patientName(patient),
+            mobileNumber: mobileNumber(patient),
+            registrationNo: regNo(patient),
+            visitNo: visit.visitNo,
+            date: visit.date,
+            procedure: visit.procedure || visit.treatment || visit.details,
+            rawVisit: visit,
+          }))
+        )
+        .filter((appointment) => appointment.date)
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+        .map((appointment) => ({
+          ...appointment,
+          dateLabel: new Date(`${appointment.date}T00:00:00`).toLocaleDateString("en-PK", {
+            day: "2-digit",
+            month: "short",
+          }),
+        }));
 
+      setAppointments(allAppointments);
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Appointments could not be loaded from patient planned sequences.");
+    } finally {
       setLoading(false);
-
-    } catch (error) {
-
-      console.error(error);
-
-      setLoading(false);
-
     }
-
   };
 
-  /* DATES */
-  const today = new Date();
-
-  const todayString =
-    today.toISOString().split("T")[0];
-
+  const todayKey = toDateKey(new Date());
   const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = toDateKey(tomorrow);
 
-  tomorrow.setDate(
-    tomorrow.getDate() + 1
-  );
+  const grouped = useMemo(() => {
+    const today = appointments.filter((appointment) => appointment.date === todayKey);
+    const tomorrowList = appointments.filter((appointment) => appointment.date === tomorrowKey);
+    const upcoming = appointments.filter((appointment) => appointment.date > tomorrowKey);
+    const overdue = appointments.filter((appointment) => appointment.date < todayKey);
 
-  const tomorrowString =
-    tomorrow.toISOString().split("T")[0];
-
-  /* TODAY */
-  const todayAppointmentsList =
-    appointments.filter(
-      (a) => a.date === todayString
-    );
-
-  /* TOMORROW */
-  const tomorrowAppointmentsList =
-    appointments.filter(
-      (a) => a.date === tomorrowString
-    );
-
-  /* UPCOMING */
-  const upcomingAppointments =
-    appointments.filter(
-      (a) =>
-        a.date > tomorrowString
-    );
+    return { today, tomorrow: tomorrowList, upcoming, overdue };
+  }, [appointments, todayKey, tomorrowKey]);
 
   return (
-
     <Layout
       activePage={activePage}
       setActivePage={setActivePage}
+      handleLogout={handleLogout}
     >
-
-      <div className="space-y-8">
-
-        {/* HEADER */}
-        <div>
-
-          <h1 className="text-5xl font-bold text-gray-800">
-            Appointments
-          </h1>
-
-          <p className="text-gray-500 mt-2 text-lg">
-            Integrated Planned Sequence Appointments
-          </p>
-
-        </div>
-
-        {/* LOADING */}
-        {loading && (
-
-          <div className="bg-white rounded-3xl p-10 border shadow-sm text-center text-2xl font-semibold">
-
-            Loading Appointments...
-
+      <div className="page">
+        <section className="page-hero">
+          <div>
+            <div className="eyebrow">Planned sequence calendar</div>
+            <h1>Appointments</h1>
+            <p>All scheduled visits are pulled directly from patient treatment plans.</p>
           </div>
 
-        )}
+          <div className="hero-actions no-print">
+            <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
+              <span className="btn-icon">+</span>
+              Add visit
+            </button>
+            <button className="btn" onClick={fetchAppointments}>Refresh</button>
+          </div>
+        </section>
 
-        {/* CONTENT */}
-        {!loading && (
+        {error && <div className="notice danger">{error}</div>}
 
-          <div className="space-y-8">
+        <section className="metrics-grid three">
+          <div className="metric-card">
+            <div className="metric-accent blue" />
+            <div className="metric-label">Today</div>
+            <div className="metric-value">{loading ? "..." : grouped.today.length}</div>
+            <div className="metric-detail">Chairside visits</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-accent gold" />
+            <div className="metric-label">Tomorrow</div>
+            <div className="metric-value">{loading ? "..." : grouped.tomorrow.length}</div>
+            <div className="metric-detail">Prepared files</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-accent green" />
+            <div className="metric-label">Upcoming</div>
+            <div className="metric-value">{loading ? "..." : grouped.upcoming.length}</div>
+            <div className="metric-detail">Future visits</div>
+          </div>
+        </section>
 
-            {/* TODAY */}
-            <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
-
-              <div className="p-6 border-b bg-[#176bff] text-white">
-
-                <h2 className="text-2xl font-bold">
-                  Today's Appointments
-                </h2>
-
+        <section className="schedule-layout">
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Today</h2>
+                <p>{todayKey}</p>
               </div>
-
-              <div className="divide-y">
-
-                {todayAppointmentsList.length === 0 && (
-
-                  <div className="p-6 text-gray-500">
-                    No appointments today
-                  </div>
-
-                )}
-
-                {todayAppointmentsList.map(
-                  (
-                    appointment,
-                    index
-                  ) => (
-
-                    <div
-                      key={index}
-                      className="p-6 flex items-center justify-between hover:bg-gray-50"
-                    >
-
-                      <div>
-
-                        <h3 className="text-xl font-bold">
-                          {
-                            appointment.patientName
-                          }
-                        </h3>
-
-                        <p className="text-gray-500">
-                          {
-                            appointment.procedure
-                          }
-                        </p>
-
-                      </div>
-
-                      <div className="text-right">
-
-                        <p className="font-semibold">
-                          {
-                            appointment.mobileNumber
-                          }
-                        </p>
-
-                        <p className="text-gray-500">
-                          Visit #
-                          {
-                            appointment.visitNo
-                          }
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  )
-                )}
-
-              </div>
-
+              <span className="pill">{grouped.today.length}</span>
             </div>
 
-            {/* TOMORROW */}
-            <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
+            <div className="schedule-stack">
+              {loading && <div className="empty-state compact">Loading schedule...</div>}
 
-              <div className="p-6 border-b bg-yellow-500 text-white">
+              {!loading && grouped.today.length === 0 && (
+                <div className="empty-state compact">No appointments today.</div>
+              )}
 
-                <h2 className="text-2xl font-bold">
-                  Tomorrow's Appointments
-                </h2>
-
-              </div>
-
-              <div className="divide-y">
-
-                {tomorrowAppointmentsList.length === 0 && (
-
-                  <div className="p-6 text-gray-500">
-                    No appointments tomorrow
-                  </div>
-
-                )}
-
-                {tomorrowAppointmentsList.map(
-                  (
-                    appointment,
-                    index
-                  ) => (
-
-                    <div
-                      key={index}
-                      className="p-6 flex items-center justify-between hover:bg-gray-50"
-                    >
-
-                      <div>
-
-                        <h3 className="text-xl font-bold">
-                          {
-                            appointment.patientName
-                          }
-                        </h3>
-
-                        <p className="text-gray-500">
-                          {
-                            appointment.procedure
-                          }
-                        </p>
-
-                      </div>
-
-                      <div className="text-right">
-
-                        <p className="font-semibold">
-                          {
-                            appointment.mobileNumber
-                          }
-                        </p>
-
-                        <p className="text-gray-500">
-                          Visit #
-                          {
-                            appointment.visitNo
-                          }
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  )
-                )}
-
-              </div>
-
+              {grouped.today.map((appointment, index) => (
+                <AppointmentCard
+                  key={`${appointment.registrationNo}-today-${index}`}
+                  appointment={appointment}
+                  tone="today"
+                />
+              ))}
             </div>
-
-            {/* UPCOMING */}
-            <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
-
-              <div className="p-6 border-b bg-black text-white">
-
-                <h2 className="text-2xl font-bold">
-                  Upcoming Appointments
-                </h2>
-
-              </div>
-
-              <div className="divide-y">
-
-                {upcomingAppointments.length === 0 && (
-
-                  <div className="p-6 text-gray-500">
-                    No upcoming appointments
-                  </div>
-
-                )}
-
-                {upcomingAppointments.map(
-                  (
-                    appointment,
-                    index
-                  ) => (
-
-                    <div
-                      key={index}
-                      className="p-6 flex items-center justify-between hover:bg-gray-50"
-                    >
-
-                      <div>
-
-                        <h3 className="text-xl font-bold">
-                          {
-                            appointment.patientName
-                          }
-                        </h3>
-
-                        <p className="text-gray-500">
-                          {
-                            appointment.procedure
-                          }
-                        </p>
-
-                      </div>
-
-                      <div className="text-right">
-
-                        <p className="font-semibold">
-                          {
-                            appointment.date
-                          }
-                        </p>
-
-                        <p className="text-gray-500">
-                          {
-                            appointment.mobileNumber
-                          }
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  )
-                )}
-
-              </div>
-
-            </div>
-
           </div>
 
-        )}
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Tomorrow</h2>
+                <p>{tomorrowKey}</p>
+              </div>
+              <span className="pill warning">{grouped.tomorrow.length}</span>
+            </div>
 
+            <div className="schedule-stack">
+              {!loading && grouped.tomorrow.length === 0 && (
+                <div className="empty-state compact">No appointments tomorrow.</div>
+              )}
+
+              {grouped.tomorrow.map((appointment, index) => (
+                <AppointmentCard
+                  key={`${appointment.registrationNo}-tomorrow-${index}`}
+                  appointment={appointment}
+                  tone="tomorrow"
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="panel wide">
+            <div className="panel-heading">
+              <div>
+                <h2>Upcoming Treatment Queue</h2>
+                <p>Future planned visits sorted by date.</p>
+              </div>
+              <span className="pill success">{grouped.upcoming.length}</span>
+            </div>
+
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Reg No</th>
+                    <th>Mobile</th>
+                    <th>Procedure</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan="5">Loading upcoming appointments...</td>
+                    </tr>
+                  )}
+
+                  {!loading && grouped.upcoming.length === 0 && (
+                    <tr>
+                      <td colSpan="5">No upcoming appointments found.</td>
+                    </tr>
+                  )}
+
+                  {grouped.upcoming.map((appointment, index) => (
+                    <tr key={`${appointment.registrationNo}-upcoming-${index}`}>
+                      <td>
+                        <span className="pill">{appointment.date}</span>
+                      </td>
+                      <td>
+                        <strong>{appointment.patientName}</strong>
+                      </td>
+                      <td>{appointment.registrationNo || "-"}</td>
+                      <td>{appointment.mobileNumber}</td>
+                      <td>{appointment.procedure || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {grouped.overdue.length > 0 && (
+            <div className="panel wide">
+              <div className="panel-heading">
+                <div>
+                  <h2>Overdue Follow-ups</h2>
+                  <p>Past planned dates that may need a call.</p>
+                </div>
+                <span className="pill danger">{grouped.overdue.length}</span>
+              </div>
+
+              <div className="schedule-stack dense">
+                {grouped.overdue.slice(0, 8).map((appointment, index) => (
+                  <AppointmentCard
+                    key={`${appointment.registrationNo}-overdue-${index}`}
+                    appointment={appointment}
+                    tone="overdue"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
       </div>
-
     </Layout>
-
   );
 }
 

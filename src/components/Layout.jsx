@@ -1,212 +1,136 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 
-function Layout({
-  children,
-  activePage,
-  setActivePage,
-}) {
-  const handleLogout = () => {
+const NAV_ITEMS = [
+  { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic" },
+  { page: "patients", label: "New Patient", short: "+", section: "Clinic" },
+  { page: "patients-list", label: "Patient Records", short: "R", section: "Clinic" },
+  { page: "appointments", label: "Appointments", short: "A", section: "Clinic" },
+  { page: "account-status", label: "Account Status", short: "$", section: "Finance" },
+];
+
+function Layout({ children, activePage, setActivePage, user, handleLogout }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const profile = useMemo(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const role = sessionStorage.getItem("role") || storedUser.role || "Administrator";
+    const name = user?.name || storedUser.name || storedUser.username || "HDC Admin";
+
+    return {
+      name,
+      role,
+      initials: name
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+    };
+  }, [user]);
+
+  const pageTitle = NAV_ITEMS.find((item) => item.page === activePage)?.label || "Clinic";
+
+  const logout = () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("role");
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.reload();
+    localStorage.removeItem("user");
+
+    if (handleLogout) {
+      handleLogout();
+    } else {
+      window.location.reload();
+    }
   };
 
+  const goToPage = (page) => {
+    setActivePage(page);
+    setMobileOpen(false);
+  };
+
+  let lastSection = "";
+
   return (
-    <div className="flex h-screen bg-[#f4f7fb] overflow-hidden">
+    <div className="app-shell">
+      <button
+        className="mobile-menu-button no-print"
+        type="button"
+        onClick={() => setMobileOpen((open) => !open)}
+        aria-label="Open navigation"
+      >
+        <span />
+        <span />
+        <span />
+      </button>
 
-      {/* SIDEBAR */}
-      <div className="w-[280px] bg-gradient-to-b from-[#02152d] to-[#01214d] text-white flex flex-col justify-between shadow-2xl">
+      {mobileOpen && (
+        <button
+          className="sidebar-scrim no-print"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-        {/* TOP */}
-        <div>
-
-          {/* LOGO */}
-          <div className="h-[90px] border-b border-white/10 flex items-center px-7">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-3xl">
-                🦷
-              </div>
-
-              <h1 className="text-[34px] font-bold">
-                HDC Dental
-              </h1>
-            </div>
-          </div>
-
-          {/* MENU */}
-          <div className="px-4 py-6 space-y-2">
-
-            {/* DASHBOARD */}
-            <button
-              onClick={() => setActivePage("dashboard")}
-              className={`
-                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
-                ${
-                  activePage === "dashboard"
-                    ? "bg-[#176bff] shadow-xl"
-                    : "hover:bg-white/10"
-                }
-              `}
-            >
-              <span className="text-[24px]">🏠</span>
-              <span className="text-[18px] font-medium">
-                Dashboard
-              </span>
-            </button>
-
-            {/* PATIENT ENTRY */}
-            <button
-              onClick={() => setActivePage("patients")}
-              className={`
-                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
-                ${
-                  activePage === "patients"
-                    ? "bg-[#176bff] shadow-xl"
-                    : "hover:bg-white/10"
-                }
-              `}
-            >
-              <span className="text-[24px]">👨‍⚕️</span>
-              <span className="text-[18px] font-medium">
-                Patient Entry
-              </span>
-            </button>
-
-            {/* APPOINTMENTS */}
-            <button
-              onClick={() => setActivePage("appointments")}
-              className={`
-                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
-                ${
-                  activePage === "appointments"
-                    ? "bg-[#176bff] shadow-xl"
-                    : "hover:bg-white/10"
-                }
-              `}
-            >
-              <span className="text-[24px]">📅</span>
-              <span className="text-[18px] font-medium">
-                Appointments
-              </span>
-            </button>
-
-            {/* PATIENTS RECORDS */}
-            <button
-              onClick={() => setActivePage("patients-list")}
-              className={`
-                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
-                ${
-                  activePage === "patients-list"
-                    ? "bg-[#176bff] shadow-xl"
-                    : "hover:bg-white/10"
-                }
-              `}
-            >
-              <span className="text-[24px]">👥</span>
-              <span className="text-[18px] font-medium">
-                Patients Records
-              </span>
-            </button>
-
-            {/* ACCOUNT STATUS */}
-            <button
-              onClick={() => setActivePage("account-status")}
-              className={`
-                w-full h-[62px] rounded-2xl flex items-center gap-4 px-5 transition-all
-                ${
-                  activePage === "account-status"
-                    ? "bg-[#176bff] shadow-xl"
-                    : "hover:bg-white/10"
-                }
-              `}
-            >
-              <span className="text-[24px]">💰</span>
-              <span className="text-[18px] font-medium">
-                Account Status
-              </span>
-            </button>
-
+      <aside className={`sidebar no-print${mobileOpen ? " open" : ""}`}>
+        <div className="brand-block">
+          <div className="brand-mark">H</div>
+          <div>
+            <div className="brand-name">HDC Dental</div>
+            <div className="brand-meta">Clinic Command Center</div>
           </div>
         </div>
 
-        {/* BOTTOM */}
-        <div className="p-4 border-t border-white/10">
-          <div className="bg-white/5 rounded-2xl p-5">
+        <div className="sidebar-status">
+          <span className="status-dot" />
+          <span>Live clinic workspace</span>
+        </div>
 
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-xl font-bold">
-                A
-              </div>
+        <nav className="nav-stack" aria-label="Main navigation">
+          {NAV_ITEMS.map((item) => {
+            const showSection = item.section !== lastSection;
+            lastSection = item.section;
 
-              <div>
-                <h3 className="font-semibold text-lg">
-                  Admin
-                </h3>
+            return (
+              <React.Fragment key={item.page}>
+                {showSection && <div className="nav-section">{item.section}</div>}
+                <button
+                  type="button"
+                  className={`nav-item${activePage === item.page ? " active" : ""}`}
+                  onClick={() => goToPage(item.page)}
+                >
+                  <span className="nav-icon">{item.short}</span>
+                  <span>{item.label}</span>
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </nav>
 
-                <p className="text-white/60 text-sm">
-                  HDC Clinic
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="
-                w-full
-                bg-red-500
-                hover:bg-red-600
-                py-3
-                rounded-xl
-                font-semibold
-              "
-            >
-              Logout
-            </button>
-
+        <div className="sidebar-upgrade">
+          <div className="upgrade-title">VVVIP Mode</div>
+          <div className="upgrade-copy">
+            Premium records, finance, appointments and patient care in one place.
           </div>
         </div>
 
-      </div>
-
-      {/* MAIN */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* TOPBAR */}
-        <div className="h-[90px] bg-white border-b border-gray-200 px-10 flex items-center justify-between">
-
-          <div className="flex items-center gap-8">
-
-            <button className="text-[30px] text-gray-700">
-              ☰
-            </button>
-
-            <h2 className="text-[34px] font-bold text-gray-800">
-              {
-                activePage === "dashboard"
-                  ? "Dashboard"
-                  : activePage === "patients"
-                  ? "Patient Entry"
-                  : activePage === "appointments"
-                  ? "Appointments"
-                  : activePage === "patients-list"
-                  ? "Patients Records"
-                  : activePage === "account-status"
-                  ? "Account Status"
-                  : ""
-              }
-            </h2>
-
+        <div className="sidebar-user">
+          <div className="user-avatar">{profile.initials || "AD"}</div>
+          <div className="user-details">
+            <div className="user-name">{profile.name}</div>
+            <div className="user-role">{profile.role}</div>
           </div>
-
+          <button className="logout-button" type="button" onClick={logout} aria-label="Logout">
+            Out
+          </button>
         </div>
+      </aside>
 
-        {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {children}
-        </div>
-
-      </div>
-
+      <main className="main-wrapper">
+        <div className="mobile-title no-print">{pageTitle}</div>
+        {children}
+      </main>
     </div>
   );
 }

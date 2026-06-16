@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import api from "../../api";
+import { patientArray } from "../../utils/patientHelpers";
 
 function Biography({
   patientData,
@@ -24,7 +25,7 @@ function Biography({
           await api.get("/patients");
 
         const totalPatients =
-          response.data.length;
+          patientArray(response.data).length;
 
         const nextRegNo =
           String(
