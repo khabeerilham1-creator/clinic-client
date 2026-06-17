@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import toothChart from "../assets/tooth-chart.png";
+import { CATEGORY_OPTIONS, normalizeCategoryKey } from "../utils/clinicData";
+import { printPatientFile } from "../utils/printPatientFile";
 import {
   balanceDue,
   bio,
@@ -58,7 +60,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
       const matchesCategory =
         category === "all" ||
-        String(patientBio.category || "").toLowerCase() === category;
+        normalizeCategoryKey(patientBio.category) === category;
 
       return matchesQuery && matchesCategory;
     });
@@ -96,112 +98,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
   };
 
   const handlePrint = (patient) => {
-    const printWindow = window.open("", "", "width=1200,height=900");
-    const invoice = patient?.invoice || [];
-    const planned = patient?.plannedSequence || [];
-    const patientBio = bio(patient);
-    const total = invoiceTotal(patient);
-    const discount = Number(patient?.discount || 0);
-    const net = Math.max(total - discount, 0);
-    const toothImage = window.location.origin + toothChart;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>HDC Dental Patient File</title>
-          <style>
-            *{box-sizing:border-box}
-            body{font-family:Arial,sans-serif;color:#111827;margin:0;padding:36px;background:#fff}
-            .header{border-bottom:3px solid #0f2747;padding-bottom:18px;margin-bottom:24px}
-            .brand{font-size:30px;font-weight:800;color:#0f2747}
-            .meta{color:#64748b;font-size:13px;margin-top:4px}
-            .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin:18px 0}
-            .row{border-bottom:1px solid #e5e7eb;padding:8px 0;font-size:14px}
-            .row b{display:inline-block;min-width:120px;color:#334155}
-            h2{font-size:17px;color:#0f2747;margin:28px 0 12px;text-transform:uppercase;letter-spacing:.08em}
-            table{width:100%;border-collapse:collapse;margin-bottom:18px}
-            th{background:#f1f5f9;color:#0f2747;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-            th,td{border:1px solid #cbd5e1;padding:9px 10px;font-size:13px}
-            .right{text-align:right}
-            .totals{width:360px;margin-left:auto}
-            .totals td{font-weight:700}
-            .chart{max-width:760px;width:100%;display:block;margin:8px auto 18px}
-            .signature{display:flex;justify-content:space-between;margin-top:48px}
-            .sig{border-top:1px solid #111827;width:220px;text-align:center;padding-top:8px;font-size:12px}
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="brand">HDC Dental Clinic</div>
-            <div class="meta">Premium patient file generated ${new Date().toLocaleDateString("en-PK")}</div>
-          </div>
-
-          <h2>Bio Data</h2>
-          <div class="grid">
-            <div class="row"><b>Reg No</b>${regNo(patient) || "-"}</div>
-            <div class="row"><b>Date</b>${patientBio.date || "-"}</div>
-            <div class="row"><b>Name</b>${patientName(patient)}</div>
-            <div class="row"><b>Mobile</b>${mobileNumber(patient)}</div>
-            <div class="row"><b>Category</b>${patientBio.category || "-"}</div>
-            <div class="row"><b>Patient Type</b>${patientBio.patientType || "-"}</div>
-            <div class="row"><b>Age</b>${patientBio.age || "-"}</div>
-            <div class="row"><b>Address</b>${patientBio.address || "-"}</div>
-          </div>
-
-          <h2>Dental Chart</h2>
-          <img class="chart" src="${toothImage}" alt="Tooth chart" />
-
-          <h2>Planned Sequence</h2>
-          <table>
-            <tr><th>Visit</th><th>Date</th><th>Procedure</th></tr>
-            ${
-              planned.length
-                ? planned
-                    .map(
-                      (visit) =>
-                        `<tr><td>${visit.visitNo || ""}</td><td>${visit.date || ""}</td><td>${
-                          visit.procedure || visit.treatment || ""
-                        }</td></tr>`
-                    )
-                    .join("")
-                : `<tr><td colspan="3">No planned visits recorded.</td></tr>`
-            }
-          </table>
-
-          <h2>Invoice</h2>
-          <table>
-            <tr><th>Item</th><th>Qty</th><th>Rate</th><th class="right">Cost</th></tr>
-            ${
-              invoice.length
-                ? invoice
-                    .map(
-                      (item) =>
-                        `<tr><td>${item.details || ""}</td><td>${item.qty || ""}</td><td>${
-                          item.rate || ""
-                        }</td><td class="right">${formatCurrency(item.cost)}</td></tr>`
-                    )
-                    .join("")
-                : `<tr><td colspan="4">No invoice items recorded.</td></tr>`
-            }
-          </table>
-
-          <table class="totals">
-            <tr><td>Total</td><td class="right">${formatCurrency(total)}</td></tr>
-            <tr><td>Discount</td><td class="right">${formatCurrency(discount)}</td></tr>
-            <tr><td>Net Amount</td><td class="right">${formatCurrency(net)}</td></tr>
-          </table>
-
-          <div class="signature">
-            <div class="sig">Patient Signature</div>
-            <div class="sig">Doctor Signature</div>
-          </div>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 300);
+    printPatientFile(patient, toothChart);
   };
 
   return (
@@ -241,14 +138,16 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
           </div>
 
           <div className="segmented-control" aria-label="Filter by category">
-            {["all", "elite", "mediocre"].map((item) => (
+            {["all", ...CATEGORY_OPTIONS.map((option) => option.key)].map((item) => (
               <button
                 key={item}
                 type="button"
                 className={category === item ? "active" : ""}
                 onClick={() => setCategory(item)}
               >
-                {item === "all" ? "All" : item}
+                {item === "all"
+                  ? "All"
+                  : CATEGORY_OPTIONS.find((option) => option.key === item)?.label.replace("Category ", "Cat ")}
               </button>
             ))}
           </div>

@@ -7,6 +7,8 @@ import {
   formatCurrency,
   invoiceTotal,
   mobileNumber,
+  netAmount,
+  patientRecordDate,
   patientArray,
   patientName,
   regNo,
@@ -28,9 +30,12 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(String(now.getMonth() + 1));
+  const [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
 
   const today = new Date().toISOString().split("T")[0];
-  const dateLabel = new Date().toLocaleDateString("en-PK", {
+  const dateLabel = now.toLocaleDateString("en-PK", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -78,6 +83,64 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     };
   }, [patients, today]);
 
+  const revenueYears = useMemo(() => {
+    const years = patients
+      .map((patient) => new Date(patientRecordDate(patient)).getFullYear())
+      .filter((year) => !Number.isNaN(year));
+
+    return Array.from(new Set([now.getFullYear(), ...years])).sort((a, b) => b - a);
+  }, [patients, now]);
+
+  const periodPatients = useMemo(() => {
+    return patients.filter((patient) => {
+      const date = new Date(patientRecordDate(patient));
+
+      if (Number.isNaN(date.getTime())) {
+        return false;
+      }
+
+      const yearMatches = String(date.getFullYear()) === String(selectedYear);
+      const monthMatches =
+        selectedMonth === "all" || String(date.getMonth() + 1) === String(selectedMonth);
+
+      return yearMatches && monthMatches;
+    });
+  }, [patients, selectedMonth, selectedYear]);
+
+  const periodMetrics = useMemo(() => {
+    const matchesSelectedPeriod = (value) => {
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return false;
+      }
+
+      const yearMatches = String(date.getFullYear()) === String(selectedYear);
+      const monthMatches =
+        selectedMonth === "all" || String(date.getMonth() + 1) === String(selectedMonth);
+
+      return yearMatches && monthMatches;
+    };
+
+    const periodRevenue = periodPatients.reduce((sum, patient) => sum + netAmount(patient), 0);
+    const periodPaid = patients.reduce(
+      (sum, patient) =>
+        sum +
+        (patient.accountLedger || [])
+          .filter((entry) => matchesSelectedPeriod(entry.date || entry.timestamp))
+          .reduce((ledgerSum, entry) => ledgerSum + Number(entry.amount || 0), 0),
+      0
+    );
+    const periodDue = periodPatients.reduce((sum, patient) => sum + balanceDue(patient), 0);
+
+    return {
+      patients: periodPatients.length,
+      periodRevenue,
+      periodPaid,
+      periodDue,
+    };
+  }, [patients, periodPatients, selectedMonth, selectedYear]);
+
   const todayAppointments = useMemo(() => {
     return patients
       .flatMap((patient) =>
@@ -124,6 +187,72 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
         </section>
 
         {error && <div className="notice danger">{error}</div>}
+
+        <section className="toolbar-panel revenue-filter">
+          <div>
+            <span className="toolbar-label">Revenue view</span>
+            <strong>
+              {selectedMonth === "all"
+                ? selectedYear
+                : new Date(Number(selectedYear), Number(selectedMonth) - 1, 1).toLocaleDateString("en-PK", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+            </strong>
+          </div>
+
+          <div className="filter-controls">
+            <label className="field inline-field">
+              <span>Month</span>
+              <select value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)}>
+                <option value="all">Full year</option>
+                {Array.from({ length: 12 }, (_, index) => (
+                  <option key={index + 1} value={String(index + 1)}>
+                    {new Date(2026, index, 1).toLocaleDateString("en-PK", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field inline-field">
+              <span>Year</span>
+              <select value={selectedYear} onChange={(event) => setSelectedYear(event.target.value)}>
+                {revenueYears.map((year) => (
+                  <option key={year} value={String(year)}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="metrics-grid">
+          <StatCard
+            label="Period revenue"
+            value={loading ? "..." : formatCurrency(periodMetrics.periodRevenue)}
+            detail={`${periodMetrics.patients} patient records in selected period`}
+            accent="gold"
+          />
+          <StatCard
+            label="Paid in period"
+            value={loading ? "..." : formatCurrency(periodMetrics.periodPaid)}
+            detail="Based on account ledger payments"
+            accent="green"
+          />
+          <StatCard
+            label="Remaining"
+            value={loading ? "..." : formatCurrency(periodMetrics.periodDue)}
+            detail="Pending after paid amounts"
+            accent="rose"
+          />
+          <StatCard
+            label="Patients"
+            value={loading ? "..." : periodMetrics.patients}
+            detail="Filtered by patient record date"
+            accent="blue"
+          />
+        </section>
 
         <section className="metrics-grid">
           <StatCard

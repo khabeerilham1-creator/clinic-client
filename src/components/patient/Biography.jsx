@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import api from "../../api";
 import { patientArray } from "../../utils/patientHelpers";
+import { CATEGORY_OPTIONS } from "../../utils/clinicData";
 
 function Biography({
   patientData,
@@ -9,6 +10,8 @@ function Biography({
 
   const formData =
     patientData.biography || {};
+
+  const sessionUser = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   useEffect(() => {
 
@@ -52,11 +55,15 @@ function Biography({
 
             category:
               prev.biography?.category ||
-              "Elite",
+              "Category 1 - Affording",
 
             patientType:
               prev.biography?.patientType ||
               "Affording",
+
+            doctorName:
+              prev.biography?.doctorName ||
+              (sessionUser.role === "doctor" ? sessionUser.name : ""),
 
           },
 
@@ -512,13 +519,11 @@ function Biography({
             "
           >
 
-            <option>
-              Elite
-            </option>
-
-            <option>
-              Mediocre
-            </option>
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option.key} value={option.value}>
+                {option.label}
+              </option>
+            ))}
 
           </select>
 
@@ -562,6 +567,35 @@ function Biography({
             </option>
 
           </select>
+
+        </div>
+
+        {/* DOCTOR */}
+        <div>
+
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
+            Doctor / Case Done By
+          </label>
+
+          <input
+            type="text"
+            name="doctorName"
+            value={
+              formData.doctorName || ""
+            }
+            onChange={handleChange}
+            placeholder="Dr Zaffar Iqbal"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
+          />
 
         </div>
 

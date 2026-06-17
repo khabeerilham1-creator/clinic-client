@@ -5,14 +5,19 @@ import Layout from "../components/Layout";
 import {
   balanceDue,
   bio,
+  discountAmount,
+  discountPercent,
   formatCurrency,
   initials,
   invoiceTotal,
   mobileNumber,
+  netAmount,
   patientArray,
   patientName,
+  paymentsTotal,
   regNo,
 } from "../utils/patientHelpers";
+import { playSectionSound } from "../utils/sound";
 
 function AccountStatus({ activePage, setActivePage, handleLogout }) {
   const [patients, setPatients] = useState([]);
@@ -20,6 +25,11 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentForm, setPaymentForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    amount: "",
+    description: "",
+  });
 
   useEffect(() => {
     fetchPatients();
@@ -62,11 +72,12 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
   const totals = useMemo(() => {
     const totalAmount = filteredPatients.reduce((sum, patient) => sum + invoiceTotal(patient), 0);
     const dueAmount = filteredPatients.reduce((sum, patient) => sum + balanceDue(patient), 0);
+    const paidAmount = filteredPatients.reduce((sum, patient) => sum + paymentsTotal(patient), 0);
 
     return {
       totalAmount,
       dueAmount,
-      recoveredAmount: Math.max(totalAmount - dueAmount, 0),
+      recoveredAmount: paidAmount,
     };
   }, [filteredPatients]);
 
@@ -77,6 +88,41 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleAddPayment = async () => {
+    if (!selectedPatient?._id || !Number(paymentForm.amount || 0)) {
+      return;
+    }
+
+    const entry = {
+      date: paymentForm.date,
+      amount: Number(paymentForm.amount),
+      description: paymentForm.description || "Payment received",
+      type: "payment",
+    };
+
+    try {
+      await api.post(`/patients/${selectedPatient._id}/ledger`, entry);
+      const updatedPatient = {
+        ...selectedPatient,
+        accountLedger: [...(selectedPatient.accountLedger || []), entry],
+      };
+
+      setSelectedPatient(updatedPatient);
+      setPatients((current) =>
+        current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
+      );
+      setPaymentForm({
+        date: new Date().toISOString().split("T")[0],
+        amount: "",
+        description: "",
+      });
+      playSectionSound("success");
+    } catch (requestError) {
+      console.error(requestError);
+      alert("Payment could not be saved. Please try again.");
+    }
   };
 
   return (
@@ -157,12 +203,52 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
               </div>
               <div>
                 <span>Discount</span>
-                <strong>{formatCurrency(selectedPatient.discount)}</strong>
+                <strong>{discountPercent(selectedPatient)}% / {formatCurrency(discountAmount(selectedPatient))}</strong>
               </div>
               <div>
-                <span>Balance due</span>
+                <span>Paid</span>
+                <strong>{formatCurrency(paymentsTotal(selectedPatient))}</strong>
+              </div>
+              <div>
+                <span>Net amount</span>
+                <strong>{formatCurrency(netAmount(selectedPatient))}</strong>
+              </div>
+              <div>
+                <span>Remaining</span>
                 <strong>{formatCurrency(balanceDue(selectedPatient))}</strong>
               </div>
+            </div>
+
+            <div className="payment-panel no-print">
+              <label className="field">
+                <span>Paid Date</span>
+                <input
+                  type="date"
+                  value={paymentForm.date}
+                  onChange={(event) => setPaymentForm((form) => ({ ...form, date: event.target.value }))}
+                />
+              </label>
+              <label className="field">
+                <span>Paid Amount</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={paymentForm.amount}
+                  onChange={(event) => setPaymentForm((form) => ({ ...form, amount: event.target.value }))}
+                  placeholder="Enter amount"
+                />
+              </label>
+              <label className="field">
+                <span>Payment Note</span>
+                <input
+                  value={paymentForm.description}
+                  onChange={(event) => setPaymentForm((form) => ({ ...form, description: event.target.value }))}
+                  placeholder="Cash, card, bank transfer..."
+                />
+              </label>
+              <button className="btn btn-primary" type="button" onClick={handleAddPayment}>
+                Save payment
+              </button>
             </div>
 
             <div className="data-table-wrap">
@@ -192,6 +278,44 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="detail-card">
+              <h3>Payment Details</h3>
+              <div className="data-table-wrap">
+                <table className="data-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>Paid Date</th>
+                      <th>Details</th>
+                      <th>Amount</th>
+                      <th>Remaining After Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedPatient.accountLedger || []).length === 0 && (
+                      <tr>
+                        <td colSpan="4">No payment details recorded.</td>
+                      </tr>
+                    )}
+
+                    {(selectedPatient.accountLedger || []).map((entry, index) => {
+                      const paidUntilNow = (selectedPatient.accountLedger || [])
+                        .slice(0, index + 1)
+                        .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+                      return (
+                        <tr key={`${entry.date}-${index}`}>
+                          <td>{entry.date || "-"}</td>
+                          <td>{entry.description || "Payment received"}</td>
+                          <td>{formatCurrency(entry.amount)}</td>
+                          <td>{formatCurrency(Math.max(netAmount(selectedPatient) - paidUntilNow, 0))}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         )}

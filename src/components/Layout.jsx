@@ -1,18 +1,21 @@
 import React, { useMemo, useState } from "react";
+import { CLINIC_NAME } from "../utils/clinicData";
+import { isSoundEnabled, playSectionSound, setSoundEnabled } from "../utils/sound";
 
 const NAV_ITEMS = [
-  { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic" },
-  { page: "patients", label: "New Patient", short: "+", section: "Clinic" },
-  { page: "patients-list", label: "Patient Records", short: "R", section: "Clinic" },
-  { page: "appointments", label: "Appointments", short: "A", section: "Clinic" },
-  { page: "account-status", label: "Account Status", short: "$", section: "Finance" },
+  { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic", roles: ["admin"] },
+  { page: "patients", label: "Patient Entry", short: "+", section: "Clinic", roles: ["admin", "doctor", "receptionist"] },
+  { page: "patients-list", label: "Patient Records", short: "R", section: "Clinic", roles: ["admin"] },
+  { page: "appointments", label: "Appointments", short: "A", section: "Clinic", roles: ["admin", "doctor", "receptionist"] },
+  { page: "account-status", label: "Account Status", short: "$", section: "Finance", roles: ["admin"] },
 ];
 
 function Layout({ children, activePage, setActivePage, user, handleLogout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
 
   const profile = useMemo(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const storedUser = JSON.parse(sessionStorage.getItem("user") || "{}");
     const role = sessionStorage.getItem("role") || storedUser.role || "Administrator";
     const name = user?.name || storedUser.name || storedUser.username || "HDC Admin";
 
@@ -29,13 +32,13 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
     };
   }, [user]);
 
-  const pageTitle = NAV_ITEMS.find((item) => item.page === activePage)?.label || "Clinic";
+  const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(profile.role));
+  const pageTitle = visibleNavItems.find((item) => item.page === activePage)?.label || "Clinic";
 
   const logout = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
 
     if (handleLogout) {
       handleLogout();
@@ -45,8 +48,18 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
   };
 
   const goToPage = (page) => {
+    playSectionSound("section");
     setActivePage(page);
     setMobileOpen(false);
+  };
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundEnabled(next);
+    setSoundOn(next);
+    if (next) {
+      playSectionSound("success");
+    }
   };
 
   let lastSection = "";
@@ -77,8 +90,8 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
         <div className="brand-block">
           <div className="brand-mark">H</div>
           <div>
-            <div className="brand-name">HDC Dental</div>
-            <div className="brand-meta">Clinic Command Center</div>
+            <div className="brand-name">{CLINIC_NAME}</div>
+            <div className="brand-meta">Dr Zaffar Iqbal</div>
           </div>
         </div>
 
@@ -88,7 +101,7 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
         </div>
 
         <nav className="nav-stack" aria-label="Main navigation">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const showSection = item.section !== lastSection;
             lastSection = item.section;
 
@@ -109,10 +122,13 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
         </nav>
 
         <div className="sidebar-upgrade">
-          <div className="upgrade-title">VVVIP Mode</div>
+          <div className="upgrade-title">{CLINIC_NAME}</div>
           <div className="upgrade-copy">
-            Premium records, finance, appointments and patient care in one place.
+            Patient care, appointments, finance and treatment records in one place.
           </div>
+          <button className="sound-toggle" type="button" onClick={toggleSound}>
+            Section sound: {soundOn ? "On" : "Off"}
+          </button>
         </div>
 
         <div className="sidebar-user">

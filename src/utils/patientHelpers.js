@@ -25,10 +25,35 @@ export const formatCurrency = (value) =>
 export const invoiceTotal = (patient) =>
   (patient?.invoice || []).reduce((sum, item) => sum + Number(item.cost || 0), 0);
 
+export const discountPercent = (patient) =>
+  Number(patient?.discountPercent ?? patient?.discount_percentage ?? 0);
+
+export const discountAmount = (patient) => {
+  if (patient?.discountPercent !== undefined || patient?.discount_percentage !== undefined) {
+    return Math.round((invoiceTotal(patient) * discountPercent(patient)) / 100);
+  }
+
+  return Number(patient?.discount || 0);
+};
+
+export const netAmount = (patient) =>
+  Math.max(invoiceTotal(patient) - discountAmount(patient), 0);
+
+export const paymentsTotal = (patient) =>
+  (patient?.accountLedger || []).reduce((sum, entry) => {
+    const type = String(entry?.type || "payment").toLowerCase();
+    const amount = Number(entry?.amount || 0);
+
+    return type === "debit" || type === "charge" ? sum - amount : sum + amount;
+  }, 0);
+
 export const balanceDue = (patient) =>
-  Math.max(invoiceTotal(patient) - Number(patient?.discount || 0), 0);
+  Math.max(netAmount(patient) - paymentsTotal(patient), 0);
 
 export const upcomingVisits = (patient) => patient?.plannedSequence || [];
+
+export const patientRecordDate = (patient) =>
+  patient?.createdAt || bio(patient).date || patient?.updatedAt || "";
 
 export const initials = (name) =>
   (name || "Patient")
@@ -38,4 +63,3 @@ export const initials = (name) =>
     .join("")
     .slice(0, 2)
     .toUpperCase();
-

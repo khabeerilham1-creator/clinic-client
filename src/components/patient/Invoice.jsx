@@ -1,23 +1,24 @@
 import React, { useEffect } from "react";
 
-function Invoice({
-  patientData,
-  setPatientData,
-}) {
+import {
+  CATEGORY_OPTIONS,
+  getTreatmentPrice,
+  normalizeCategoryKey,
+  PRICE_LIST,
+} from "../../utils/clinicData";
+import { formatCurrency } from "../../utils/patientHelpers";
+import { playSectionSound } from "../../utils/sound";
 
-  const items =
-    patientData.invoice || [];
-
-  const discount =
-    patientData.discount || 0;
+function Invoice({ patientData, setPatientData }) {
+  const items = patientData.invoice || [];
+  const category = patientData.biography?.category || CATEGORY_OPTIONS[0].value;
+  const categoryKey = normalizeCategoryKey(category);
+  const discountPercent = Number(patientData.discountPercent || 0);
 
   useEffect(() => {
-
     if (items.length === 0) {
-
       setPatientData((prev) => ({
         ...prev,
-
         invoice: [
           {
             sno: 1,
@@ -25,47 +26,51 @@ function Invoice({
             qty: 1,
             rate: 0,
             cost: 0,
+            manualRate: false,
           },
         ],
-
         discount: 0,
+        discountPercent: 0,
       }));
-
     }
-
   }, []);
 
-  const handleChange = (
-    index,
-    field,
-    value
-  ) => {
-
-    const updatedItems = [...items];
-
-    updatedItems[index][field] = value;
-
-    if (
-      field === "qty" ||
-      field === "rate"
-    ) {
-
-      updatedItems[index].cost =
-        Number(updatedItems[index].qty) *
-        Number(updatedItems[index].rate);
-
-    }
+  const updateItems = (updatedItems, extra = {}) => {
+    const totalAmount = updatedItems.reduce((total, item) => total + Number(item.cost || 0), 0);
+    const discountAmount = Math.round((totalAmount * Number(extra.discountPercent ?? discountPercent)) / 100);
 
     setPatientData((prev) => ({
       ...prev,
+      ...extra,
+      discount: discountAmount,
       invoice: updatedItems,
     }));
+  };
 
+  const handleChange = (index, field, value) => {
+    const updatedItems = [...items];
+    const item = { ...updatedItems[index], [field]: value };
+
+    if (field === "details") {
+      const autoRate = getTreatmentPrice(value, category);
+      item.rate = autoRate;
+      item.manualRate = false;
+    }
+
+    if (field === "rate") {
+      item.manualRate = true;
+    }
+
+    if (field === "qty" || field === "rate" || field === "details") {
+      item.cost = Number(item.qty || 0) * Number(item.rate || 0);
+    }
+
+    updatedItems[index] = item;
+    updateItems(updatedItems);
   };
 
   const addRow = () => {
-
-    const updatedItems = [
+    updateItems([
       ...items,
       {
         sno: items.length + 1,
@@ -73,18 +78,13 @@ function Invoice({
         qty: 1,
         rate: 0,
         cost: 0,
+        manualRate: false,
       },
-    ];
-
-    setPatientData((prev) => ({
-      ...prev,
-      invoice: updatedItems,
-    }));
-
+    ]);
+    playSectionSound("success");
   };
 
   const deleteRow = (index) => {
-
     const updatedItems = items
       .filter((_, i) => i !== index)
       .map((item, i) => ({
@@ -92,229 +92,125 @@ function Invoice({
         sno: i + 1,
       }));
 
-    setPatientData((prev) => ({
-      ...prev,
-      invoice: updatedItems,
-    }));
-
+    updateItems(updatedItems);
+    playSectionSound("warning");
   };
 
-  const totalAmount = items.reduce(
-    (total, item) =>
-      total + Number(item.cost),
-    0
-  );
+  const handleDiscountChange = (value) => {
+    const safeValue = Math.max(0, Math.min(100, Number(value || 0)));
+    updateItems(items, { discountPercent: safeValue });
+  };
 
-  const netCost =
-    totalAmount - Number(discount);
+  const totalAmount = items.reduce((total, item) => total + Number(item.cost || 0), 0);
+  const discountAmount = Math.round((totalAmount * discountPercent) / 100);
+  const netCost = Math.max(totalAmount - discountAmount, 0);
 
   return (
     <div>
+      <div className="panel-heading">
+        <div>
+          <h2>Invoice</h2>
+          <p>Prices auto-fill from the clinic price list for {category}.</p>
+        </div>
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between mb-6">
-
-        <h2 className="text-2xl font-bold text-gray-800">
-          Invoice
-        </h2>
-
-        <button
-          onClick={addRow}
-          className="bg-black text-white px-4 py-2 rounded-lg"
-        >
+        <button onClick={addRow} className="btn btn-dark no-print" type="button">
           + Add Item
         </button>
-
       </div>
 
-      {/* TABLE */}
-      <div className="overflow-x-auto">
+      <datalist id="treatment-price-list">
+        {PRICE_LIST.map((item) => (
+          <option key={item.description} value={item.description}>
+            {formatCurrency(item[categoryKey])}
+          </option>
+        ))}
+      </datalist>
 
-        <table className="w-full border border-gray-300">
-
-          <thead className="bg-gray-100">
-
+      <div className="data-table-wrap">
+        <table className="data-table invoice-table">
+          <thead>
             <tr>
-
-              <th className="border p-3">
-                S.No
-              </th>
-
-              <th className="border p-3">
-                Details
-              </th>
-
-              <th className="border p-3">
-                Qty
-              </th>
-
-              <th className="border p-3">
-                Rate
-              </th>
-
-              <th className="border p-3">
-                Cost
-              </th>
-
-              <th className="border p-3">
-                Action
-              </th>
-
+              <th>S.No</th>
+              <th>Treatment / Item</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Cost</th>
+              <th className="no-print">Action</th>
             </tr>
-
           </thead>
 
           <tbody>
-
             {items.map((item, index) => (
-
               <tr key={index}>
-
-                {/* SNO */}
-                <td className="border p-2 text-center">
-                  {item.sno}
-                </td>
-
-                {/* DETAILS */}
-                <td className="border p-2">
-
+                <td>{item.sno || index + 1}</td>
+                <td>
                   <input
-                    type="text"
-                    value={item.details}
-                    onChange={(e) =>
-                      handleChange(
-                        index,
-                        "details",
-                        e.target.value
-                      )
-                    }
-                    className="w-full p-2 border rounded"
+                    list="treatment-price-list"
+                    value={item.details || ""}
+                    onChange={(event) => handleChange(index, "details", event.target.value)}
+                    placeholder="Select or type treatment"
+                    className="table-input"
                   />
-
                 </td>
-
-                {/* QTY */}
-                <td className="border p-2">
-
+                <td>
                   <input
                     type="number"
+                    min="0"
                     value={item.qty}
-                    onChange={(e) =>
-                      handleChange(
-                        index,
-                        "qty",
-                        e.target.value
-                      )
-                    }
-                    className="w-full p-2 border rounded"
+                    onChange={(event) => handleChange(index, "qty", event.target.value)}
+                    className="table-input small"
                   />
-
                 </td>
-
-                {/* RATE */}
-                <td className="border p-2">
-
+                <td>
                   <input
                     type="number"
+                    min="0"
                     value={item.rate}
-                    onChange={(e) =>
-                      handleChange(
-                        index,
-                        "rate",
-                        e.target.value
-                      )
-                    }
-                    className="w-full p-2 border rounded"
+                    onChange={(event) => handleChange(index, "rate", event.target.value)}
+                    className="table-input"
                   />
-
                 </td>
-
-                {/* COST */}
-                <td className="border p-2 text-center font-semibold">
-                  {item.cost}
+                <td>
+                  <strong>{formatCurrency(item.cost)}</strong>
                 </td>
-
-                {/* DELETE */}
-                <td className="border p-2 text-center">
-
-                  <button
-                    onClick={() =>
-                      deleteRow(index)
-                    }
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
+                <td className="no-print">
+                  <button onClick={() => deleteRow(index)} className="btn btn-sm btn-danger" type="button">
                     Delete
                   </button>
-
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
-
       </div>
 
-      {/* TOTALS */}
-      <div className="mt-6 flex justify-end">
-
-        <div className="w-full md:w-96 space-y-4">
-
-          {/* TOTAL */}
-          <div className="flex justify-between border p-3 rounded-lg">
-
-            <span className="font-semibold">
-              Total Amount
-            </span>
-
-            <span>
-              {totalAmount}
-            </span>
-
-          </div>
-
-          {/* DISCOUNT */}
-          <div className="flex justify-between items-center border p-3 rounded-lg">
-
-            <span className="font-semibold">
-              Discount
-            </span>
-
-            <input
-              type="number"
-              value={discount}
-              onChange={(e) =>
-                setPatientData((prev) => ({
-                  ...prev,
-                  discount:
-                    e.target.value,
-                }))
-              }
-              className="border rounded p-2 w-32"
-            />
-
-          </div>
-
-          {/* NET COST */}
-          <div className="flex justify-between border p-3 rounded-lg bg-gray-100">
-
-            <span className="font-bold">
-              Net Cost
-            </span>
-
-            <span className="font-bold">
-              {netCost}
-            </span>
-
-          </div>
-
+      <div className="invoice-total-panel">
+        <div>
+          <span>Total Amount</span>
+          <strong>{formatCurrency(totalAmount)}</strong>
         </div>
 
-      </div>
+        <label className="field">
+          <span>Discount %</span>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={discountPercent}
+            onChange={(event) => handleDiscountChange(event.target.value)}
+          />
+        </label>
 
+        <div>
+          <span>Discount Amount</span>
+          <strong>{formatCurrency(discountAmount)}</strong>
+        </div>
+
+        <div className="net-total">
+          <span>Net Cost</span>
+          <strong>{formatCurrency(netCost)}</strong>
+        </div>
+      </div>
     </div>
   );
 }

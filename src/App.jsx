@@ -8,12 +8,19 @@ import Appointments from "./pages/Appointments";
 import PatientsList from "./pages/PatientsList";
 import AccountStatus from "./pages/AccountStatus";
 
+const ROLE_PAGES = {
+  admin: ["dashboard", "patients", "patients-list", "appointments", "account-status"],
+  doctor: ["patients", "appointments"],
+  receptionist: ["patients", "appointments"],
+};
+
+const firstPageForRole = (role) => ROLE_PAGES[role]?.[0] || "dashboard";
+
 function App() {
 
   // LOGIN STATE
   const [token, setToken] = useState(
-    sessionStorage.getItem("token") ||
-    localStorage.getItem("token")
+    sessionStorage.getItem("token")
   );
 
   // ACTIVE PAGE
@@ -24,8 +31,7 @@ function App() {
   useEffect(() => {
 
     const savedToken =
-      sessionStorage.getItem("token") ||
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (savedToken) {
 
@@ -35,13 +41,27 @@ function App() {
 
   }, []);
 
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    const role = sessionStorage.getItem("role") || "admin";
+    const allowedPages = ROLE_PAGES[role] || ROLE_PAGES.admin;
+
+    if (!allowedPages.includes(activePage)) {
+      setActivePage(firstPageForRole(role));
+    }
+  }, [token, activePage]);
+
   // LOGIN SUCCESS FUNCTION
   const handleLogin = (newToken) => {
 
     sessionStorage.setItem("token", newToken);
-    localStorage.setItem("token", newToken);
+    const role = sessionStorage.getItem("role") || "admin";
 
     setToken(newToken);
+    setActivePage(firstPageForRole(role));
 
   };
 
@@ -50,8 +70,7 @@ function App() {
 
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
 
     setToken(null);
 
@@ -66,6 +85,13 @@ function App() {
       />
     );
 
+  }
+
+  const currentRole = sessionStorage.getItem("role") || "admin";
+  const allowedPages = ROLE_PAGES[currentRole] || ROLE_PAGES.admin;
+
+  if (!allowedPages.includes(activePage)) {
+    return null;
   }
 
   // DASHBOARD

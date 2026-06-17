@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 
 import api from "../api";
+import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
+import { playSectionSound } from "../utils/sound";
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -32,7 +34,8 @@ function Login({ onLogin }) {
 
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("role", user.role);
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("user", JSON.stringify(user));
+      playSectionSound("success");
 
       if (onLogin) {
         onLogin(response.data.token);
@@ -55,15 +58,15 @@ function Login({ onLogin }) {
     <main className="login-screen">
       <section className="login-visual">
         <div className="login-brand">
-          <div className="brand-mark large">H</div>
-          <div>
-            <div className="brand-name">HDC Dental</div>
-            <div className="brand-meta">Dr. Zaffar Iqbal Clinic</div>
+            <div className="brand-mark large">H</div>
+            <div>
+            <div className="brand-name">{CLINIC_NAME}</div>
+            <div className="brand-meta">{DOCTOR_NAME}</div>
           </div>
         </div>
 
         <div className="login-copy">
-          <div className="eyebrow">VVVIP clinic workspace</div>
+          <div className="eyebrow">Clinic management workspace</div>
           <h1>Premium patient care starts here.</h1>
           <p>
             Secure access to patient records, appointments, invoices and clinic account
@@ -128,6 +131,11 @@ function Login({ onLogin }) {
         <button className="btn btn-primary btn-full" onClick={handleLogin} disabled={loading}>
           {loading ? "Signing in..." : "Sign in"}
         </button>
+
+        <div className="login-help">
+          <span>Admin: full access</span>
+          <span>Receptionist/doctor: patient entry and appointments only</span>
+        </div>
       </section>
     </main>
   );

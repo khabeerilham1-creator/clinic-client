@@ -220,6 +220,18 @@ button:disabled {
   line-height: 1.5;
 }
 
+.sound-toggle {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .sidebar-user {
   display: flex;
   align-items: center;
@@ -691,6 +703,28 @@ button:disabled {
   margin: 18px 0;
 }
 
+.toolbar-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.filter-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inline-field {
+  min-width: 170px;
+  margin-bottom: 0;
+}
+
 .search-field {
   flex: 1;
   min-width: 220px;
@@ -976,6 +1010,22 @@ textarea:focus {
   margin-bottom: 18px;
 }
 
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  padding: 12px 14px;
+}
+
+.field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
 .password-field {
   display: flex;
   gap: 8px;
@@ -1066,6 +1116,169 @@ textarea:focus {
   backdrop-filter: blur(18px);
 }
 
+.patient-entry-shell {
+  min-height: 100vh;
+}
+
+.mini-summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.mini-summary span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mini-summary strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.tab-done {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.form-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.clinical-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.clinical-chart-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+  padding: 18px;
+}
+
+.clinical-selector {
+  margin-bottom: 16px;
+}
+
+.clinical-selector h3 {
+  margin: 0 0 14px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.clinical-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.manual-grid {
+  margin-top: 14px;
+}
+
+.compact-table {
+  min-width: 560px;
+}
+
+.tooth-chart-wrap {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.invoice-table .table-input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 0 10px;
+  outline: none;
+}
+
+.invoice-table .table-input.small {
+  max-width: 90px;
+}
+
+.invoice-total-panel {
+  width: min(760px, 100%);
+  margin: 20px 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.invoice-total-panel > div,
+.invoice-total-panel > label {
+  margin: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.invoice-total-panel span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.invoice-total-panel strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.invoice-total-panel .net-total {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.payment-panel {
+  display: grid;
+  grid-template-columns: 180px 180px minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+  margin-bottom: 18px;
+}
+
+.login-help {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .progress-tabs {
   display: flex;
   align-items: center;
@@ -1077,6 +1290,8 @@ textarea:focus {
   height: 5px;
   flex: 1;
   max-width: 100px;
+  border: 0;
+  padding: 0;
   border-radius: 999px;
   background: var(--line);
   cursor: pointer;
@@ -1117,7 +1332,9 @@ textarea:focus {
   .record-summary,
   .dashboard-grid,
   .schedule-layout,
-  .modal-grid {
+  .modal-grid,
+  .invoice-total-panel,
+  .payment-panel {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -1222,7 +1439,10 @@ textarea:focus {
   .modal-grid,
   .schedule-stack.dense,
   .login-screen,
-  .login-stats {
+  .login-stats,
+  .clinical-grid,
+  .invoice-total-panel,
+  .payment-panel {
     grid-template-columns: 1fr;
   }
 

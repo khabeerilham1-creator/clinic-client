@@ -1,414 +1,248 @@
 import React from "react";
 
 import ToothChart from "../common/ToothChart";
+import { HARD_TISSUE_CONDITIONS, SOFT_TISSUE_CONDITIONS } from "../../utils/clinicData";
+import { playSectionSound } from "../../utils/sound";
 
-function Checkup({
-  patientData,
-  setPatientData,
+function FindingTable({ rows, onDelete, emptyText }) {
+  return (
+    <div className="data-table-wrap">
+      <table className="data-table compact-table">
+        <thead>
+          <tr>
+            <th>S No</th>
+            <th>Condition</th>
+            <th>Suggested Treatment</th>
+            <th className="no-print">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan="4">{emptyText}</td>
+            </tr>
+          )}
+
+          {rows.map((row, index) => (
+            <tr key={`${row.condition}-${index}`}>
+              <td>{index + 1}</td>
+              <td>{row.condition || "-"}</td>
+              <td>{row.treatment || "-"}</td>
+              <td className="no-print">
+                <button className="btn btn-sm btn-danger" type="button" onClick={() => onDelete(index)}>
+                  Remove
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ClinicalSelector({
+  title,
+  options,
+  selectedCondition,
+  suggestedTreatment,
+  manualCondition,
+  manualTreatment,
+  onSelect,
+  onManualChange,
+  onAddAuto,
+  onAddManual,
 }) {
+  return (
+    <div className="clinical-selector">
+      <h3>{title}</h3>
 
-  const checkupData =
-    patientData.checkup || {};
+      <div className="clinical-grid">
+        <label className="field">
+          <span>Pre-existing Condition</span>
+          <select value={selectedCondition || ""} onChange={(event) => onSelect(event.target.value)}>
+            <option value="">Select condition</option>
+            {options.map((item) => (
+              <option key={item.condition} value={item.condition}>
+                {item.condition}
+              </option>
+            ))}
+          </select>
+        </label>
 
-  const conditionsData = [
-    {
-      condition: "Gingivitis",
-      treatment: "Scaling and Polishing",
-    },
-    {
-      condition: "Periodontitis",
-      treatment: "Root Planning",
-    },
-    {
-      condition: "Generalized Gingival Recession",
-      treatment:
-        "Scaling & Polishing, Fluoride Treatment",
-    },
-    {
-      condition: "Oral Ulcers",
-      treatment: "Medications",
-    },
-    {
-      condition: "Calculus",
-      treatment:
-        "Scaling & Polishing",
-    },
-    {
-      condition: "Tar Tar Deposits",
-      treatment: "Polishing",
-    },
-    {
-      condition:
-        "Juvenile Periodontitis",
-      treatment:
-        "Scaling & Polishing",
-    },
-    {
-      condition:
-        "Gingival Hyperplasia",
-      treatment:
-        "Gingivectomy under L/A",
-    },
-    {
-      condition:
-        "Gingival Swelling",
-      treatment:
-        "Localized Scaling, Medication",
-    },
-    {
-      condition:
-        "Generalized Discoloration",
-      treatment:
-        "Bleaching or Veneers",
-    },
-    {
-      condition:
-        "Pits and Fissures",
-      treatment: "Sealants",
-    },
-    {
-      condition:
-        "Class I Moderate Carious",
-      treatment:
-        "Composite Filling",
-    },
-    {
-      condition:
-        "Class I Grossly Carious",
-      treatment:
-        "RCT under L/A",
-    },
-    {
-      condition:
-        "Class II Moderate Carious",
-      treatment:
-        "Composite Filling",
-    },
-    {
-      condition:
-        "Class II Grossly Carious",
-      treatment:
-        "RCT under L/A",
-    },
-    {
-      condition:
-        "Class III Moderate Carious",
-      treatment:
-        "Composite Filling",
-    },
-    {
-      condition:
-        "Class III Grossly Carious",
-      treatment:
-        "RCT under L/A",
-    },
-    {
-      condition:
-        "Class IV Moderate Carious",
-      treatment:
-        "Composite Filling",
-    },
-    {
-      condition:
-        "Class IV Grossly Carious",
-      treatment:
-        "RCT under L/A",
-    },
-    {
-      condition:
-        "Class V Moderate Carious",
-      treatment:
-        "Composite Filling",
-    },
-    {
-      condition:
-        "Class V Grossly Carious",
-      treatment:
-        "RCT under L/A",
-    },
-    {
-      condition: "Attrition",
-      treatment:
-        "RCT under L/A",
-    },
-    {
-      condition:
-        "Shaky Grade I",
-      treatment:
-        "Localized Scaling, PRP",
-    },
-    {
-      condition:
-        "Shaky Grade II",
-      treatment:
-        "Localized Scaling, PRP",
-    },
-    {
-      condition:
-        "Shaky Grade III",
-      treatment:
-        "Extraction under L/A",
-    },
-    {
-      condition: "BDR",
-      treatment:
-        "Extraction under L/A",
-    },
-    {
-      condition:
-        "Fractured Tooth",
-      treatment:
-        "Surgical Extraction under L/A",
-    },
-    {
-      condition:
-        "Grossly Fractured Dentine",
-      treatment:
-        "Pulpotomy",
-    },
-    {
-      condition: "Missing",
-      treatment:
-        "Implant or Bridge",
-    },
-    {
-      condition: "RCTed",
-      treatment: "Crown",
-    },
-    {
-      condition:
-        "Supranumery",
-      treatment:
-        "Extraction under L/A",
-    },
-    {
-      condition:
-        "Enameloplasia",
-      treatment: "Veneer",
-    },
-    {
-      condition:
-        "Discolored Tooth",
-      treatment: "Veneer",
-    },
-    {
-      condition:
-        "Unsatisfactory RCT Done",
-      treatment: "Re-RCT",
-    },
-  ];
+        <label className="field">
+          <span>Suggested Treatment</span>
+          <input value={suggestedTreatment || ""} readOnly placeholder="Auto treatment" />
+        </label>
+      </div>
 
-  const handleConditionChange = (
-    value
-  ) => {
+      <button className="btn btn-primary btn-sm no-print" type="button" onClick={onAddAuto}>
+        Add selected treatment
+      </button>
 
-    const found =
-      conditionsData.find(
-        (item) =>
-          item.condition === value
-      );
+      <div className="clinical-grid manual-grid">
+        <label className="field">
+          <span>Manual Condition</span>
+          <textarea
+            rows="3"
+            value={manualCondition || ""}
+            onChange={(event) => onManualChange("condition", event.target.value)}
+            placeholder="Write manual condition"
+          />
+        </label>
 
+        <label className="field">
+          <span>Manual Treatment</span>
+          <textarea
+            rows="3"
+            value={manualTreatment || ""}
+            onChange={(event) => onManualChange("treatment", event.target.value)}
+            placeholder="Write manual treatment"
+          />
+        </label>
+      </div>
+
+      <button className="btn btn-sm no-print" type="button" onClick={onAddManual}>
+        Add manual treatment
+      </button>
+    </div>
+  );
+}
+
+function Checkup({ patientData, setPatientData }) {
+  const checkupData = patientData.checkup || {};
+  const softRows = checkupData.softTissueRecords || [];
+  const hardRows = checkupData.hardTissueRecords || [];
+
+  const setCheckup = (updates) => {
     setPatientData((prev) => ({
       ...prev,
-
       checkup: {
         ...prev.checkup,
-
-        selectedCondition:
-          value,
-
-        suggestedTreatment:
-          found
-            ? found.treatment
-            : "",
+        ...updates,
       },
     }));
-
   };
 
-  const handleManualChange = (
-    field,
-    value
-  ) => {
+  const selectCondition = (section, value) => {
+    const options = section === "soft" ? SOFT_TISSUE_CONDITIONS : HARD_TISSUE_CONDITIONS;
+    const found = options.find((item) => item.condition === value);
+    const prefix = section === "soft" ? "soft" : "hard";
 
-    setPatientData((prev) => ({
-      ...prev,
+    setCheckup({
+      [`${prefix}SelectedCondition`]: value,
+      [`${prefix}SuggestedTreatment`]: found?.treatment || "",
+      ...(section === "soft"
+        ? {
+            selectedCondition: value,
+            suggestedTreatment: found?.treatment || "",
+          }
+        : {}),
+    });
+    playSectionSound("section");
+  };
 
-      checkup: {
-        ...prev.checkup,
+  const manualChange = (section, field, value) => {
+    const prefix = section === "soft" ? "soft" : "hard";
+    setCheckup({
+      [`${prefix}Manual${field === "condition" ? "Condition" : "Treatment"}`]: value,
+      ...(section === "soft" && field === "condition" ? { manualCondition: value } : {}),
+      ...(section === "soft" && field === "treatment" ? { manualTreatment: value } : {}),
+    });
+  };
 
-        [field]: value,
-      },
-    }));
+  const addFinding = (section, source) => {
+    const prefix = section === "soft" ? "soft" : "hard";
+    const rowsKey = section === "soft" ? "softTissueRecords" : "hardTissueRecords";
+    const currentRows = section === "soft" ? softRows : hardRows;
+    const condition =
+      source === "manual"
+        ? checkupData[`${prefix}ManualCondition`]
+        : checkupData[`${prefix}SelectedCondition`];
+    const treatment =
+      source === "manual"
+        ? checkupData[`${prefix}ManualTreatment`]
+        : checkupData[`${prefix}SuggestedTreatment`];
 
+    if (!condition && !treatment) {
+      return;
+    }
+
+    setCheckup({
+      [rowsKey]: [...currentRows, { condition, treatment, source }],
+      ...(source === "manual"
+        ? {
+            [`${prefix}ManualCondition`]: "",
+            [`${prefix}ManualTreatment`]: "",
+          }
+        : {}),
+    });
+    playSectionSound("success");
+  };
+
+  const deleteFinding = (section, index) => {
+    const rowsKey = section === "soft" ? "softTissueRecords" : "hardTissueRecords";
+    const currentRows = section === "soft" ? softRows : hardRows;
+    setCheckup({
+      [rowsKey]: currentRows.filter((_, rowIndex) => rowIndex !== index),
+    });
+    playSectionSound("warning");
   };
 
   return (
-    <div>
-
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Checkup Section
-      </h2>
-
-      {/* SOFT TISSUE */}
-      <div className="border rounded-2xl p-5 mb-6">
-
-        <h3 className="text-xl font-semibold mb-4">
-          Soft Tissue
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* CONDITION */}
-          <div>
-
-            <label className="block mb-2 font-medium">
-              Pre-existing Conditions
-            </label>
-
-            <select
-              value={
-                checkupData.selectedCondition || ""
-              }
-              onChange={(e) =>
-                handleConditionChange(
-                  e.target.value
-                )
-              }
-              className="w-full border rounded-lg p-3"
-            >
-
-              <option value="">
-                Select Condition
-              </option>
-
-              {conditionsData.map(
-                (item, index) => (
-
-                  <option
-                    key={index}
-                    value={
-                      item.condition
-                    }
-                  >
-                    {
-                      item.condition
-                    }
-                  </option>
-
-                )
-              )}
-
-            </select>
-
-          </div>
-
-          {/* TREATMENT */}
-          <div>
-
-            <label className="block mb-2 font-medium">
-              Suggested Treatments
-            </label>
-
-            <input
-              type="text"
-              value={
-                checkupData.suggestedTreatment || ""
-              }
-              readOnly
-              className="w-full border rounded-lg p-3 bg-gray-100"
-            />
-
-          </div>
-
-        </div>
-
-        {/* MANUAL ENTRY */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-
-          {/* MANUAL CONDITION */}
-          <div>
-
-            <label className="block mb-2 font-medium">
-              Manual Condition
-            </label>
-
-            <textarea
-              rows="4"
-              value={
-                checkupData.manualCondition || ""
-              }
-              onChange={(e) =>
-                handleManualChange(
-                  "manualCondition",
-                  e.target.value
-                )
-              }
-              className="w-full border rounded-lg p-3"
-            />
-
-          </div>
-
-          {/* MANUAL TREATMENT */}
-          <div>
-
-            <label className="block mb-2 font-medium">
-              Manual Treatment
-            </label>
-
-            <textarea
-              rows="4"
-              value={
-                checkupData.manualTreatment || ""
-              }
-              onChange={(e) =>
-                handleManualChange(
-                  "manualTreatment",
-                  e.target.value
-                )
-              }
-              className="w-full border rounded-lg p-3"
-            />
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* HARD TISSUE */}
-      <div className="border rounded-2xl p-5">
-
-        <h3 className="text-xl font-semibold mb-6">
-          Hard Tissue
-        </h3>
-
-        {/* CLINICAL TASKS */}
-        <div className="mb-10">
-
-          <ToothChart
-            title="Clinical Tasks"
-            chartKey="clinicalTasks"
-            patientData={patientData}
-            setPatientData={setPatientData}
-          />
-
-        </div>
-
-        {/* LAB TASKS */}
+    <div className="clinical-section">
+      <div className="panel-heading">
         <div>
-
-          <ToothChart
-            title="Lab Tasks"
-            chartKey="labTasks"
-            patientData={patientData}
-            setPatientData={setPatientData}
-          />
-
+          <h2>Clinical Exam</h2>
+          <p>Soft tissue and hard tissue findings with automatic treatment suggestions.</p>
         </div>
-
       </div>
 
+      <section className="clinical-chart-card">
+        <ClinicalSelector
+          title="Soft Tissue Chart"
+          options={SOFT_TISSUE_CONDITIONS}
+          selectedCondition={checkupData.softSelectedCondition || checkupData.selectedCondition}
+          suggestedTreatment={checkupData.softSuggestedTreatment || checkupData.suggestedTreatment}
+          manualCondition={checkupData.softManualCondition || checkupData.manualCondition}
+          manualTreatment={checkupData.softManualTreatment || checkupData.manualTreatment}
+          onSelect={(value) => selectCondition("soft", value)}
+          onManualChange={(field, value) => manualChange("soft", field, value)}
+          onAddAuto={() => addFinding("soft", "auto")}
+          onAddManual={() => addFinding("soft", "manual")}
+        />
+
+        <FindingTable
+          rows={softRows}
+          onDelete={(index) => deleteFinding("soft", index)}
+          emptyText="No soft tissue findings selected yet."
+        />
+      </section>
+
+      <section className="clinical-chart-card">
+        <ClinicalSelector
+          title="Hard Tissue Chart"
+          options={HARD_TISSUE_CONDITIONS}
+          selectedCondition={checkupData.hardSelectedCondition}
+          suggestedTreatment={checkupData.hardSuggestedTreatment}
+          manualCondition={checkupData.hardManualCondition}
+          manualTreatment={checkupData.hardManualTreatment}
+          onSelect={(value) => selectCondition("hard", value)}
+          onManualChange={(field, value) => manualChange("hard", field, value)}
+          onAddAuto={() => addFinding("hard", "auto")}
+          onAddManual={() => addFinding("hard", "manual")}
+        />
+
+        <FindingTable
+          rows={hardRows}
+          onDelete={(index) => deleteFinding("hard", index)}
+          emptyText="No hard tissue findings selected yet."
+        />
+
+        <div className="tooth-chart-wrap">
+          <ToothChart patientData={patientData} setPatientData={setPatientData} />
+        </div>
+      </section>
     </div>
   );
 }
