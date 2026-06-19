@@ -199,7 +199,10 @@ function Checkup({ patientData, setPatientData }) {
   };
 
   const handleToothSelect = (toothNo) => {
-    setCheckup({ selectedToothNo: toothNo });
+    setCheckup({
+      selectedToothNo: toothNo,
+      selectedToothClickId: Date.now(),
+    });
     playSectionSound("section");
   };
 

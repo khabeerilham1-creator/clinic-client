@@ -7,18 +7,22 @@ const getDefaultBaseURL = () => {
     return "http://localhost:8000";
   }
 
-  const { hostname, protocol } = window.location;
+  const { hostname } = window.location;
   const isLocalHost = !hostname || hostname === "localhost" || hostname === "127.0.0.1";
+  const isPrivateNetwork =
+    hostname.startsWith("192.168.") ||
+    hostname.startsWith("10.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
 
   if (isLocalHost) {
     return "http://localhost:8000";
   }
 
-  if (protocol === "https:") {
-    return "https://api.drzaffariqbal.com";
+  if (isPrivateNetwork) {
+    return `http://${hostname}:8000`;
   }
 
-  return `http://${hostname}:8000`;
+  return "https://api.drzaffariqbal.com";
 };
 
 const api = axios.create({
