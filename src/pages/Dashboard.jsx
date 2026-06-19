@@ -6,11 +6,13 @@ import {
   balanceDue,
   formatCurrency,
   invoiceTotal,
+  matchesPeriod,
   mobileNumber,
   netAmount,
   patientRecordDate,
   patientArray,
   patientName,
+  parseLocalDate,
   regNo,
   upcomingVisits,
 } from "../utils/patientHelpers";
@@ -85,49 +87,33 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
 
   const revenueYears = useMemo(() => {
     const years = patients
-      .map((patient) => new Date(patientRecordDate(patient)).getFullYear())
-      .filter((year) => !Number.isNaN(year));
+      .flatMap((patient) => [
+        patientRecordDate(patient),
+        ...(patient.accountLedger || []).map((entry) => entry.date || entry.timestamp),
+      ])
+      .map((value) => parseLocalDate(value)?.getFullYear())
+      .filter(Boolean);
 
     return Array.from(new Set([now.getFullYear(), ...years])).sort((a, b) => b - a);
   }, [patients, now]);
 
   const periodPatients = useMemo(() => {
-    return patients.filter((patient) => {
-      const date = new Date(patientRecordDate(patient));
-
-      if (Number.isNaN(date.getTime())) {
-        return false;
-      }
-
-      const yearMatches = String(date.getFullYear()) === String(selectedYear);
-      const monthMatches =
-        selectedMonth === "all" || String(date.getMonth() + 1) === String(selectedMonth);
-
-      return yearMatches && monthMatches;
-    });
+    return patients.filter((patient) =>
+      matchesPeriod(patientRecordDate(patient), selectedMonth, selectedYear)
+    );
   }, [patients, selectedMonth, selectedYear]);
 
+  const selectedPeriodPatients = useMemo(() => {
+    return [...periodPatients].sort((a, b) => patientName(a).localeCompare(patientName(b)));
+  }, [periodPatients]);
+
   const periodMetrics = useMemo(() => {
-    const matchesSelectedPeriod = (value) => {
-      const date = new Date(value);
-
-      if (Number.isNaN(date.getTime())) {
-        return false;
-      }
-
-      const yearMatches = String(date.getFullYear()) === String(selectedYear);
-      const monthMatches =
-        selectedMonth === "all" || String(date.getMonth() + 1) === String(selectedMonth);
-
-      return yearMatches && monthMatches;
-    };
-
     const periodRevenue = periodPatients.reduce((sum, patient) => sum + netAmount(patient), 0);
     const periodPaid = patients.reduce(
       (sum, patient) =>
         sum +
         (patient.accountLedger || [])
-          .filter((entry) => matchesSelectedPeriod(entry.date || entry.timestamp))
+          .filter((entry) => matchesPeriod(entry.date || entry.timestamp, selectedMonth, selectedYear))
           .reduce((ledgerSum, entry) => ledgerSum + Number(entry.amount || 0), 0),
       0
     );
@@ -153,8 +139,6 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
       )
       .slice(0, 6);
   }, [patients, today]);
-
-  const recentPatients = patients.slice(0, 6);
 
   const dueAccounts = patients
     .filter((patient) => balanceDue(patient) > 0)
@@ -339,6 +323,14 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                 <span>$</span>
                 Accounts
               </button>
+              <button onClick={() => setActivePage("expenses")} className="quick-action">
+                <span>E</span>
+                Expenses
+              </button>
+              <button onClick={() => setActivePage("inventory")} className="quick-action">
+                <span>I</span>
+                Inventory
+              </button>
               <button onClick={() => window.print()} className="quick-action">
                 <span>P</span>
                 Print view
@@ -349,8 +341,8 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
           <div className="panel xl">
             <div className="panel-heading">
               <div>
-                <h2>Recent Patients</h2>
-                <p>Newest records saved in the clinic database.</p>
+                <h2>Selected Period Patients A-Z</h2>
+                <p>{periodMetrics.patients} records match the current dashboard filter.</p>
               </div>
               <button className="btn btn-sm" onClick={() => setActivePage("patients-list")}>
                 Open records
@@ -375,13 +367,13 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                     </tr>
                   )}
 
-                  {!loading && recentPatients.length === 0 && (
+                  {!loading && selectedPeriodPatients.length === 0 && (
                     <tr>
-                      <td colSpan="5">No patients saved yet.</td>
+                      <td colSpan="5">No patients found for the selected period.</td>
                     </tr>
                   )}
 
-                  {recentPatients.map((patient) => (
+                  {selectedPeriodPatients.map((patient) => (
                     <tr key={patient._id || regNo(patient)}>
                       <td>
                         <strong>{patientName(patient)}</strong>

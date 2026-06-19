@@ -924,6 +924,32 @@ textarea:focus {
   color: #a71d2a;
 }
 
+.notice.warning {
+  border-color: #f7c948;
+  background: var(--gold-soft);
+  color: #7a4b00;
+}
+
+.finance-report {
+  page-break-inside: avoid;
+}
+
+.finance-report .record-summary {
+  margin-top: 0;
+}
+
+.payment-panel.inventory-form,
+.payment-panel.expense-form {
+  grid-template-columns: repeat(5, minmax(150px, 1fr)) auto auto;
+}
+
+.data-table td small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .login-screen {
   min-height: 100vh;
   display: grid;
@@ -1204,6 +1230,32 @@ textarea:focus {
   background: #fff;
 }
 
+.selected-tooth-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.selected-tooth-strip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.selected-tooth-strip strong {
+  color: var(--blue);
+  font-size: 16px;
+  font-weight: 900;
+}
+
 .invoice-table .table-input {
   width: 100%;
   min-height: 38px;
@@ -1422,8 +1474,20 @@ textarea:focus {
   .hero-actions,
   .row-actions,
   .toolbar-panel,
-  .search-field {
+  .search-field,
+  .filter-controls,
+  .segmented-control,
+  .inline-field {
     width: 100%;
+  }
+
+  .segmented-control {
+    overflow-x: auto;
+  }
+
+  .segmented-control button {
+    flex: 1;
+    white-space: nowrap;
   }
 
   .hero-actions .btn,

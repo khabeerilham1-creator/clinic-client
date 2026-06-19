@@ -19,9 +19,14 @@ const EMPTY_PATIENT = {
   discount: 0,
   discountPercent: 0,
   accountLedger: [],
+  doctorShare: [],
+  labExpenses: [],
+  dentalMaterials: [],
   toothStates: {},
   toothNotes: "",
 };
+
+const todayInputValue = () => new Date().toISOString().split("T")[0];
 
 const TABS = [
   { id: "biography", label: "Bio-data" },
@@ -36,6 +41,11 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   const [tab, setTab] = useState("biography");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [initialPayment, setInitialPayment] = useState({
+    date: todayInputValue(),
+    amount: "",
+    description: "Paid at registration",
+  });
   const messageTimer = useRef(null);
 
   useEffect(() => {
@@ -88,17 +98,44 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      const response = await api.post("/patients", data);
+      const paidNow = Number(initialPayment.amount || 0);
+      const paymentEntry =
+        paidNow > 0
+          ? {
+              date: initialPayment.date || todayInputValue(),
+              amount: paidNow,
+              description: initialPayment.description || "Paid at registration",
+              type: "payment",
+            }
+          : null;
+      const payload = paymentEntry
+        ? {
+            ...data,
+            accountLedger: [...(data.accountLedger || []), paymentEntry],
+          }
+        : data;
+      const response = await api.post("/patients", payload);
       setData((current) => ({
-        ...current,
+        ...payload,
         biography: {
-          ...current.biography,
+          ...payload.biography,
           regNo: response.data.reg_no,
         },
       }));
+      setInitialPayment({
+        date: todayInputValue(),
+        amount: "",
+        description: "Paid at registration",
+      });
       notify(`Patient saved. Reg No: ${response.data.reg_no}`);
     } catch (error) {
-      notify(error?.response?.data?.detail || "Error saving patient. Try again.", "danger");
+      const detail = error?.response?.data?.detail;
+      notify(
+        (typeof detail === "string" && detail) ||
+          error?.message ||
+          "Error saving patient. Try again.",
+        "danger"
+      );
     } finally {
       setLoading(false);
     }
@@ -221,6 +258,43 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
               Next
             </button>
           </div>
+
+          {!data.isEditing && (
+            <div className="payment-panel no-print">
+              <label className="field">
+                <span>Paid Date</span>
+                <input
+                  type="date"
+                  value={initialPayment.date}
+                  onChange={(event) =>
+                    setInitialPayment((payment) => ({ ...payment, date: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="field">
+                <span>Paid Now</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={initialPayment.amount}
+                  onChange={(event) =>
+                    setInitialPayment((payment) => ({ ...payment, amount: event.target.value }))
+                  }
+                  placeholder="Amount received"
+                />
+              </label>
+              <label className="field">
+                <span>Payment Note</span>
+                <input
+                  value={initialPayment.description}
+                  onChange={(event) =>
+                    setInitialPayment((payment) => ({ ...payment, description: event.target.value }))
+                  }
+                  placeholder="Cash, card, bank transfer..."
+                />
+              </label>
+            </div>
+          )}
         </div>
 
         <div className="bottom-bar no-print">

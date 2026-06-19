@@ -82,7 +82,7 @@ function ToothSVG({ shape, fill, stroke, selected }) {
 }
 
 // ── Main ToothChart component ──────────────────────────────────────────────
-export default function ToothChart({ patientData, setPatientData }) {
+export default function ToothChart({ patientData, setPatientData, onToothSelect }) {
   const toothStates = patientData?.toothStates || {};
   const [mode, setMode]       = useState("cavity");
   const [selected, setSelected] = useState(null);
@@ -94,6 +94,7 @@ export default function ToothChart({ patientData, setPatientData }) {
     const newStates = { ...toothStates, [tooth.num]: mode };
     setSelected(tooth);
     setPatientData((prev) => ({ ...prev, toothStates: newStates }));
+    onToothSelect?.(tooth.num, tooth);
   };
 
   const clearTooth = (num) => {
@@ -256,7 +257,10 @@ export default function ToothChart({ patientData, setPatientData }) {
               const c = STATE[state];
               return (
                 <span key={num} style={{ background: c.fill, border: `1px solid ${c.stroke}`, borderRadius: "8px", padding: "3px 10px", fontSize: "11.5px", color: c.stroke, fontWeight: "600", cursor: "pointer" }}
-                  onClick={() => { setSelected(t); }}
+                  onClick={() => {
+                    setSelected(t);
+                    onToothSelect?.(Number(num), t);
+                  }}
                   title={t?.name}
                 >
                   #{num} {c.label}

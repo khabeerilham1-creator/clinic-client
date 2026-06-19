@@ -4,13 +4,13 @@ import ToothChart from "../common/ToothChart";
 import { HARD_TISSUE_CONDITIONS, SOFT_TISSUE_CONDITIONS } from "../../utils/clinicData";
 import { playSectionSound } from "../../utils/sound";
 
-function FindingTable({ rows, onDelete, emptyText }) {
+function FindingTable({ rows, onDelete, emptyText, firstColumnLabel = "S No", firstValue }) {
   return (
     <div className="data-table-wrap">
       <table className="data-table compact-table">
         <thead>
           <tr>
-            <th>S No</th>
+            <th>{firstColumnLabel}</th>
             <th>Condition</th>
             <th>Suggested Treatment</th>
             <th className="no-print">Action</th>
@@ -25,7 +25,7 @@ function FindingTable({ rows, onDelete, emptyText }) {
 
           {rows.map((row, index) => (
             <tr key={`${row.condition}-${index}`}>
-              <td>{index + 1}</td>
+              <td>{firstValue ? firstValue(row, index) : index + 1}</td>
               <td>{row.condition || "-"}</td>
               <td>{row.treatment || "-"}</td>
               <td className="no-print">
@@ -113,6 +113,7 @@ function Checkup({ patientData, setPatientData }) {
   const checkupData = patientData.checkup || {};
   const softRows = checkupData.softTissueRecords || [];
   const hardRows = checkupData.hardTissueRecords || [];
+  const selectedToothNo = checkupData.selectedToothNo || "";
 
   const setCheckup = (updates) => {
     setPatientData((prev) => ({
@@ -169,7 +170,15 @@ function Checkup({ patientData, setPatientData }) {
     }
 
     setCheckup({
-      [rowsKey]: [...currentRows, { condition, treatment, source }],
+      [rowsKey]: [
+        ...currentRows,
+        {
+          condition,
+          treatment,
+          source,
+          ...(section === "hard" ? { toothNo: selectedToothNo } : {}),
+        },
+      ],
       ...(source === "manual"
         ? {
             [`${prefix}ManualCondition`]: "",
@@ -187,6 +196,11 @@ function Checkup({ patientData, setPatientData }) {
       [rowsKey]: currentRows.filter((_, rowIndex) => rowIndex !== index),
     });
     playSectionSound("warning");
+  };
+
+  const handleToothSelect = (toothNo) => {
+    setCheckup({ selectedToothNo: toothNo });
+    playSectionSound("section");
   };
 
   return (
@@ -220,6 +234,21 @@ function Checkup({ patientData, setPatientData }) {
       </section>
 
       <section className="clinical-chart-card">
+        <div className="tooth-chart-wrap">
+          <ToothChart
+            patientData={patientData}
+            setPatientData={setPatientData}
+            onToothSelect={handleToothSelect}
+          />
+        </div>
+      </section>
+
+      <section className="clinical-chart-card">
+        <div className="selected-tooth-strip">
+          <span>Selected Tooth</span>
+          <strong>{selectedToothNo ? `#${selectedToothNo}` : "Click a tooth above"}</strong>
+        </div>
+
         <ClinicalSelector
           title="Hard Tissue Chart"
           options={HARD_TISSUE_CONDITIONS}
@@ -237,11 +266,9 @@ function Checkup({ patientData, setPatientData }) {
           rows={hardRows}
           onDelete={(index) => deleteFinding("hard", index)}
           emptyText="No hard tissue findings selected yet."
+          firstColumnLabel="Tooth No"
+          firstValue={(row) => (row.toothNo ? `#${row.toothNo}` : "-")}
         />
-
-        <div className="tooth-chart-wrap">
-          <ToothChart patientData={patientData} setPatientData={setPatientData} />
-        </div>
       </section>
     </div>
   );

@@ -53,7 +53,7 @@ const selectedClinicalRows = (patient) => {
   (checkup.hardTissueRecords || []).forEach((item, index) => {
     rows.push(`
       <tr>
-        <td>${rows.length + 1}</td>
+        <td>${item.toothNo ? `#${item.toothNo}` : rows.length + 1}</td>
         <td>Hard Tissue</td>
         <td>${item.condition || ""}</td>
         <td>${item.treatment || ""}</td>
@@ -103,7 +103,6 @@ const copyPage = (patient, copyLabel, toothChartUrl) => {
         </tr>
       `
     );
-
   return `
     <section class="copy-page">
       <div class="copy-label">${copyLabel}</div>
@@ -124,7 +123,7 @@ const copyPage = (patient, copyLabel, toothChartUrl) => {
 
       <h3>Treatment Details</h3>
       <table>
-        <tr><th>S No</th><th>Section</th><th>Pre-existing Condition</th><th>Suggested Treatment</th></tr>
+        <tr><th>No / Tooth</th><th>Section</th><th>Pre-existing Condition</th><th>Suggested Treatment</th></tr>
         ${rowsOrEmpty(clinicalRows, 4, "No treatment details selected.")}
       </table>
 

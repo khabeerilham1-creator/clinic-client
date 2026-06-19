@@ -10,6 +10,30 @@ export const patientArray = (payload) => {
   return [];
 };
 
+export const inventoryArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+
+  return [];
+};
+
+export const expenseArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.expenses)) {
+    return payload.expenses;
+  }
+
+  return [];
+};
+
 export const bio = (patient) => patient?.biography || {};
 
 export const regNo = (patient) =>
@@ -53,7 +77,43 @@ export const balanceDue = (patient) =>
 export const upcomingVisits = (patient) => patient?.plannedSequence || [];
 
 export const patientRecordDate = (patient) =>
-  patient?.createdAt || bio(patient).date || patient?.updatedAt || "";
+  bio(patient).date || patient?.createdAt || patient?.updatedAt || "";
+
+export const parseLocalDate = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const text = String(value);
+  const isoDate = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+  if (isoDate) {
+    const [, year, month, day] = isoDate;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  const date = new Date(text);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const matchesPeriod = (value, selectedMonth, selectedYear) => {
+  const date = parseLocalDate(value);
+
+  if (!date) {
+    return false;
+  }
+
+  const yearMatches = String(date.getFullYear()) === String(selectedYear);
+  const monthMatches =
+    selectedMonth === "all" || String(date.getMonth() + 1) === String(selectedMonth);
+
+  return yearMatches && monthMatches;
+};
 
 export const initials = (name) =>
   (name || "Patient")

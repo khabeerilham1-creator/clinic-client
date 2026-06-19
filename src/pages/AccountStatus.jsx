@@ -12,23 +12,135 @@ import {
   invoiceTotal,
   mobileNumber,
   netAmount,
+  parseLocalDate,
   patientArray,
   patientName,
+  patientRecordDate,
   paymentsTotal,
   regNo,
 } from "../utils/patientHelpers";
 import { playSectionSound } from "../utils/sound";
 
+const todayInputValue = () => new Date().toISOString().split("T")[0];
+
+const expenseArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.expenses)) {
+    return payload.expenses;
+  }
+
+  return [];
+};
+
+const entryAmount = (entry) => Number(entry?.amount || 0);
+
+const ledgerEntryValue = (entry) => {
+  const type = String(entry?.type || "payment").toLowerCase();
+  const amount = entryAmount(entry);
+
+  return type === "debit" || type === "charge" ? -amount : amount;
+};
+
+const listTotal = (items = []) =>
+  items.reduce((sum, item) => sum + entryAmount(item), 0);
+
+const patientExpenseTotal = (patient) =>
+  listTotal(patient?.doctorShare) +
+  listTotal(patient?.labExpenses) +
+  listTotal(patient?.dentalMaterials);
+
+const allPatientExpenseEntries = (patient) => [
+  ...(patient?.doctorShare || []).map((entry) => ({ ...entry, category: "Doctor share" })),
+  ...(patient?.labExpenses || []).map((entry) => ({ ...entry, category: "Lab expenses" })),
+  ...(patient?.dentalMaterials || []).map((entry) => ({ ...entry, category: "Dental material" })),
+];
+
+const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const endOfDay = (date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
+const reportBounds = (period, anchorValue) => {
+  const anchor = parseLocalDate(anchorValue) || new Date();
+
+  if (period === "weekly") {
+    const start = startOfDay(anchor);
+    const day = start.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + mondayOffset);
+
+    const end = endOfDay(start);
+    end.setDate(start.getDate() + 6);
+
+    return { start, end };
+  }
+
+  if (period === "yearly") {
+    return {
+      start: new Date(anchor.getFullYear(), 0, 1),
+      end: new Date(anchor.getFullYear(), 11, 31, 23, 59, 59, 999),
+    };
+  }
+
+  return {
+    start: new Date(anchor.getFullYear(), anchor.getMonth(), 1),
+    end: new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0, 23, 59, 59, 999),
+  };
+};
+
+const withinBounds = (value, bounds) => {
+  const date = parseLocalDate(value);
+
+  return Boolean(date && date >= bounds.start && date <= bounds.end);
+};
+
+const reportLabel = (period, bounds) => {
+  if (period === "weekly") {
+    return `${bounds.start.toLocaleDateString("en-PK")} - ${bounds.end.toLocaleDateString("en-PK")}`;
+  }
+
+  if (period === "yearly") {
+    return String(bounds.start.getFullYear());
+  }
+
+  return bounds.start.toLocaleDateString("en-PK", {
+    month: "long",
+    year: "numeric",
+  });
+};
+
 function AccountStatus({ activePage, setActivePage, handleLogout }) {
   const [patients, setPatients] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reportPeriod, setReportPeriod] = useState("monthly");
+  const [reportDate, setReportDate] = useState(todayInputValue());
   const [paymentForm, setPaymentForm] = useState({
-    date: new Date().toISOString().split("T")[0],
+    date: todayInputValue(),
     amount: "",
     description: "",
+  });
+  const [doctorShareForm, setDoctorShareForm] = useState({
+    date: todayInputValue(),
+    amount: "",
+    status: "unpaid",
+  });
+  const [labExpenseForm, setLabExpenseForm] = useState({
+    labName: "",
+    details: "",
+    date: todayInputValue(),
+    amount: "",
+    status: "unpaid",
+  });
+  const [dentalMaterialForm, setDentalMaterialForm] = useState({
+    date: todayInputValue(),
+    amount: "",
+    status: "paid",
   });
 
   useEffect(() => {
@@ -40,11 +152,17 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     setError("");
 
     try {
-      const response = await api.get("/patients", {
-        params: { limit: 100, sort: "createdAt", order: -1 },
-      });
+      const [patientsResponse, expensesResponse] = await Promise.all([
+        api.get("/patients", {
+          params: { limit: 100, sort: "createdAt", order: -1 },
+        }),
+        api.get("/expenses", {
+          params: { limit: 500, sort: "date", order: -1 },
+        }),
+      ]);
 
-      setPatients(patientArray(response.data));
+      setPatients(patientArray(patientsResponse.data));
+      setExpenses(expenseArray(expensesResponse.data));
     } catch (requestError) {
       console.error(requestError);
       setError("Account data could not be loaded. Please check the backend connection.");
@@ -70,16 +188,94 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
   }, [patients, search]);
 
   const totals = useMemo(() => {
-    const totalAmount = filteredPatients.reduce((sum, patient) => sum + invoiceTotal(patient), 0);
     const dueAmount = filteredPatients.reduce((sum, patient) => sum + balanceDue(patient), 0);
     const paidAmount = filteredPatients.reduce((sum, patient) => sum + paymentsTotal(patient), 0);
+    const patientExpenses = filteredPatients.reduce(
+      (sum, patient) => sum + patientExpenseTotal(patient),
+      0
+    );
+    const operatingExpenses = expenses.reduce((sum, expense) => sum + entryAmount(expense), 0);
+    const totalExpenses = patientExpenses + operatingExpenses;
 
     return {
-      totalAmount,
       dueAmount,
-      recoveredAmount: paidAmount,
+      incomeAmount: paidAmount,
+      totalExpenses,
+      netIncome: paidAmount - totalExpenses,
     };
-  }, [filteredPatients]);
+  }, [filteredPatients, expenses]);
+
+  const financeReport = useMemo(() => {
+    const bounds = reportBounds(reportPeriod, reportDate);
+    const periodPatients = patients
+      .filter((patient) => withinBounds(patientRecordDate(patient), bounds))
+      .sort((a, b) => patientName(a).localeCompare(patientName(b)));
+    const periodIncome = patients.reduce(
+      (sum, patient) =>
+        sum +
+        (patient.accountLedger || [])
+          .filter((entry) => withinBounds(entry.date || entry.timestamp, bounds))
+          .reduce((ledgerSum, entry) => ledgerSum + ledgerEntryValue(entry), 0),
+      0
+    );
+    const patientExpenseEntries = patients.flatMap(allPatientExpenseEntries).filter((entry) =>
+      withinBounds(entry.date || entry.timestamp, bounds)
+    );
+    const periodExpenses = expenses.filter((expense) =>
+      withinBounds(expense.date || expense.createdAt, bounds)
+    );
+    const patientExpenseAmount = patientExpenseEntries.reduce(
+      (sum, entry) => sum + entryAmount(entry),
+      0
+    );
+    const operatingExpenseAmount = periodExpenses.reduce(
+      (sum, expense) => sum + entryAmount(expense),
+      0
+    );
+    const breakdown = [
+      {
+        label: "Doctor share",
+        amount: patientExpenseEntries
+          .filter((entry) => entry.category === "Doctor share")
+          .reduce((sum, entry) => sum + entryAmount(entry), 0),
+      },
+      {
+        label: "Lab expenses",
+        amount: patientExpenseEntries
+          .filter((entry) => entry.category === "Lab expenses")
+          .reduce((sum, entry) => sum + entryAmount(entry), 0),
+      },
+      {
+        label: "Dental material",
+        amount: patientExpenseEntries
+          .filter((entry) => entry.category === "Dental material")
+          .reduce((sum, entry) => sum + entryAmount(entry), 0),
+      },
+      {
+        label: "Clinical expenses",
+        amount: periodExpenses
+          .filter((expense) => expense.category === "clinical")
+          .reduce((sum, expense) => sum + entryAmount(expense), 0),
+      },
+      {
+        label: "Home expenses",
+        amount: periodExpenses
+          .filter((expense) => expense.category === "home")
+          .reduce((sum, expense) => sum + entryAmount(expense), 0),
+      },
+    ];
+    const totalExpenses = patientExpenseAmount + operatingExpenseAmount;
+
+    return {
+      bounds,
+      label: reportLabel(reportPeriod, bounds),
+      patients: periodPatients,
+      income: periodIncome,
+      expenses: totalExpenses,
+      netIncome: periodIncome - totalExpenses,
+      breakdown,
+    };
+  }, [patients, expenses, reportDate, reportPeriod]);
 
   const handleEdit = (patient) => {
     localStorage.setItem("editPatient", JSON.stringify({ ...patient, isEditing: true }));
@@ -114,7 +310,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
         current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
       );
       setPaymentForm({
-        date: new Date().toISOString().split("T")[0],
+        date: todayInputValue(),
         amount: "",
         description: "",
       });
@@ -122,6 +318,102 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     } catch (requestError) {
       console.error(requestError);
       alert("Payment could not be saved. Please try again.");
+    }
+  };
+
+  const updateSelectedPatient = async (updates) => {
+    const updatedPatient = {
+      ...selectedPatient,
+      ...updates,
+    };
+
+    await api.put(`/patients/${selectedPatient._id}`, updatedPatient);
+    setSelectedPatient(updatedPatient);
+    setPatients((current) =>
+      current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
+    );
+    playSectionSound("success");
+  };
+
+  const handleAddDoctorShare = async () => {
+    if (!selectedPatient?._id || !Number(doctorShareForm.amount || 0)) {
+      return;
+    }
+
+    const entry = {
+      date: doctorShareForm.date || todayInputValue(),
+      amount: Number(doctorShareForm.amount),
+      status: doctorShareForm.status || "unpaid",
+    };
+
+    try {
+      await updateSelectedPatient({
+        doctorShare: [...(selectedPatient.doctorShare || []), entry],
+      });
+      setDoctorShareForm({
+        date: todayInputValue(),
+        amount: "",
+        status: "unpaid",
+      });
+    } catch (requestError) {
+      console.error(requestError);
+      alert("Doctor share could not be saved. Please try again.");
+    }
+  };
+
+  const handleAddLabExpense = async () => {
+    if (!selectedPatient?._id || !Number(labExpenseForm.amount || 0)) {
+      return;
+    }
+
+    const entry = {
+      labName: labExpenseForm.labName || "Lab",
+      details: labExpenseForm.details || "",
+      date: labExpenseForm.date || todayInputValue(),
+      amount: Number(labExpenseForm.amount),
+      status: labExpenseForm.status || "unpaid",
+    };
+
+    try {
+      await updateSelectedPatient({
+        labExpenses: [...(selectedPatient.labExpenses || []), entry],
+      });
+      setLabExpenseForm({
+        labName: "",
+        details: "",
+        date: todayInputValue(),
+        amount: "",
+        status: "unpaid",
+      });
+    } catch (requestError) {
+      console.error(requestError);
+      alert("Lab expense could not be saved. Please try again.");
+    }
+  };
+
+  const handleAddDentalMaterial = async () => {
+    if (!selectedPatient?._id || !Number(dentalMaterialForm.amount || 0)) {
+      return;
+    }
+
+    const entry = {
+      date: dentalMaterialForm.date || todayInputValue(),
+      amount: Number(dentalMaterialForm.amount),
+      status: dentalMaterialForm.status || "paid",
+    };
+
+    try {
+      await updateSelectedPatient({
+        dentalMaterials: [...(selectedPatient.dentalMaterials || []), entry],
+      });
+      setDentalMaterialForm({
+        date: todayInputValue(),
+        amount: "",
+        status: "paid",
+      });
+    } catch (requestError) {
+      console.error(requestError);
+      alert("Dental material expense could not be saved. Please try again.");
     }
   };
 
@@ -136,32 +428,38 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
           <div>
             <div className="eyebrow">Finance cockpit</div>
             <h1>Account Status</h1>
-            <p>Track invoice totals, balances and payment attention points for every patient.</p>
+            <p>Track income, expenses, balances and printable finance reports.</p>
           </div>
 
           <div className="hero-actions no-print">
-            <button className="btn btn-primary" onClick={handlePrint}>Print</button>
+            <button className="btn btn-primary" onClick={handlePrint}>Print report</button>
             <button className="btn" onClick={fetchPatients}>Refresh</button>
           </div>
         </section>
 
         {error && <div className="notice danger">{error}</div>}
 
-        <section className="metrics-grid three">
+        <section className="metrics-grid">
           <div className="metric-card">
-            <div className="metric-accent blue" />
-            <div className="metric-label">Invoice value</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(totals.totalAmount)}</div>
-            <div className="metric-detail">All visible accounts</div>
+            <div className="metric-accent gold" />
+            <div className="metric-label">Net income</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(totals.netIncome)}</div>
+            <div className="metric-detail">Income after all expenses</div>
           </div>
           <div className="metric-card">
             <div className="metric-accent green" />
-            <div className="metric-label">Recovered</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(totals.recoveredAmount)}</div>
-            <div className="metric-detail">After current balances</div>
+            <div className="metric-label">Income received</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(totals.incomeAmount)}</div>
+            <div className="metric-detail">Payments in visible accounts</div>
           </div>
           <div className="metric-card">
             <div className="metric-accent rose" />
+            <div className="metric-label">Total expenses</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(totals.totalExpenses)}</div>
+            <div className="metric-detail">Doctor, lab, material and expense entries</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-accent blue" />
             <div className="metric-label">Balance due</div>
             <div className="metric-value">{loading ? "..." : formatCurrency(totals.dueAmount)}</div>
             <div className="metric-detail">Needs follow-up</div>
@@ -176,6 +474,78 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Name, reg no or mobile number"
             />
+          </div>
+        </section>
+
+        <section className="panel finance-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Finance Report</h2>
+              <p>{financeReport.label}</p>
+            </div>
+
+            <div className="filter-controls no-print">
+              <label className="field inline-field">
+                <span>Report</span>
+                <select
+                  value={reportPeriod}
+                  onChange={(event) => setReportPeriod(event.target.value)}
+                >
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </label>
+              <label className="field inline-field">
+                <span>Date</span>
+                <input
+                  type="date"
+                  value={reportDate}
+                  onChange={(event) => setReportDate(event.target.value)}
+                />
+              </label>
+              <button className="btn btn-dark" type="button" onClick={handlePrint}>
+                Print
+              </button>
+            </div>
+          </div>
+
+          <div className="record-summary">
+            <div>
+              <span>Income</span>
+              <strong>{formatCurrency(financeReport.income)}</strong>
+            </div>
+            <div>
+              <span>Expenses</span>
+              <strong>{formatCurrency(financeReport.expenses)}</strong>
+            </div>
+            <div>
+              <span>Net income</span>
+              <strong>{formatCurrency(financeReport.netIncome)}</strong>
+            </div>
+            <div>
+              <span>Patients</span>
+              <strong>{financeReport.patients.length}</strong>
+            </div>
+          </div>
+
+          <div className="data-table-wrap">
+            <table className="data-table compact-table">
+              <thead>
+                <tr>
+                  <th>Expense Type</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {financeReport.breakdown.map((item) => (
+                  <tr key={item.label}>
+                    <td>{item.label}</td>
+                    <td>{formatCurrency(item.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -210,8 +580,14 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                 <strong>{formatCurrency(paymentsTotal(selectedPatient))}</strong>
               </div>
               <div>
-                <span>Net amount</span>
-                <strong>{formatCurrency(netAmount(selectedPatient))}</strong>
+                <span>Expenses</span>
+                <strong>{formatCurrency(patientExpenseTotal(selectedPatient))}</strong>
+              </div>
+              <div>
+                <span>Net income</span>
+                <strong>
+                  {formatCurrency(paymentsTotal(selectedPatient) - patientExpenseTotal(selectedPatient))}
+                </strong>
               </div>
               <div>
                 <span>Remaining</span>
@@ -313,6 +689,240 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                         </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="detail-card">
+              <h3>Doctor Share</h3>
+              <div className="payment-panel no-print">
+                <label className="field">
+                  <span>Date</span>
+                  <input
+                    type="date"
+                    value={doctorShareForm.date}
+                    onChange={(event) =>
+                      setDoctorShareForm((form) => ({ ...form, date: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Amount</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={doctorShareForm.amount}
+                    onChange={(event) =>
+                      setDoctorShareForm((form) => ({ ...form, amount: event.target.value }))
+                    }
+                    placeholder="Doctor share"
+                  />
+                </label>
+                <label className="field">
+                  <span>Status</span>
+                  <select
+                    value={doctorShareForm.status}
+                    onChange={(event) =>
+                      setDoctorShareForm((form) => ({ ...form, status: event.target.value }))
+                    }
+                  >
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
+                </label>
+                <button className="btn btn-primary" type="button" onClick={handleAddDoctorShare}>
+                  Save share
+                </button>
+              </div>
+
+              <div className="data-table-wrap">
+                <table className="data-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Paid / Unpaid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedPatient.doctorShare || []).length === 0 && (
+                      <tr>
+                        <td colSpan="3">No doctor share recorded.</td>
+                      </tr>
+                    )}
+
+                    {(selectedPatient.doctorShare || []).map((entry, index) => (
+                      <tr key={`${entry.date}-${index}`}>
+                        <td>{entry.date || "-"}</td>
+                        <td>{formatCurrency(entry.amount)}</td>
+                        <td>{entry.status === "paid" ? "Paid" : "Unpaid"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="detail-card">
+              <h3>Lab Expenses</h3>
+              <div className="payment-panel no-print">
+                <label className="field">
+                  <span>Lab Name</span>
+                  <input
+                    value={labExpenseForm.labName}
+                    onChange={(event) =>
+                      setLabExpenseForm((form) => ({ ...form, labName: event.target.value }))
+                    }
+                    placeholder="Lab name"
+                  />
+                </label>
+                <label className="field">
+                  <span>Details</span>
+                  <input
+                    value={labExpenseForm.details}
+                    onChange={(event) =>
+                      setLabExpenseForm((form) => ({ ...form, details: event.target.value }))
+                    }
+                    placeholder="Case or item details"
+                  />
+                </label>
+                <label className="field">
+                  <span>Date</span>
+                  <input
+                    type="date"
+                    value={labExpenseForm.date}
+                    onChange={(event) =>
+                      setLabExpenseForm((form) => ({ ...form, date: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Amount</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={labExpenseForm.amount}
+                    onChange={(event) =>
+                      setLabExpenseForm((form) => ({ ...form, amount: event.target.value }))
+                    }
+                    placeholder="Lab expense"
+                  />
+                </label>
+                <label className="field">
+                  <span>Status</span>
+                  <select
+                    value={labExpenseForm.status}
+                    onChange={(event) =>
+                      setLabExpenseForm((form) => ({ ...form, status: event.target.value }))
+                    }
+                  >
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
+                </label>
+                <button className="btn btn-primary" type="button" onClick={handleAddLabExpense}>
+                  Save lab
+                </button>
+              </div>
+
+              <div className="data-table-wrap">
+                <table className="data-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>Lab Name</th>
+                      <th>Details</th>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Paid / Unpaid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedPatient.labExpenses || []).length === 0 && (
+                      <tr>
+                        <td colSpan="5">No lab expenses recorded.</td>
+                      </tr>
+                    )}
+
+                    {(selectedPatient.labExpenses || []).map((entry, index) => (
+                      <tr key={`${entry.labName}-${entry.date}-${index}`}>
+                        <td>{entry.labName || "-"}</td>
+                        <td>{entry.details || "-"}</td>
+                        <td>{entry.date || "-"}</td>
+                        <td>{formatCurrency(entry.amount)}</td>
+                        <td>{entry.status === "paid" ? "Paid" : "Unpaid"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="detail-card">
+              <h3>Dental Material</h3>
+              <div className="payment-panel no-print">
+                <label className="field">
+                  <span>Date</span>
+                  <input
+                    type="date"
+                    value={dentalMaterialForm.date}
+                    onChange={(event) =>
+                      setDentalMaterialForm((form) => ({ ...form, date: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Amount</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={dentalMaterialForm.amount}
+                    onChange={(event) =>
+                      setDentalMaterialForm((form) => ({ ...form, amount: event.target.value }))
+                    }
+                    placeholder="Material amount"
+                  />
+                </label>
+                <label className="field">
+                  <span>Status</span>
+                  <select
+                    value={dentalMaterialForm.status}
+                    onChange={(event) =>
+                      setDentalMaterialForm((form) => ({ ...form, status: event.target.value }))
+                    }
+                  >
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
+                </label>
+                <button className="btn btn-primary" type="button" onClick={handleAddDentalMaterial}>
+                  Save material
+                </button>
+              </div>
+
+              <div className="data-table-wrap">
+                <table className="data-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Paid / Unpaid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedPatient.dentalMaterials || []).length === 0 && (
+                      <tr>
+                        <td colSpan="3">No dental material expense recorded.</td>
+                      </tr>
+                    )}
+
+                    {(selectedPatient.dentalMaterials || []).map((entry, index) => (
+                      <tr key={`${entry.date}-${index}`}>
+                        <td>{entry.date || "-"}</td>
+                        <td>{formatCurrency(entry.amount)}</td>
+                        <td>{entry.status === "paid" ? "Paid" : "Unpaid"}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

@@ -26,7 +26,7 @@ export const playSectionSound = (type = "section") => {
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.015);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
     oscillator.connect(gain);
     gain.connect(ctx.destination);
@@ -35,5 +35,25 @@ export const playSectionSound = (type = "section") => {
     oscillator.onended = () => ctx.close();
   } catch (error) {
     // Browser audio can be blocked before a user gesture; section sounds are optional.
+  }
+};
+
+export const announceRestockAlert = (productName = "Inventory item") => {
+  playSectionSound("warning");
+
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    return;
+  }
+
+  try {
+    window.speechSynthesis.cancel();
+    const message = new SpeechSynthesisUtterance(
+      `${productName} needs to restock before stockout.`
+    );
+    message.rate = 0.95;
+    message.volume = 1;
+    window.speechSynthesis.speak(message);
+  } catch (error) {
+    // Spoken alerts are optional; the warning tone and on-screen alert still work.
   }
 };

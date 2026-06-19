@@ -1,6 +1,4 @@
 import React, { useEffect } from "react";
-import api from "../../api";
-import { patientArray } from "../../utils/patientHelpers";
 import { CATEGORY_OPTIONS } from "../../utils/clinicData";
 
 function Biography({
@@ -20,64 +18,37 @@ function Biography({
         .toISOString()
         .split("T")[0];
 
-    const loadRegNo = async () => {
+    setPatientData((prev) => ({
 
-      try {
+      ...prev,
 
-        const response =
-          await api.get("/patients");
+      biography: {
 
-        const totalPatients =
-          patientArray(response.data).length;
+        ...prev.biography,
 
-        const nextRegNo =
-          String(
-            totalPatients + 1
-          ).padStart(5, "0");
+        date:
+          prev.biography?.date ||
+          today,
 
-        setPatientData((prev) => ({
+        title:
+          prev.biography?.title ||
+          "Mr.",
 
-          ...prev,
+        category:
+          prev.biography?.category ||
+          "Category 1 - Affording",
 
-          biography: {
+        patientType:
+          prev.biography?.patientType ||
+          "Affording",
 
-            ...prev.biography,
+        doctorName:
+          prev.biography?.doctorName ||
+          (sessionUser.role === "doctor" ? sessionUser.name : ""),
 
-            date:
-              prev.biography?.date ||
-              today,
+      },
 
-           regNo: nextRegNo,
-
-            title:
-              prev.biography?.title ||
-              "Mr.",
-
-            category:
-              prev.biography?.category ||
-              "Category 1 - Affording",
-
-            patientType:
-              prev.biography?.patientType ||
-              "Affording",
-
-            doctorName:
-              prev.biography?.doctorName ||
-              (sessionUser.role === "doctor" ? sessionUser.name : ""),
-
-          },
-
-        }));
-
-      } catch (error) {
-
-        console.error(error);
-
-      }
-
-    };
-
-    loadRegNo();
+    }));
 
   }, []);
 
@@ -216,6 +187,7 @@ function Biography({
             value={
               formData.regNo || ""
             }
+            placeholder="Auto on save"
             readOnly
             className="
               w-full
