@@ -938,6 +938,10 @@ textarea:focus {
   margin-top: 0;
 }
 
+.print-report-header {
+  display: none;
+}
+
 .payment-panel.inventory-form,
 .payment-panel.expense-form {
   grid-template-columns: repeat(5, minmax(150px, 1fr)) auto auto;
@@ -1322,6 +1326,69 @@ textarea:focus {
   margin-bottom: 18px;
 }
 
+.lab-layout {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin: 18px 0;
+}
+
+.patient-select-panel {
+  position: sticky;
+  top: 18px;
+}
+
+.patient-select-list {
+  display: flex;
+  max-height: 640px;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+  margin-top: 16px;
+  padding-right: 4px;
+}
+
+.patient-select-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  padding: 10px;
+  text-align: left;
+}
+
+.patient-select-row.active {
+  border-color: rgba(37, 99, 235, 0.42);
+  background: var(--blue-soft);
+}
+
+.patient-select-row > span:last-child {
+  min-width: 0;
+}
+
+.patient-select-row strong,
+.patient-select-row small {
+  display: block;
+}
+
+.patient-select-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.payment-panel.lab-form {
+  grid-template-columns: minmax(150px, 1fr) minmax(220px, 1.25fr) 160px 160px auto auto;
+}
+
+.lab-recent-panel {
+  margin-top: 18px;
+}
+
 .login-help {
   display: grid;
   gap: 6px;
@@ -1386,7 +1453,8 @@ textarea:focus {
   .schedule-layout,
   .modal-grid,
   .invoice-total-panel,
-  .payment-panel {
+  .payment-panel,
+  .lab-layout {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -1501,13 +1569,18 @@ textarea:focus {
   .dashboard-grid,
   .schedule-layout,
   .modal-grid,
-  .schedule-stack.dense,
-  .login-screen,
-  .login-stats,
-  .clinical-grid,
-  .invoice-total-panel,
-  .payment-panel {
+    .schedule-stack.dense,
+    .login-screen,
+    .login-stats,
+    .clinical-grid,
+    .invoice-total-panel,
+    .payment-panel,
+    .lab-layout {
     grid-template-columns: 1fr;
+  }
+
+  .patient-select-panel {
+    position: static;
   }
 
   .appointment-item,
@@ -1538,7 +1611,16 @@ textarea:focus {
 }
 
 @media print {
+  @page {
+    margin: 10mm;
+  }
+
   body {
+    background: #fff;
+  }
+
+  .app-shell {
+    display: block;
     background: #fff;
   }
 
@@ -1554,6 +1636,7 @@ textarea:focus {
   .page-content {
     min-height: auto;
     padding: 0;
+    width: 100%;
   }
 
   .panel,
@@ -1562,5 +1645,104 @@ textarea:focus {
   .page-hero {
     box-shadow: none;
     border-color: #cbd5e1;
+  }
+
+  .printable-page > :not(.print-report-header):not(.printable-report) {
+    display: none !important;
+  }
+
+  .print-report-header {
+    display: block;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #111827;
+    color: #111827;
+  }
+
+  .print-report-header strong,
+  .print-report-header span {
+    display: block;
+  }
+
+  .print-report-header strong {
+    font-size: 18px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .print-report-header span {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #334155;
+  }
+
+  .printable-report {
+    margin: 0 0 12px !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  .panel.printable-report {
+    border: 0;
+  }
+
+  .printable-report .panel-heading {
+    margin-bottom: 10px;
+  }
+
+  .printable-report .panel-heading h2 {
+    font-size: 16px;
+  }
+
+  .printable-report .panel-heading p {
+    color: #475569;
+    font-size: 11px;
+  }
+
+  .data-table-wrap {
+    overflow: visible;
+  }
+
+  .data-table {
+    min-width: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .data-table th,
+  .data-table td {
+    border: 1px solid #cbd5e1;
+    padding: 6px 7px;
+    font-size: 11px;
+  }
+
+  .metrics-grid.printable-report {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .metrics-grid.printable-report .metric-card {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .metrics-grid.printable-report .metric-accent,
+  .printable-report .patient-avatar {
+    display: none;
+  }
+
+  .metrics-grid.printable-report .metric-value {
+    font-size: 18px;
+  }
+
+  .lab-layout.printable-report {
+    display: block;
+  }
+
+  .lab-layout.printable-report .panel {
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 }

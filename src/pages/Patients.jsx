@@ -21,6 +21,7 @@ const EMPTY_PATIENT = {
   accountLedger: [],
   doctorShare: [],
   labExpenses: [],
+  labRecords: [],
   dentalMaterials: [],
   toothStates: {},
   toothNotes: "",

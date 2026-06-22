@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { page: "patients", label: "Patient Entry", short: "+", section: "Clinic", roles: ["admin", "doctor", "receptionist"] },
   { page: "patients-list", label: "Patient Records", short: "R", section: "Clinic", roles: ["admin"] },
   { page: "appointments", label: "Appointments", short: "A", section: "Clinic", roles: ["admin", "doctor", "receptionist"] },
+  { page: "lab-records", label: "Lab Records", short: "L", section: "Clinic", roles: ["admin", "doctor", "receptionist"] },
   { page: "account-status", label: "Account Status", short: "$", section: "Finance", roles: ["admin"] },
   { page: "expenses", label: "Expenses", short: "E", section: "Finance", roles: ["admin"] },
   { page: "inventory", label: "Inventory", short: "I", section: "Operations", roles: ["admin"] },

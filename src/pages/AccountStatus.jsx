@@ -19,6 +19,7 @@ import {
   paymentsTotal,
   regNo,
 } from "../utils/patientHelpers";
+import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
 import { playSectionSound } from "../utils/sound";
 
 const todayInputValue = () => new Date().toISOString().split("T")[0];
@@ -423,7 +424,13 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
       setActivePage={setActivePage}
       handleLogout={handleLogout}
     >
-      <div className="page">
+      <div className="page printable-page">
+        <section className="print-report-header">
+          <strong>{CLINIC_NAME}</strong>
+          <span>{DOCTOR_NAME}</span>
+          <span>Finance Report - {financeReport.label}</span>
+        </section>
+
         <section className="page-hero">
           <div>
             <div className="eyebrow">Finance cockpit</div>
@@ -477,7 +484,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="panel finance-report">
+        <section className="panel finance-report printable-report">
           <div className="panel-heading">
             <div>
               <h2>Finance Report</h2>

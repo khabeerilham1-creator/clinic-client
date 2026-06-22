@@ -323,6 +323,10 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                 <span>$</span>
                 Accounts
               </button>
+              <button onClick={() => setActivePage("lab-records")} className="quick-action">
+                <span>L</span>
+                Lab records
+              </button>
               <button onClick={() => setActivePage("expenses")} className="quick-action">
                 <span>E</span>
                 Expenses
@@ -330,10 +334,6 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
               <button onClick={() => setActivePage("inventory")} className="quick-action">
                 <span>I</span>
                 Inventory
-              </button>
-              <button onClick={() => window.print()} className="quick-action">
-                <span>P</span>
-                Print view
               </button>
             </div>
           </div>

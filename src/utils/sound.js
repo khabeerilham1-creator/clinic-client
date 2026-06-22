@@ -21,17 +21,22 @@ export const playSectionSound = (type = "section") => {
     const ctx = new AudioContext();
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
+    const compressor = ctx.createDynamicsCompressor();
     const frequency = type === "success" ? 740 : type === "warning" ? 420 : 560;
 
-    oscillator.type = "sine";
+    oscillator.type = type === "warning" ? "square" : "triangle";
     oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+    gain.gain.exponentialRampToValueAtTime(0.42, ctx.currentTime + 0.018);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.32);
+    compressor.threshold.setValueAtTime(-18, ctx.currentTime);
+    compressor.knee.setValueAtTime(18, ctx.currentTime);
+    compressor.ratio.setValueAtTime(8, ctx.currentTime);
     oscillator.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(compressor);
+    compressor.connect(ctx.destination);
     oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.16);
+    oscillator.stop(ctx.currentTime + 0.34);
     oscillator.onended = () => ctx.close();
   } catch (error) {
     // Browser audio can be blocked before a user gesture; section sounds are optional.

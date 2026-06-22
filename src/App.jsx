@@ -9,11 +9,12 @@ import PatientsList from "./pages/PatientsList";
 import AccountStatus from "./pages/AccountStatus";
 import Inventory from "./pages/Inventory";
 import Expenses from "./pages/Expenses";
+import LabRecords from "./pages/LabRecords";
 
 const ROLE_PAGES = {
-  admin: ["dashboard", "patients", "patients-list", "appointments", "account-status", "inventory", "expenses"],
-  doctor: ["patients", "appointments"],
-  receptionist: ["patients", "appointments"],
+  admin: ["dashboard", "patients", "patients-list", "appointments", "lab-records", "account-status", "inventory", "expenses"],
+  doctor: ["patients", "appointments", "lab-records"],
+  receptionist: ["patients", "appointments", "lab-records"],
 };
 
 const firstPageForRole = (role) => ROLE_PAGES[role]?.[0] || "dashboard";
@@ -127,6 +128,18 @@ function App() {
 
     return (
       <Appointments
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+
+  }
+
+  if (activePage === "lab-records") {
+
+    return (
+      <LabRecords
         activePage={activePage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}

@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import { expenseArray, formatCurrency } from "../utils/patientHelpers";
+import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
 import { playSectionSound } from "../utils/sound";
 
 const todayInputValue = () => new Date().toISOString().split("T")[0];
@@ -153,7 +154,13 @@ function Expenses({ activePage, setActivePage, handleLogout }) {
 
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
-      <div className="page">
+      <div className="page printable-page">
+        <section className="print-report-header">
+          <strong>{CLINIC_NAME}</strong>
+          <span>{DOCTOR_NAME}</span>
+          <span>{CATEGORY_LABELS[activeCategory]} Report</span>
+        </section>
+
         <section className="page-hero">
           <div>
             <div className="eyebrow">Expense control</div>
@@ -201,7 +208,7 @@ function Expenses({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="metrics-grid">
+        <section className="metrics-grid printable-report">
           <div className="metric-card">
             <div className="metric-accent blue" />
             <div className="metric-label">Entries</div>
@@ -292,7 +299,7 @@ function Expenses({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="panel">
+        <section className="panel printable-report">
           <div className="data-table-wrap">
             <table className="data-table">
               <thead>
