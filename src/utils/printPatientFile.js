@@ -15,10 +15,16 @@ import { DOCTOR_NAME } from "./clinicData";
 
 const PRINT_PAGE_WIDTH_CM = 21;
 const PRINT_PAGE_HEIGHT_CM = 29.7;
+const INVOICE_PAGE_WIDTH_CM = 14.8;
+const INVOICE_PAGE_HEIGHT_CM = 21;
 const LETTERHEAD_TOP_CM = 4.35;
 const LETTERHEAD_BOTTOM_CM = 2.35;
 const LETTERHEAD_SIDE_CM = 1.55;
 const PRINT_BODY_WIDTH_CM = 16.8;
+const INVOICE_LETTERHEAD_TOP_CM = 2.55;
+const INVOICE_LETTERHEAD_BOTTOM_CM = 1.55;
+const INVOICE_LETTERHEAD_SIDE_CM = 1.05;
+const INVOICE_BODY_WIDTH_CM = 12.55;
 
 const escapeHtml = (value) =>
   String(value ?? "")
@@ -261,10 +267,12 @@ export function printPatientFile(patient, toothChartSrc) {
           .chart-notes{border:1px solid #cbd5e1;padding:6px;min-height:24mm}
           .chart-notes b,.chart-notes span{display:block}
           .chart-notes b{margin-bottom:4px;color:#334155}
-          .checkup-page,.invoice-page{page:clinicLetterhead;width:${PRINT_PAGE_WIDTH_CM}cm;min-height:${PRINT_PAGE_HEIGHT_CM}cm;padding:${LETTERHEAD_TOP_CM}cm ${LETTERHEAD_SIDE_CM}cm ${LETTERHEAD_BOTTOM_CM}cm;page-break-after:always;background:#fff}
+          .checkup-page,.invoice-page{page-break-after:always;background:#fff}
+          .checkup-page{page:clinicLetterhead;width:${PRINT_PAGE_WIDTH_CM}cm;min-height:${PRINT_PAGE_HEIGHT_CM}cm;padding:${LETTERHEAD_TOP_CM}cm ${LETTERHEAD_SIDE_CM}cm ${LETTERHEAD_BOTTOM_CM}cm}
+          .invoice-page{page:invoiceLetterhead;width:${INVOICE_PAGE_WIDTH_CM}cm;min-height:${INVOICE_PAGE_HEIGHT_CM}cm;padding:${INVOICE_LETTERHEAD_TOP_CM}cm ${INVOICE_LETTERHEAD_SIDE_CM}cm ${INVOICE_LETTERHEAD_BOTTOM_CM}cm}
           .checkup-page{overflow:hidden}
           .checkup-page>*,.invoice-content{width:min(${PRINT_BODY_WIDTH_CM}cm,100%);margin-left:auto;margin-right:auto}
-          .invoice-content{height:auto;max-height:${PRINT_PAGE_HEIGHT_CM - LETTERHEAD_TOP_CM - LETTERHEAD_BOTTOM_CM}cm;padding:0;overflow:hidden}
+          .invoice-content{width:min(${INVOICE_BODY_WIDTH_CM}cm,100%);height:auto;max-height:${INVOICE_PAGE_HEIGHT_CM - INVOICE_LETTERHEAD_TOP_CM - INVOICE_LETTERHEAD_BOTTOM_CM}cm;padding:0;overflow:hidden}
           .invoice-topline{display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #111827;padding-bottom:.16cm;margin-bottom:.22cm}
           .invoice-topline strong{font-size:14px;text-transform:uppercase}
           .invoice-bio{display:grid;grid-template-columns:1fr 1fr;gap:.08cm .28cm;margin-bottom:.2cm}
@@ -284,6 +292,7 @@ export function printPatientFile(patient, toothChartSrc) {
           .invoice-signatures span{width:5.5cm;border-top:1px solid #111827;text-align:center;padding-top:.12cm;font-size:9px}
           .checkup-page:last-child,.invoice-page:last-child{page-break-after:auto}
           @page clinicLetterhead{size:A4;margin:0}
+          @page invoiceLetterhead{size:${INVOICE_PAGE_WIDTH_CM}cm ${INVOICE_PAGE_HEIGHT_CM}cm;margin:0}
           @media print{
             body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
             .checkup-page{min-height:auto}
