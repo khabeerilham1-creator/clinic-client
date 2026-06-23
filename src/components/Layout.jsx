@@ -19,12 +19,15 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
 
   const profile = useMemo(() => {
     const storedUser = JSON.parse(sessionStorage.getItem("user") || "{}");
+    const storedShift = JSON.parse(sessionStorage.getItem("shift") || "null");
     const role = sessionStorage.getItem("role") || storedUser.role || "Administrator";
     const name = user?.name || storedUser.name || storedUser.username || "HDC Admin";
 
     return {
       name,
       role,
+      shiftLabel: storedShift?.label || storedUser.shiftName || "",
+      shiftDoctor: storedShift?.doctorName || storedUser.doctorName || "",
       initials: name
         .split(" ")
         .filter(Boolean)
@@ -42,6 +45,7 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("shift");
 
     if (handleLogout) {
       handleLogout();
@@ -100,7 +104,7 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
 
         <div className="sidebar-status">
           <span className="status-dot" />
-          <span>Live clinic workspace</span>
+          <span>{profile.shiftLabel || "Live clinic workspace"}</span>
         </div>
 
         <nav className="nav-stack" aria-label="Main navigation">
@@ -138,7 +142,9 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
           <div className="user-avatar">{profile.initials || "AD"}</div>
           <div className="user-details">
             <div className="user-name">{profile.name}</div>
-            <div className="user-role">{profile.role}</div>
+            <div className="user-role">
+              {profile.shiftDoctor ? `${profile.shiftLabel} | ${profile.shiftDoctor}` : profile.role}
+            </div>
           </div>
           <button className="logout-button" type="button" onClick={logout} aria-label="Logout">
             Out

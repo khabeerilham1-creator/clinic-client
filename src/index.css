@@ -1035,6 +1035,48 @@ textarea:focus {
   font-weight: 900;
 }
 
+.shift-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.shift-choice {
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  text-align: left;
+  transition: 0.16s ease;
+}
+
+.shift-choice:hover,
+.shift-choice.active {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: var(--blue-soft);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+}
+
+.shift-choice strong,
+.shift-choice span {
+  display: block;
+}
+
+.shift-choice strong {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.shift-choice span {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .field {
   display: block;
   margin-bottom: 18px;
@@ -1088,6 +1130,14 @@ textarea:focus {
   font-size: 24px;
   font-weight: 900;
   color: var(--ink);
+}
+
+.topbar-shift {
+  display: block;
+  margin-top: 3px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .page-content {
@@ -1382,7 +1432,43 @@ textarea:focus {
 }
 
 .payment-panel.lab-form {
-  grid-template-columns: minmax(150px, 1fr) minmax(220px, 1.25fr) 160px 160px auto auto;
+  grid-template-columns: 150px minmax(220px, 1.2fr) minmax(160px, 1fr) 100px 100px 140px 130px 150px auto auto;
+}
+
+.payment-panel.lab-form .lab-patient-field {
+  min-width: 220px;
+}
+
+.lab-switcher {
+  align-items: stretch;
+}
+
+.lab-tabs {
+  flex: 1;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+.add-lab-form {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  min-width: min(360px, 100%);
+}
+
+.add-lab-form input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  padding: 0 14px;
+}
+
+.lab-record-table {
+  min-width: 1060px;
 }
 
 .lab-recent-panel {
@@ -1575,6 +1661,7 @@ textarea:focus {
     .clinical-grid,
     .invoice-total-panel,
     .payment-panel,
+    .shift-choice-grid,
     .lab-layout {
     grid-template-columns: 1fr;
   }
@@ -1612,7 +1699,7 @@ textarea:focus {
 
 @media print {
   @page {
-    margin: 10mm;
+    margin: 42mm 12mm 24mm;
   }
 
   body {

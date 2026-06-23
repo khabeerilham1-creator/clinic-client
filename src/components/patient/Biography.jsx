@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { CATEGORY_OPTIONS } from "../../utils/clinicData";
+import { activeShift } from "../../utils/patientHelpers";
 
 function Biography({
   patientData,
@@ -10,6 +11,7 @@ function Biography({
     patientData.biography || {};
 
   const sessionUser = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const shift = activeShift();
 
   useEffect(() => {
 
@@ -43,8 +45,20 @@ function Biography({
           "Affording",
 
         doctorName:
+          shift?.doctorName ||
           prev.biography?.doctorName ||
+          sessionUser.doctorName ||
           (sessionUser.role === "doctor" ? sessionUser.name : ""),
+
+        shiftId:
+          shift?.id ||
+          prev.biography?.shiftId ||
+          "",
+
+        shiftName:
+          shift?.label ||
+          prev.biography?.shiftName ||
+          "",
 
       },
 
@@ -550,6 +564,33 @@ function Biography({
             mb-1
             font-medium
           ">
+            Working Shift
+          </label>
+
+          <input
+            type="text"
+            value={
+              formData.shiftName || shift?.label || ""
+            }
+            readOnly
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+              bg-gray-100
+            "
+          />
+
+        </div>
+
+        <div>
+
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
             Doctor / Case Done By
           </label>
 
@@ -557,10 +598,11 @@ function Biography({
             type="text"
             name="doctorName"
             value={
-              formData.doctorName || ""
+              shift?.doctorName || formData.doctorName || ""
             }
             onChange={handleChange}
-            placeholder="Dr Zaffar Iqbal"
+            placeholder={shift?.doctorName || "Doctor name"}
+            readOnly={Boolean(shift?.doctorName)}
             className="
               w-full
               border

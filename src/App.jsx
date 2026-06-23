@@ -74,6 +74,7 @@ function App() {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("shift");
 
     setToken(null);
 

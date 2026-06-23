@@ -2,6 +2,27 @@ export const CLINIC_NAME = "HDC Dental & Aesthetics";
 export const DOCTOR_NAME = "Dr Zaffar Iqbal";
 export const CLINIC_LOCATION = "Hayatabad, Peshawar";
 
+export const SHIFT_OPTIONS = [
+  {
+    id: "morning",
+    label: "Morning Shift",
+    doctorName: "Dr Tufyl",
+    password: "12345",
+  },
+  {
+    id: "evening",
+    label: "Evening Shift",
+    doctorName: "Dr Abdur Rehman",
+    password: "6789",
+  },
+];
+
+export const DEFAULT_LABS = [
+  "Khyber Lab",
+  "Hayat Lab",
+  "Chamkani Lab",
+];
+
 export const CATEGORY_OPTIONS = [
   { key: "category1", value: "Category 1 - Affording", label: "Category 1 - Affording" },
   { key: "category2", value: "Category 2 - Non Affording", label: "Category 2 - Non Affording" },

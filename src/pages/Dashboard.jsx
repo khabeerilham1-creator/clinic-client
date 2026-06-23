@@ -4,6 +4,9 @@ import api from "../api";
 import Layout from "../components/Layout";
 import {
   balanceDue,
+  activeShift,
+  activeShiftId,
+  filterPatientsForActiveShift,
   formatCurrency,
   invoiceTotal,
   matchesPeriod,
@@ -29,6 +32,7 @@ function StatCard({ label, value, detail, accent }) {
 }
 
 function Dashboard({ activePage, setActivePage, handleLogout }) {
+  const shift = activeShift();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,10 +52,10 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     const fetchDashboard = async () => {
       try {
         const response = await api.get("/patients", {
-          params: { limit: 100, sort: "createdAt", order: -1 },
+          params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
         });
 
-        setPatients(patientArray(response.data));
+        setPatients(filterPatientsForActiveShift(patientArray(response.data)));
       } catch (requestError) {
         console.error(requestError);
         setError("Dashboard data could not be loaded. Please check the API connection.");
@@ -155,8 +159,10 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
         <section className="page-hero">
           <div>
             <div className="eyebrow">Clinic overview</div>
-            <h1>Executive Dashboard</h1>
-            <p>{dateLabel}. Patient flow, treatment plans and account health at a glance.</p>
+            <h1>{shift?.label || "Executive Dashboard"}</h1>
+            <p>
+              {dateLabel}. {shift?.doctorName ? `${shift.doctorName} patient flow, treatment plans and account health.` : "Patient flow, treatment plans and account health at a glance."}
+            </p>
           </div>
 
           <div className="hero-actions no-print">

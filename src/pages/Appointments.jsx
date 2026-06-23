@@ -3,6 +3,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import {
+  activeShift,
+  activeShiftId,
+  filterPatientsForActiveShift,
   initials,
   mobileNumber,
   patientArray,
@@ -37,6 +40,7 @@ function AppointmentCard({ appointment, tone }) {
 }
 
 function Appointments({ activePage, setActivePage, handleLogout }) {
+  const shift = activeShift();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,10 +55,10 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
 
     try {
       const response = await api.get("/patients", {
-        params: { limit: 100, sort: "createdAt", order: -1 },
+        params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
       });
 
-      const allAppointments = patientArray(response.data)
+      const allAppointments = filterPatientsForActiveShift(patientArray(response.data))
         .flatMap((patient) =>
           (patient.plannedSequence || []).map((visit) => ({
             patientId: patient._id,
@@ -110,8 +114,12 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
         <section className="page-hero">
           <div>
             <div className="eyebrow">Planned sequence calendar</div>
-            <h1>Appointments</h1>
-            <p>All scheduled visits are pulled directly from patient treatment plans.</p>
+            <h1>{shift?.label ? `${shift.label} Appointments` : "Appointments"}</h1>
+            <p>
+              {shift?.doctorName
+                ? `Scheduled visits for ${shift.doctorName} are pulled directly from patient treatment plans.`
+                : "All scheduled visits are pulled directly from patient treatment plans."}
+            </p>
           </div>
 
           <div className="hero-actions no-print">

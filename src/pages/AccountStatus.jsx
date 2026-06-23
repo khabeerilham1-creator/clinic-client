@@ -3,10 +3,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import {
+  activeShift,
+  activeShiftId,
   balanceDue,
   bio,
   discountAmount,
   discountPercent,
+  filterPatientsForActiveShift,
   formatCurrency,
   initials,
   invoiceTotal,
@@ -113,6 +116,7 @@ const reportLabel = (period, bounds) => {
 };
 
 function AccountStatus({ activePage, setActivePage, handleLogout }) {
+  const shift = activeShift();
   const [patients, setPatients] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -155,14 +159,14 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     try {
       const [patientsResponse, expensesResponse] = await Promise.all([
         api.get("/patients", {
-          params: { limit: 100, sort: "createdAt", order: -1 },
+          params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
         }),
         api.get("/expenses", {
           params: { limit: 500, sort: "date", order: -1 },
         }),
       ]);
 
-      setPatients(patientArray(patientsResponse.data));
+      setPatients(filterPatientsForActiveShift(patientArray(patientsResponse.data)));
       setExpenses(expenseArray(expensesResponse.data));
     } catch (requestError) {
       console.error(requestError);
@@ -434,8 +438,12 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
         <section className="page-hero">
           <div>
             <div className="eyebrow">Finance cockpit</div>
-            <h1>Account Status</h1>
-            <p>Track income, expenses, balances and printable finance reports.</p>
+            <h1>{shift?.label ? `${shift.label} Account Status` : "Account Status"}</h1>
+            <p>
+              {shift?.doctorName
+                ? `Track income, expenses and balances for ${shift.doctorName}.`
+                : "Track income, expenses, balances and printable finance reports."}
+            </p>
           </div>
 
           <div className="hero-actions no-print">

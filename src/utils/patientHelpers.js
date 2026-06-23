@@ -1,3 +1,5 @@
+import { SHIFT_OPTIONS } from "./clinicData";
+
 export const patientArray = (payload) => {
   if (Array.isArray(payload)) {
     return payload;
@@ -35,6 +37,99 @@ export const expenseArray = (payload) => {
 };
 
 export const bio = (patient) => patient?.biography || {};
+
+const normalizeText = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+export const shiftById = (shiftId) => {
+  const cleanId = normalizeText(shiftId);
+
+  return SHIFT_OPTIONS.find(
+    (shift) =>
+      normalizeText(shift.id) === cleanId ||
+      normalizeText(shift.label) === cleanId ||
+      normalizeText(shift.label).includes(cleanId)
+  );
+};
+
+export const shiftByDoctorName = (doctorName) => {
+  const cleanDoctor = normalizeText(doctorName);
+
+  return SHIFT_OPTIONS.find((shift) => normalizeText(shift.doctorName) === cleanDoctor);
+};
+
+export const activeShift = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const storedShift = JSON.parse(sessionStorage.getItem("shift") || "null");
+
+    if (storedShift?.id) {
+      return shiftById(storedShift.id) || storedShift;
+    }
+  } catch (error) {
+    return null;
+  }
+
+  return null;
+};
+
+export const activeShiftId = () => activeShift()?.id || "";
+
+export const patientShiftId = (patient) => {
+  const patientBio = bio(patient);
+  const explicitShift =
+    patient?.shiftId ||
+    patient?.shift ||
+    patientBio.shiftId ||
+    patientBio.shift ||
+    patientBio.shiftName;
+  const matchedExplicitShift = shiftById(explicitShift);
+
+  if (matchedExplicitShift) {
+    return matchedExplicitShift.id;
+  }
+
+  return shiftByDoctorName(patientBio.doctorName)?.id || "";
+};
+
+export const patientShift = (patient) => shiftById(patientShiftId(patient));
+
+export const belongsToActiveShift = (patient) => {
+  const shift = activeShift();
+
+  if (!shift?.id) {
+    return true;
+  }
+
+  return patientShiftId(patient) === shift.id;
+};
+
+export const filterPatientsForActiveShift = (patients) =>
+  (patients || []).filter((patient) => belongsToActiveShift(patient));
+
+export const applyShiftToPatient = (patient, shift = activeShift()) => {
+  if (!shift?.id) {
+    return patient;
+  }
+
+  return {
+    ...patient,
+    shiftId: shift.id,
+    shiftName: shift.label,
+    biography: {
+      ...(patient?.biography || {}),
+      shiftId: shift.id,
+      shiftName: shift.label,
+      doctorName: shift.doctorName,
+    },
+  };
+};
 
 export const regNo = (patient) =>
   bio(patient).regNo || bio(patient).registrationNo || "";

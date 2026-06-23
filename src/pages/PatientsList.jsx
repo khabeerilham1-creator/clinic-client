@@ -6,8 +6,11 @@ import toothChart from "../assets/tooth-chart.png";
 import { CATEGORY_OPTIONS, normalizeCategoryKey } from "../utils/clinicData";
 import { printPatientFile } from "../utils/printPatientFile";
 import {
+  activeShift,
+  activeShiftId,
   balanceDue,
   bio,
+  filterPatientsForActiveShift,
   formatCurrency,
   initials,
   invoiceTotal,
@@ -18,6 +21,7 @@ import {
 } from "../utils/patientHelpers";
 
 function PatientsList({ activePage, setActivePage, handleLogout }) {
+  const shift = activeShift();
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [search, setSearch] = useState("");
@@ -35,10 +39,10 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
     try {
       const response = await api.get("/patients", {
-        params: { limit: 100, sort: "createdAt", order: -1 },
+        params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
       });
 
-      setPatients(patientArray(response.data));
+      setPatients(filterPatientsForActiveShift(patientArray(response.data)));
     } catch (requestError) {
       console.error(requestError);
       setError("Patients could not be loaded. Please check the backend connection.");
@@ -111,8 +115,12 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
         <section className="page-hero">
           <div>
             <div className="eyebrow">Patient command file</div>
-            <h1>Patient Records</h1>
-            <p>Search, audit, edit, print and manage every dental record from one premium view.</p>
+            <h1>{shift?.label ? `${shift.label} Patient Records` : "Patient Records"}</h1>
+            <p>
+              {shift?.doctorName
+                ? `Search, audit, edit and print records for ${shift.doctorName}.`
+                : "Search, audit, edit, print and manage every dental record from one premium view."}
+            </p>
           </div>
 
           <div className="hero-actions no-print">

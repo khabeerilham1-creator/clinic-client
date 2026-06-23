@@ -7,7 +7,7 @@ import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
 import toothChartImg from "../assets/tooth-chart.png";
-import { discountAmount, netAmount } from "../utils/patientHelpers";
+import { activeShift, applyShiftToPatient, discountAmount, netAmount } from "../utils/patientHelpers";
 import { printPatientFile } from "../utils/printPatientFile";
 import { playSectionSound } from "../utils/sound";
 
@@ -38,6 +38,7 @@ const TABS = [
 
 export default function Patients({ activePage, setActivePage, handleLogout }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const shift = activeShift();
   const [data, setData] = useState(EMPTY_PATIENT);
   const [tab, setTab] = useState("biography");
   const [loading, setLoading] = useState(false);
@@ -54,10 +55,12 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
     if (stored) {
       try {
-        setData(JSON.parse(stored));
+        setData(applyShiftToPatient(JSON.parse(stored)));
       } catch (error) {
         console.error(error);
       }
+    } else {
+      setData(applyShiftToPatient(EMPTY_PATIENT));
     }
   }, []);
 
@@ -100,6 +103,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
     try {
       const paidNow = Number(initialPayment.amount || 0);
+      const shiftedData = applyShiftToPatient(data);
       const paymentEntry =
         paidNow > 0
           ? {
@@ -111,10 +115,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           : null;
       const payload = paymentEntry
         ? {
-            ...data,
-            accountLedger: [...(data.accountLedger || []), paymentEntry],
+            ...shiftedData,
+            accountLedger: [...(shiftedData.accountLedger || []), paymentEntry],
           }
-        : data;
+        : shiftedData;
       const response = await api.post("/patients", payload);
       setData((current) => ({
         ...payload,
@@ -151,7 +155,9 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      await api.put(`/patients/${data._id}`, data);
+      const payload = applyShiftToPatient(data);
+      await api.put(`/patients/${data._id}`, payload);
+      setData(payload);
       localStorage.removeItem("editPatient");
       notify("Patient updated successfully.");
     } catch (error) {
@@ -167,7 +173,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     }
 
     localStorage.removeItem("editPatient");
-    setData(EMPTY_PATIENT);
+    setData(applyShiftToPatient(EMPTY_PATIENT));
     setTab("biography");
     notify("Form cleared. Ready for new patient.");
   };
@@ -194,6 +200,11 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             <div className="topbar-title">{data.isEditing ? "Edit Patient" : "Patient Entry"}</div>
             {data.biography?.regNo && (
               <span style={{ fontSize: "12px", color: "var(--muted)" }}>Reg #{data.biography.regNo}</span>
+            )}
+            {shift?.label && (
+              <span className="topbar-shift">
+                {shift.label} | {shift.doctorName}
+              </span>
             )}
           </div>
 
