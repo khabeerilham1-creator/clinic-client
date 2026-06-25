@@ -27,7 +27,6 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
       name,
       role,
       shiftLabel: storedShift?.label || storedUser.shiftName || "",
-      shiftDoctor: storedShift?.doctorName || storedUser.doctorName || "",
       initials: name
         .split(" ")
         .filter(Boolean)
@@ -143,7 +142,7 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
           <div className="user-details">
             <div className="user-name">{profile.name}</div>
             <div className="user-role">
-              {profile.shiftDoctor ? `${profile.shiftLabel} | ${profile.shiftDoctor}` : profile.role}
+              {profile.shiftLabel || profile.role}
             </div>
           </div>
           <button className="logout-button" type="button" onClick={logout} aria-label="Logout">

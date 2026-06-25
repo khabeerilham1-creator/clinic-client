@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { capitalizeFirstWord } from "../../utils/patientHelpers";
 
 function PlannedSequence({
   patientData,
@@ -36,7 +37,7 @@ function PlannedSequence({
 
     const updatedRows = [...rows];
 
-    updatedRows[index][field] = value;
+    updatedRows[index][field] = field === "procedure" ? capitalizeFirstWord(value) : value;
 
     setPatientData((prev) => ({
       ...prev,
@@ -142,7 +143,7 @@ function PlannedSequence({
                 <td className="border p-2">
 
                   <input
-                    type="date"
+                    type="text"
                     value={row.date}
                     onChange={(e) =>
                       handleChange(
@@ -152,6 +153,8 @@ function PlannedSequence({
                       )
                     }
                     className="w-full p-2 border rounded"
+                    placeholder="dd/mm/yyyy"
+                    inputMode="numeric"
                   />
 
                 </td>
@@ -171,6 +174,8 @@ function PlannedSequence({
                       )
                     }
                     className="w-full p-2 border rounded"
+                    autoCapitalize="sentences"
+                    spellCheck="true"
                   />
 
                 </td>

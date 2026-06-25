@@ -8,8 +8,8 @@ import {
   balanceDue,
   bio,
   discountAmount,
-  discountPercent,
   filterPatientsForActiveShift,
+  formatDateDisplay,
   formatCurrency,
   initials,
   invoiceTotal,
@@ -287,6 +287,28 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     setActivePage("patients");
   };
 
+  const handleDeletePatient = async (patient) => {
+    if (!patient?._id) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete patient account for ${patientName(patient)}?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.delete(`/patients/${patient._id}`);
+      setPatients((current) => current.filter((item) => item._id !== patient._id));
+      setSelectedPatient(null);
+      playSectionSound("warning");
+    } catch (requestError) {
+      console.error(requestError);
+      alert("Patient account could not be deleted. Please try again.");
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -440,9 +462,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Finance cockpit</div>
             <h1>{shift?.label ? `${shift.label} Account Status` : "Account Status"}</h1>
             <p>
-              {shift?.doctorName
-                ? `Track income, expenses and balances for ${shift.doctorName}.`
-                : "Track income, expenses, balances and printable finance reports."}
+              Track income, expenses, balances and printable finance reports.
             </p>
           </div>
 
@@ -577,6 +597,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
 
               <div className="row-actions no-print">
                 <button className="btn" onClick={() => handleEdit(selectedPatient)}>Edit file</button>
+                <button className="btn btn-danger" onClick={() => handleDeletePatient(selectedPatient)}>Delete</button>
                 <button className="btn btn-dark" onClick={() => setSelectedPatient(null)}>Close</button>
               </div>
             </div>
@@ -588,7 +609,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
               </div>
               <div>
                 <span>Discount</span>
-                <strong>{discountPercent(selectedPatient)}% / {formatCurrency(discountAmount(selectedPatient))}</strong>
+                <strong>{formatCurrency(discountAmount(selectedPatient))}</strong>
               </div>
               <div>
                 <span>Paid</span>
@@ -697,7 +718,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
 
                       return (
                         <tr key={`${entry.date}-${index}`}>
-                          <td>{entry.date || "-"}</td>
+                          <td>{formatDateDisplay(entry.date) || "-"}</td>
                           <td>{entry.description || "Payment received"}</td>
                           <td>{formatCurrency(entry.amount)}</td>
                           <td>{formatCurrency(Math.max(netAmount(selectedPatient) - paidUntilNow, 0))}</td>
@@ -769,7 +790,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
 
                     {(selectedPatient.doctorShare || []).map((entry, index) => (
                       <tr key={`${entry.date}-${index}`}>
-                        <td>{entry.date || "-"}</td>
+                        <td>{formatDateDisplay(entry.date) || "-"}</td>
                         <td>{formatCurrency(entry.amount)}</td>
                         <td>{entry.status === "paid" ? "Paid" : "Unpaid"}</td>
                       </tr>
@@ -863,7 +884,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                       <tr key={`${entry.labName}-${entry.date}-${index}`}>
                         <td>{entry.labName || "-"}</td>
                         <td>{entry.details || "-"}</td>
-                        <td>{entry.date || "-"}</td>
+                        <td>{formatDateDisplay(entry.date) || "-"}</td>
                         <td>{formatCurrency(entry.amount)}</td>
                         <td>{entry.status === "paid" ? "Paid" : "Unpaid"}</td>
                       </tr>
@@ -933,7 +954,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
 
                     {(selectedPatient.dentalMaterials || []).map((entry, index) => (
                       <tr key={`${entry.date}-${index}`}>
-                        <td>{entry.date || "-"}</td>
+                        <td>{formatDateDisplay(entry.date) || "-"}</td>
                         <td>{formatCurrency(entry.amount)}</td>
                         <td>{entry.status === "paid" ? "Paid" : "Unpaid"}</td>
                       </tr>

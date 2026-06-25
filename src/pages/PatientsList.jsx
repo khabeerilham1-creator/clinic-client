@@ -10,7 +10,9 @@ import {
   activeShiftId,
   balanceDue,
   bio,
+  discountAmount,
   filterPatientsForActiveShift,
+  formatDateDisplay,
   formatCurrency,
   initials,
   invoiceTotal,
@@ -101,8 +103,8 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
     setActivePage("patients");
   };
 
-  const handlePrint = (patient) => {
-    printPatientFile(patient, toothChart);
+  const handlePrint = (patient, mode) => {
+    printPatientFile(patient, toothChart, mode);
   };
 
   return (
@@ -117,9 +119,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Patient command file</div>
             <h1>{shift?.label ? `${shift.label} Patient Records` : "Patient Records"}</h1>
             <p>
-              {shift?.doctorName
-                ? `Search, audit, edit and print records for ${shift.doctorName}.`
-                : "Search, audit, edit, print and manage every dental record from one premium view."}
+              Search, audit, edit, print and manage every dental record from one premium view.
             </p>
           </div>
 
@@ -258,7 +258,8 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
                 <div className="row-actions">
                   <button className="btn" onClick={() => handleEdit(selectedPatient)}>Edit</button>
-                  <button className="btn" onClick={() => handlePrint(selectedPatient)}>Print</button>
+                  <button className="btn" onClick={() => handlePrint(selectedPatient, "checkup")}>Checkup Sheet Print</button>
+                  <button className="btn" onClick={() => handlePrint(selectedPatient, "invoice")}>Invoice Print</button>
                   <button className="btn btn-dark" onClick={() => setSelectedPatient(null)}>Close</button>
                 </div>
               </div>
@@ -286,7 +287,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                     <dt>Total invoice</dt>
                     <dd>{formatCurrency(invoiceTotal(selectedPatient))}</dd>
                     <dt>Discount</dt>
-                    <dd>{formatCurrency(selectedPatient.discount)}</dd>
+                    <dd>{formatCurrency(discountAmount(selectedPatient))}</dd>
                     <dt>Balance due</dt>
                     <dd>{formatCurrency(balanceDue(selectedPatient))}</dd>
                   </dl>
@@ -314,7 +315,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                       {(selectedPatient.plannedSequence || []).map((visit, index) => (
                         <tr key={`${visit.visitNo}-${index}`}>
                           <td>{visit.visitNo || index + 1}</td>
-                          <td>{visit.date || "-"}</td>
+                          <td>{formatDateDisplay(visit.date) || "-"}</td>
                           <td>{visit.procedure || visit.treatment || "-"}</td>
                         </tr>
                       ))}

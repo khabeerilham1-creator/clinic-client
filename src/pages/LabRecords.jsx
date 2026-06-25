@@ -424,7 +424,7 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
       <div className="page printable-page lab-page">
         <section className="print-report-header">
           <strong>{CLINIC_NAME}</strong>
-          <span>{shift?.doctorName || DOCTOR_NAME}</span>
+          <span>{shift?.label || DOCTOR_NAME}</span>
           <span>{labTitle(activeLab)} - {shift?.label || "All shifts"}</span>
         </section>
 
@@ -433,9 +433,7 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Lab case register</div>
             <h1>{labTitle(activeLab)}</h1>
             <p>
-              {shift?.doctorName
-                ? `Manage ${activeLab} cases for ${shift.doctorName}.`
-                : "Select a lab, attach a patient, and sync charges to patient accounts."}
+              Select a lab, attach a patient, and sync charges to patient accounts.
             </p>
           </div>
 

@@ -1,12 +1,10 @@
 import {
   balanceDue,
   bio,
-  discountAmount,
-  discountPercent,
-  formatCurrency,
-  invoiceTotal,
+  formatCurrencyBlank,
+  formatDateDisplay,
+  invoiceGroups,
   mobileNumber,
-  netAmount,
   patientName,
   paymentsTotal,
   regNo,
@@ -35,17 +33,9 @@ const escapeHtml = (value) =>
     .replace(/'/g, "&#039;");
 
 const formatDate = (value) => {
-  const date = value ? new Date(`${value}`.includes("T") ? value : `${value}T00:00:00`) : new Date();
+  const formatted = formatDateDisplay(value || new Date());
 
-  if (Number.isNaN(date.getTime())) {
-    return value || "";
-  }
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatted || value || "";
 };
 
 const rowsOrEmpty = (rows, columns, emptyText) => {
@@ -105,24 +95,38 @@ const plannedSequenceRows = (patient) =>
       (visit, index) => `
         <tr>
           <td>${index + 1}</td>
-          <td>${escapeHtml(visit.date)}</td>
+          <td>${escapeHtml(formatDate(visit.date))}</td>
           <td>${escapeHtml(visit.procedure || visit.treatment || visit.details)}</td>
           <td>${escapeHtml(visit.status || "Planned")}</td>
         </tr>
       `
     );
 
-const invoiceItemRows = (patient) =>
-  safeList(patient?.invoice)
+const invoiceItemRows = (items) =>
+  safeList(items)
     .filter((item) => item.details || Number(item.cost || 0) > 0)
     .map(
       (item, index) => `
         <tr>
           <td>${index + 1}</td>
           <td>${escapeHtml(item.details)}</td>
-          <td>${escapeHtml(item.qty)}</td>
-          <td>${escapeHtml(formatCurrency(item.rate))}</td>
-          <td>${escapeHtml(formatCurrency(item.cost))}</td>
+          <td>${escapeHtml(item.qty || "")}</td>
+          <td>${escapeHtml(formatCurrencyBlank(item.rate))}</td>
+          <td>${escapeHtml(formatCurrencyBlank(item.cost))}</td>
+        </tr>
+      `
+    );
+
+const paymentRows = (patient) =>
+  safeList(patient?.accountLedger)
+    .filter((entry) => Number(entry.amount || 0) > 0)
+    .map(
+      (entry, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(formatDate(entry.date || entry.timestamp))}</td>
+          <td>${escapeHtml(entry.description || "")}</td>
+          <td>${escapeHtml(formatCurrencyBlank(entry.amount))}</td>
         </tr>
       `
     );
@@ -151,47 +155,49 @@ const checkupPage = (patient, copyLabel, toothChartUrl) => {
         <div class="wide"><b>Address</b><span>${escapeHtml(patientBio.address || "-")}</span></div>
       </div>
 
-      <div class="checkup-grid">
-        <div>
-          <h3>Clinical Exam</h3>
-          <table>
-            <thead>
-              <tr><th>No / Tooth</th><th>Section</th><th>Pre-existing Condition</th><th>Suggested Treatment</th></tr>
-            </thead>
-            <tbody>${rowsOrEmpty(clinicalRows, 4, "No treatment details selected.")}</tbody>
-          </table>
-
-          <h3>Planned Sequence</h3>
-          <table>
-            <thead>
-              <tr><th>S No</th><th>Date</th><th>Procedure</th><th>Status</th></tr>
-            </thead>
-            <tbody>${rowsOrEmpty(plannedRows, 4, "No planned sequence selected.")}</tbody>
-          </table>
+      <div class="chart-panel">
+        <h3>Dental Chart</h3>
+        <img class="chart" src="${escapeHtml(toothChartUrl)}" alt="Tooth chart" />
+        <div class="chart-notes">
+          <b>Notes</b>
+          <span>${escapeHtml(patient?.toothNotes || "No tooth chart notes.")}</span>
         </div>
+      </div>
 
-        <aside>
-          <h3>Dental Chart</h3>
-          <img class="chart" src="${escapeHtml(toothChartUrl)}" alt="Tooth chart" />
-          <div class="chart-notes">
-            <b>Notes</b>
-            <span>${escapeHtml(patient?.toothNotes || "No tooth chart notes.")}</span>
-          </div>
-        </aside>
+      <div class="checkup-tables">
+        <h3>Clinical Exam</h3>
+        <table>
+          <thead>
+            <tr><th>No / Tooth</th><th>Section</th><th>Pre-existing Condition</th><th>Suggested Treatment</th></tr>
+          </thead>
+          <tbody>${rowsOrEmpty(clinicalRows, 4, "No treatment details selected.")}</tbody>
+        </table>
+
+        <h3>Planned Sequence</h3>
+        <table>
+          <thead>
+            <tr><th>S No</th><th>Date</th><th>Procedure</th><th>Status</th></tr>
+          </thead>
+          <tbody>${rowsOrEmpty(plannedRows, 4, "No planned sequence selected.")}</tbody>
+        </table>
       </div>
     </section>
   `;
 };
 
-const invoicePage = (patient, copyLabel) => {
+const invoicePage = (patient, copyLabel, invoice) => {
   const patientBio = bio(patient);
-  const invoiceRows = invoiceItemRows(patient);
+  const invoiceRows = invoiceItemRows(invoice.items);
+  const paidRows = paymentRows(patient);
+  const total = (invoice.items || []).reduce((sum, item) => sum + Number(item.cost || 0), 0);
+  const discount = Number(invoice.discount || 0);
+  const net = Math.max(total - discount, 0);
 
   return `
     <section class="invoice-page">
       <div class="invoice-content">
         <div class="invoice-topline">
-          <strong>Invoice</strong>
+          <strong>${escapeHtml(invoice.title || "Invoice")}</strong>
           <span>${escapeHtml(copyLabel)}</span>
         </div>
 
@@ -213,12 +219,20 @@ const invoicePage = (patient, copyLabel) => {
 
         <table class="invoice-totals">
           <tbody>
-            <tr><td>Total</td><td>${escapeHtml(formatCurrency(invoiceTotal(patient)))}</td></tr>
-            <tr><td>Discount (${escapeHtml(discountPercent(patient))}%)</td><td>${escapeHtml(formatCurrency(discountAmount(patient)))}</td></tr>
-            <tr class="net"><td>Net Amount</td><td>${escapeHtml(formatCurrency(netAmount(patient)))}</td></tr>
-            <tr><td>Paid</td><td>${escapeHtml(formatCurrency(paymentsTotal(patient)))}</td></tr>
-            <tr><td>Remaining</td><td>${escapeHtml(formatCurrency(balanceDue(patient)))}</td></tr>
+            <tr><td>Total</td><td>${escapeHtml(formatCurrencyBlank(total))}</td></tr>
+            <tr><td>Discount</td><td>${escapeHtml(formatCurrencyBlank(discount))}</td></tr>
+            <tr class="net"><td>Net Amount</td><td>${escapeHtml(formatCurrencyBlank(net))}</td></tr>
+            <tr><td>Total Paid</td><td>${escapeHtml(formatCurrencyBlank(paymentsTotal(patient)))}</td></tr>
+            <tr><td>Total Remaining</td><td>${escapeHtml(formatCurrencyBlank(balanceDue(patient)))}</td></tr>
           </tbody>
+        </table>
+
+        <h3>Payments</h3>
+        <table class="payment-items">
+          <thead>
+            <tr><th>S</th><th>Date</th><th>Note</th><th>Amount</th></tr>
+          </thead>
+          <tbody>${rowsOrEmpty(paidRows, 4, "No payments recorded.")}</tbody>
         </table>
 
         <div class="invoice-signatures">
@@ -230,7 +244,7 @@ const invoicePage = (patient, copyLabel) => {
   `;
 };
 
-export function printPatientFile(patient, toothChartSrc) {
+export function printPatientFile(patient, toothChartSrc, mode = "all") {
   const printWindow = window.open("", "", "width=1200,height=900");
 
   if (!printWindow) {
@@ -239,6 +253,25 @@ export function printPatientFile(patient, toothChartSrc) {
   }
 
   const toothChartUrl = new URL(toothChartSrc, window.location.origin).href;
+  const invoices = invoiceGroups(patient);
+  const shouldPrintCheckup = mode === "all" || mode === "checkup";
+  const shouldPrintInvoice = mode === "all" || mode === "invoice";
+  const checkupPages = shouldPrintCheckup
+    ? `
+        ${checkupPage(patient, "Clinic Copy", toothChartUrl)}
+        ${checkupPage(patient, "Patient Copy", toothChartUrl)}
+      `
+    : "";
+  const invoicePages = shouldPrintInvoice
+    ? invoices
+        .map(
+          (invoice) => `
+            ${invoicePage(patient, "Clinic Copy", invoice)}
+            ${invoicePage(patient, "Patient Copy", invoice)}
+          `
+        )
+        .join("")
+    : "";
 
   printWindow.document.write(`
     <!DOCTYPE html>
@@ -262,11 +295,12 @@ export function printPatientFile(patient, toothChartSrc) {
           .bio-grid .wide{grid-column:1 / -1}
           .bio-grid b{width:66px;color:#334155}
           .bio-grid span,.invoice-bio span{flex:1;min-width:0}
-          .checkup-grid{display:grid;grid-template-columns:minmax(0,1fr) 62mm;gap:10px;align-items:start}
-          .chart{display:block;width:100%;max-height:70mm;object-fit:contain;margin:2px auto 6px}
-          .chart-notes{border:1px solid #cbd5e1;padding:6px;min-height:24mm}
+          .chart-panel{width:min(13.5cm,100%);margin:.2cm auto .3cm;text-align:center}
+          .chart{display:block;width:100%;max-height:64mm;object-fit:contain;margin:2px auto 6px}
+          .chart-notes{border:1px solid #cbd5e1;padding:6px;min-height:16mm;text-align:left}
           .chart-notes b,.chart-notes span{display:block}
           .chart-notes b{margin-bottom:4px;color:#334155}
+          .checkup-tables{width:100%}
           .checkup-page,.invoice-page{page-break-after:always;background:#fff}
           .checkup-page{page:clinicLetterhead;width:${PRINT_PAGE_WIDTH_CM}cm;min-height:${PRINT_PAGE_HEIGHT_CM}cm;padding:${LETTERHEAD_TOP_CM}cm ${LETTERHEAD_SIDE_CM}cm ${LETTERHEAD_BOTTOM_CM}cm}
           .invoice-page{page:invoiceLetterhead;width:${INVOICE_PAGE_WIDTH_CM}cm;min-height:${INVOICE_PAGE_HEIGHT_CM}cm;padding:${INVOICE_LETTERHEAD_TOP_CM}cm ${INVOICE_LETTERHEAD_SIDE_CM}cm ${INVOICE_LETTERHEAD_BOTTOM_CM}cm}
@@ -278,11 +312,14 @@ export function printPatientFile(patient, toothChartSrc) {
           .invoice-bio{display:grid;grid-template-columns:1fr 1fr;gap:.08cm .28cm;margin-bottom:.2cm}
           .invoice-bio div{font-size:9.5px;padding:.06cm 0}
           .invoice-bio b{width:1.4cm;color:#334155}
-          .invoice-items th,.invoice-items td{padding:.11cm .12cm;font-size:9.2px}
+          .invoice-items th,.invoice-items td,.payment-items th,.payment-items td{padding:.11cm .12cm;font-size:9.2px}
           .invoice-items th:first-child,.invoice-items td:first-child{width:.75cm;text-align:center}
           .invoice-items th:nth-child(3),.invoice-items td:nth-child(3){width:1cm;text-align:center}
           .invoice-items th:nth-child(4),.invoice-items td:nth-child(4),
           .invoice-items th:nth-child(5),.invoice-items td:nth-child(5){width:2.05cm;text-align:right}
+          .payment-items{margin-top:.1cm}
+          .payment-items th:first-child,.payment-items td:first-child{width:.75cm;text-align:center}
+          .payment-items th:last-child,.payment-items td:last-child{width:2.05cm;text-align:right}
           .invoice-totals{width:6.6cm;margin:.22cm 0 0 auto}
           .invoice-totals td{font-size:9.5px;padding:.1cm .13cm}
           .invoice-totals td:first-child{font-weight:800}
@@ -300,10 +337,8 @@ export function printPatientFile(patient, toothChartSrc) {
         </style>
       </head>
       <body>
-        ${checkupPage(patient, "Clinic Copy", toothChartUrl)}
-        ${invoicePage(patient, "Clinic Copy")}
-        ${checkupPage(patient, "Patient Copy", toothChartUrl)}
-        ${invoicePage(patient, "Patient Copy")}
+        ${checkupPages}
+        ${invoicePages}
         <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
       </body>
     </html>

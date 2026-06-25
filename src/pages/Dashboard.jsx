@@ -31,6 +31,20 @@ function StatCard({ label, value, detail, accent }) {
   );
 }
 
+const toDateKey = (value) => {
+  const date = parseLocalDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
 function Dashboard({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
   const [patients, setPatients] = useState([]);
@@ -135,7 +149,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     return patients
       .flatMap((patient) =>
         upcomingVisits(patient)
-          .filter((visit) => visit.date === today)
+          .filter((visit) => toDateKey(visit.date) === today)
           .map((visit) => ({
             patient,
             visit,
@@ -161,7 +175,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Clinic overview</div>
             <h1>{shift?.label || "Executive Dashboard"}</h1>
             <p>
-              {dateLabel}. {shift?.doctorName ? `${shift.doctorName} patient flow, treatment plans and account health.` : "Patient flow, treatment plans and account health at a glance."}
+              {dateLabel}. Patient flow, treatment plans and account health at a glance.
             </p>
           </div>
 

@@ -2,6 +2,7 @@ import React from "react";
 
 import ToothChart from "../common/ToothChart";
 import { HARD_TISSUE_CONDITIONS, SOFT_TISSUE_CONDITIONS } from "../../utils/clinicData";
+import { capitalizeFirstWord } from "../../utils/patientHelpers";
 import { playSectionSound } from "../../utils/sound";
 
 function FindingTable({ rows, onDelete, emptyText, firstColumnLabel = "S No", firstValue }) {
@@ -86,8 +87,10 @@ function ClinicalSelector({
           <textarea
             rows="3"
             value={manualCondition || ""}
-            onChange={(event) => onManualChange("condition", event.target.value)}
+            onChange={(event) => onManualChange("condition", capitalizeFirstWord(event.target.value))}
             placeholder="Write manual condition"
+            autoCapitalize="sentences"
+            spellCheck="true"
           />
         </label>
 
@@ -96,8 +99,10 @@ function ClinicalSelector({
           <textarea
             rows="3"
             value={manualTreatment || ""}
-            onChange={(event) => onManualChange("treatment", event.target.value)}
+            onChange={(event) => onManualChange("treatment", capitalizeFirstWord(event.target.value))}
             placeholder="Write manual treatment"
+            autoCapitalize="sentences"
+            spellCheck="true"
           />
         </label>
       </div>

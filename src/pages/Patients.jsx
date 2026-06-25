@@ -7,7 +7,14 @@ import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
 import toothChartImg from "../assets/tooth-chart.png";
-import { activeShift, applyShiftToPatient, discountAmount, netAmount } from "../utils/patientHelpers";
+import {
+  activeShift,
+  applyShiftToPatient,
+  discountAmount,
+  invoiceTotal,
+  netAmount,
+  todayDisplayValue,
+} from "../utils/patientHelpers";
 import { printPatientFile } from "../utils/printPatientFile";
 import { playSectionSound } from "../utils/sound";
 
@@ -15,6 +22,7 @@ const EMPTY_PATIENT = {
   biography: {},
   checkup: {},
   plannedSequence: [],
+  invoices: [],
   invoice: [],
   discount: 0,
   discountPercent: 0,
@@ -27,7 +35,7 @@ const EMPTY_PATIENT = {
   toothNotes: "",
 };
 
-const todayInputValue = () => new Date().toISOString().split("T")[0];
+const todayInputValue = () => todayDisplayValue();
 
 const TABS = [
   { id: "biography", label: "Bio-data" },
@@ -46,7 +54,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   const [initialPayment, setInitialPayment] = useState({
     date: todayInputValue(),
     amount: "",
-    description: "Paid at registration",
+    description: "",
   });
   const messageTimer = useRef(null);
 
@@ -71,7 +79,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     playSectionSound(type === "danger" ? "warning" : "success");
   };
 
-  const invoiceTotal = (data.invoice || []).reduce((sum, item) => sum + Number(item.cost || 0), 0);
+  const totalInvoiceAmount = invoiceTotal(data);
   const invDiscount = discountAmount(data);
   const invoiceNet = netAmount(data);
   const tabIndex = TABS.findIndex((item) => item.id === tab);
@@ -85,7 +93,39 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     plannedSequence: (data.plannedSequence || []).some(
       (visit) => visit.date || visit.procedure || visit.treatment || visit.details
     ),
-    invoice: (data.invoice || []).some((item) => item.details || Number(item.cost || 0) > 0),
+    invoice:
+      (data.invoice || []).some((item) => item.details || Number(item.cost || 0) > 0) ||
+      (data.invoices || []).some((invoice) =>
+        (invoice.items || []).some((item) => item.details || Number(item.cost || 0) > 0)
+      ),
+  };
+
+  const pendingPaymentEntry = () => {
+    const paidNow = Number(initialPayment.amount || 0);
+
+    if (paidNow <= 0) {
+      return null;
+    }
+
+    return {
+      date: initialPayment.date || todayInputValue(),
+      amount: paidNow,
+      description: initialPayment.description || "",
+      type: "payment",
+    };
+  };
+
+  const dataWithLivePayment = () => {
+    const entry = pendingPaymentEntry();
+
+    if (!entry) {
+      return data;
+    }
+
+    return {
+      ...data,
+      accountLedger: [...(data.accountLedger || []), entry],
+    };
   };
 
   const handleSave = async () => {
@@ -102,17 +142,8 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      const paidNow = Number(initialPayment.amount || 0);
       const shiftedData = applyShiftToPatient(data);
-      const paymentEntry =
-        paidNow > 0
-          ? {
-              date: initialPayment.date || todayInputValue(),
-              amount: paidNow,
-              description: initialPayment.description || "Paid at registration",
-              type: "payment",
-            }
-          : null;
+      const paymentEntry = pendingPaymentEntry();
       const payload = paymentEntry
         ? {
             ...shiftedData,
@@ -130,7 +161,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       setInitialPayment({
         date: todayInputValue(),
         amount: "",
-        description: "Paid at registration",
+        description: "",
       });
       notify(`Patient saved. Reg No: ${response.data.reg_no}`);
     } catch (error) {
@@ -203,15 +234,15 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             )}
             {shift?.label && (
               <span className="topbar-shift">
-                {shift.label} | {shift.doctorName}
+                {shift.label}
               </span>
             )}
           </div>
 
-          {invoiceTotal > 0 && (
+          {totalInvoiceAmount > 0 && (
             <div className="mini-summary">
               <span>Total</span>
-              <strong>{invoiceTotal.toLocaleString("en-PK")}</strong>
+              <strong>{totalInvoiceAmount.toLocaleString("en-PK")}</strong>
               <span>Discount</span>
               <strong>{invDiscount.toLocaleString("en-PK")}</strong>
               <span>Net</span>
@@ -224,8 +255,11 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           <button className="btn btn-ghost no-print" onClick={handleClear}>
             Clear
           </button>
-          <button className="btn no-print" onClick={() => printPatientFile(data, toothChartImg)}>
-            Print
+          <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, "checkup")}>
+            Checkup Sheet Print
+          </button>
+          <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, "invoice")}>
+            Invoice Print
           </button>
         </div>
 
@@ -251,7 +285,14 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             {tab === "biography" && <Biography patientData={data} setPatientData={setData} />}
             {tab === "checkup" && <Checkup patientData={data} setPatientData={setData} />}
             {tab === "plannedSequence" && <PlannedSequence patientData={data} setPatientData={setData} />}
-            {tab === "invoice" && <Invoice patientData={data} setPatientData={setData} />}
+            {tab === "invoice" && (
+              <Invoice
+                patientData={data}
+                setPatientData={setData}
+                initialPayment={initialPayment}
+                setInitialPayment={setInitialPayment}
+              />
+            )}
           </div>
 
           <div className="form-pager no-print">
@@ -271,42 +312,6 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             </button>
           </div>
 
-          {!data.isEditing && (
-            <div className="payment-panel no-print">
-              <label className="field">
-                <span>Paid Date</span>
-                <input
-                  type="date"
-                  value={initialPayment.date}
-                  onChange={(event) =>
-                    setInitialPayment((payment) => ({ ...payment, date: event.target.value }))
-                  }
-                />
-              </label>
-              <label className="field">
-                <span>Paid Now</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={initialPayment.amount}
-                  onChange={(event) =>
-                    setInitialPayment((payment) => ({ ...payment, amount: event.target.value }))
-                  }
-                  placeholder="Amount received"
-                />
-              </label>
-              <label className="field">
-                <span>Payment Note</span>
-                <input
-                  value={initialPayment.description}
-                  onChange={(event) =>
-                    setInitialPayment((payment) => ({ ...payment, description: event.target.value }))
-                  }
-                  placeholder="Cash, card, bank transfer..."
-                />
-              </label>
-            </div>
-          )}
         </div>
 
         <div className="bottom-bar no-print">

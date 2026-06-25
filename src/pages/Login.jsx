@@ -219,7 +219,6 @@ function Login({ onLogin }) {
                   }}
                 >
                   <strong>{shift.label}</strong>
-                  <span>{shift.doctorName}</span>
                 </button>
               ))}
             </div>
@@ -252,8 +251,8 @@ function Login({ onLogin }) {
             <span>Use admin access, then choose Morning or Evening shift.</span>
           ) : (
             <>
-              <span>Morning shift opens Dr Tufyl records.</span>
-              <span>Evening shift opens Dr Abdur Rehman records.</span>
+              <span>Morning shift opens morning records.</span>
+              <span>Evening shift opens evening records.</span>
             </>
           )}
         </div>

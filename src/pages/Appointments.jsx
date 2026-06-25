@@ -6,14 +6,28 @@ import {
   activeShift,
   activeShiftId,
   filterPatientsForActiveShift,
+  formatDateDisplay,
   initials,
   mobileNumber,
   patientArray,
   patientName,
+  parseLocalDate,
   regNo,
 } from "../utils/patientHelpers";
 
-const toDateKey = (date) => new Date(date).toISOString().split("T")[0];
+const toDateKey = (date) => {
+  const parsed = parseLocalDate(date);
+
+  if (!parsed) {
+    return "";
+  }
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
 
 function AppointmentCard({ appointment, tone }) {
   return (
@@ -67,18 +81,16 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             registrationNo: regNo(patient),
             visitNo: visit.visitNo,
             date: visit.date,
+            dateKey: toDateKey(visit.date),
             procedure: visit.procedure || visit.treatment || visit.details,
             rawVisit: visit,
           }))
         )
-        .filter((appointment) => appointment.date)
-        .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+        .filter((appointment) => appointment.dateKey)
+        .sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey)))
         .map((appointment) => ({
           ...appointment,
-          dateLabel: new Date(`${appointment.date}T00:00:00`).toLocaleDateString("en-PK", {
-            day: "2-digit",
-            month: "short",
-          }),
+          dateLabel: formatDateDisplay(appointment.date),
         }));
 
       setAppointments(allAppointments);
@@ -96,10 +108,10 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
   const tomorrowKey = toDateKey(tomorrow);
 
   const grouped = useMemo(() => {
-    const today = appointments.filter((appointment) => appointment.date === todayKey);
-    const tomorrowList = appointments.filter((appointment) => appointment.date === tomorrowKey);
-    const upcoming = appointments.filter((appointment) => appointment.date > tomorrowKey);
-    const overdue = appointments.filter((appointment) => appointment.date < todayKey);
+    const today = appointments.filter((appointment) => appointment.dateKey === todayKey);
+    const tomorrowList = appointments.filter((appointment) => appointment.dateKey === tomorrowKey);
+    const upcoming = appointments.filter((appointment) => appointment.dateKey > tomorrowKey);
+    const overdue = appointments.filter((appointment) => appointment.dateKey < todayKey);
 
     return { today, tomorrow: tomorrowList, upcoming, overdue };
   }, [appointments, todayKey, tomorrowKey]);
@@ -116,9 +128,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Planned sequence calendar</div>
             <h1>{shift?.label ? `${shift.label} Appointments` : "Appointments"}</h1>
             <p>
-              {shift?.doctorName
-                ? `Scheduled visits for ${shift.doctorName} are pulled directly from patient treatment plans.`
-                : "All scheduled visits are pulled directly from patient treatment plans."}
+              All scheduled visits are pulled directly from patient treatment plans.
             </p>
           </div>
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { CATEGORY_OPTIONS } from "../../utils/clinicData";
-import { activeShift } from "../../utils/patientHelpers";
+import { CATEGORY_OPTIONS, patientTypeForCategory } from "../../utils/clinicData";
+import { activeShift, capitalizeFirstWord, parseLocalDate, todayDisplayValue } from "../../utils/patientHelpers";
 
 function Biography({
   patientData,
@@ -10,15 +10,12 @@ function Biography({
   const formData =
     patientData.biography || {};
 
-  const sessionUser = JSON.parse(sessionStorage.getItem("user") || "{}");
   const shift = activeShift();
 
   useEffect(() => {
 
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = todayDisplayValue();
+    const defaultCategory = CATEGORY_OPTIONS[0].value;
 
     setPatientData((prev) => ({
 
@@ -38,17 +35,14 @@ function Biography({
 
         category:
           prev.biography?.category ||
-          "Category 1 - Affording",
+          defaultCategory,
 
         patientType:
-          prev.biography?.patientType ||
-          "Affording",
+          patientTypeForCategory(prev.biography?.category || defaultCategory),
 
         doctorName:
-          shift?.doctorName ||
           prev.biography?.doctorName ||
-          sessionUser.doctorName ||
-          (sessionUser.role === "doctor" ? sessionUser.name : ""),
+          "",
 
         shiftId:
           shift?.id ||
@@ -70,7 +64,13 @@ function Biography({
   const calculateAge = (dob) => {
 
     const birth =
-      new Date(dob);
+      parseLocalDate(dob);
+
+    if (!birth) {
+
+      return "";
+
+    }
 
     const today =
       new Date();
@@ -108,11 +108,26 @@ function Biography({
       value
     } = e.target;
 
+    const textFields = new Set([
+      "patientName",
+      "occupation",
+      "email",
+      "ptclNumber",
+      "mobileNumber",
+      "emergencyNumber",
+      "doctorName",
+      "address",
+    ]);
+    const nextValue =
+      textFields.has(name)
+        ? capitalizeFirstWord(value)
+        : value;
+
     let updatedData = {
 
       ...formData,
 
-      [name]: value,
+      [name]: nextValue,
 
     };
 
@@ -121,7 +136,16 @@ function Biography({
     ) {
 
       updatedData.age =
-        calculateAge(value);
+        calculateAge(nextValue);
+
+    }
+
+    if (
+      name === "category"
+    ) {
+
+      updatedData.patientType =
+        patientTypeForCategory(nextValue);
 
     }
 
@@ -138,7 +162,7 @@ function Biography({
 
   return (
 
-    <div>
+    <div spellCheck="true">
 
       <h2 className="
         text-2xl
@@ -168,12 +192,14 @@ function Biography({
           </label>
 
           <input
-            type="date"
+            type="text"
             name="date"
             value={
               formData.date || ""
             }
             onChange={handleChange}
+            placeholder="dd/mm/yyyy"
+            inputMode="numeric"
             className="
               w-full
               border
@@ -295,12 +321,14 @@ function Biography({
           </label>
 
           <input
-            type="date"
+            type="text"
             name="birthDate"
             value={
               formData.birthDate || ""
             }
             onChange={handleChange}
+            placeholder="dd/mm/yyyy"
+            inputMode="numeric"
             className="
               w-full
               border
@@ -526,33 +554,21 @@ function Biography({
             Patient Type
           </label>
 
-          <select
+          <input
+            type="text"
             name="patientType"
             value={
-              formData.patientType || ""
+              formData.patientType || patientTypeForCategory(formData.category)
             }
-            onChange={handleChange}
+            readOnly
             className="
               w-full
               border
               rounded-lg
               p-3
+              bg-gray-100
             "
-          >
-
-            <option>
-              Compassionate
-            </option>
-
-            <option>
-              Non-Affording
-            </option>
-
-            <option>
-              Affording
-            </option>
-
-          </select>
+          />
 
         </div>
 
@@ -598,11 +614,12 @@ function Biography({
             type="text"
             name="doctorName"
             value={
-              shift?.doctorName || formData.doctorName || ""
+              formData.doctorName || ""
             }
             onChange={handleChange}
-            placeholder={shift?.doctorName || "Doctor name"}
-            readOnly={Boolean(shift?.doctorName)}
+            placeholder="Enter doctor name or case done by"
+            autoCapitalize="words"
+            spellCheck="true"
             className="
               w-full
               border
@@ -632,6 +649,8 @@ function Biography({
             formData.address || ""
           }
           onChange={handleChange}
+          autoCapitalize="sentences"
+          spellCheck="true"
           rows="4"
           className="
             w-full
