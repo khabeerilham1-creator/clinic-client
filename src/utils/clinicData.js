@@ -1,4 +1,4 @@
-export const CLINIC_NAME = "HDC Dental & Aesthetics";
+export const CLINIC_NAME = "HDC Dental Intelligence System";
 export const DOCTOR_NAME = "Dr Zaffar Iqbal";
 export const CLINIC_LOCATION = "Hayatabad, Peshawar";
 

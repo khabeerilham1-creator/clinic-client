@@ -10,9 +10,10 @@ import AccountStatus from "./pages/AccountStatus";
 import Inventory from "./pages/Inventory";
 import Expenses from "./pages/Expenses";
 import LabRecords from "./pages/LabRecords";
+import DentistRevenue from "./pages/DentistRevenue";
 
 const ROLE_PAGES = {
-  admin: ["dashboard", "patients", "patients-list", "appointments", "lab-records", "account-status", "inventory", "expenses"],
+  admin: ["dashboard", "patients", "patients-list", "appointments", "lab-records", "account-status", "dentist-revenue", "inventory", "expenses"],
   doctor: ["patients", "appointments", "lab-records"],
   receptionist: ["patients", "appointments", "lab-records"],
 };
@@ -191,6 +192,18 @@ function App() {
 
     return (
       <Expenses
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+
+  }
+
+  if (activePage === "dentist-revenue") {
+
+    return (
+      <DentistRevenue
         activePage={activePage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}

@@ -1,42 +1,36 @@
 import React, { useState } from "react";
 
 import api from "../api";
-import { CLINIC_NAME, DOCTOR_NAME, SHIFT_OPTIONS } from "../utils/clinicData";
+import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
 import { playSectionSound } from "../utils/sound";
 
 function Login({ onLogin }) {
-  const [step, setStep] = useState("admin");
-  const [username, setUsername] = useState("admin");
-  const [selectedShiftId, setSelectedShiftId] = useState("");
+  const [username, setUsername] = useState("hdc1122");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [adminSession, setAdminSession] = useState(null);
 
-  const handleAdminLogin = async () => {
-    if (!username.trim()) {
-      setError("Please enter the admin username.");
+  const handleLogin = async (event) => {
+    event?.preventDefault();
+
+    if (loading) {
       return;
     }
-    if (!password.trim()) {
-      setError("Please enter the admin password.");
+
+    if (!username.trim() || !password.trim()) {
+      setError("Please enter username and password.");
       return;
     }
+
+    setLoading(true);
+    setError("");
 
     try {
-      setLoading(true);
-      setError("");
-
       const response = await api.post("/login", {
         username: username.trim(),
         password: password.trim(),
       });
-
-      if ((response.data.role || "admin") !== "admin" || response.data.shiftId) {
-        setError("Please sign in with the admin account.");
-        return;
-      }
 
       const user = {
         username: response.data.username || username.trim(),
@@ -44,77 +38,21 @@ function Login({ onLogin }) {
         role: response.data.role || "admin",
       };
 
-      setAdminSession({
-        token: response.data.token,
-        user,
-      });
-      setPassword("");
-      setSelectedShiftId("");
-      setShowPassword(false);
-      setStep("shift");
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem("role", user.role);
+      sessionStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.removeItem("shift");
       playSectionSound("success");
+
+      if (onLogin) {
+        onLogin(response.data.token);
+      }
     } catch (requestError) {
       console.error(requestError);
       setError(requestError.response?.data?.detail || "Login failed. Please try again.");
+      playSectionSound("warning");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleShiftContinue = () => {
-    const selectedShift = SHIFT_OPTIONS.find((shift) => shift.id === selectedShiftId);
-
-    if (!selectedShift) {
-      setError("Please select morning shift or evening shift.");
-      return;
-    }
-
-    if (!password.trim()) {
-      setError("Please enter the shift password.");
-      return;
-    }
-
-    if (password.trim() !== selectedShift.password) {
-      setError("Invalid shift password.");
-      return;
-    }
-
-    if (!adminSession?.token) {
-      setError("Please login with admin first.");
-      setStep("admin");
-      return;
-    }
-
-    const shift = {
-      id: selectedShift.id,
-      label: selectedShift.label,
-      doctorName: selectedShift.doctorName,
-    };
-    const user = {
-      ...adminSession.user,
-      shiftId: shift.id,
-      shiftName: shift.label,
-      doctorName: shift.doctorName,
-    };
-
-    sessionStorage.setItem("token", adminSession.token);
-    sessionStorage.setItem("role", user.role || "admin");
-    sessionStorage.setItem("user", JSON.stringify(user));
-    sessionStorage.setItem("shift", JSON.stringify(shift));
-    playSectionSound("success");
-
-    if (onLogin) {
-      onLogin(adminSession.token);
-    }
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      if (step === "admin") {
-        handleAdminLogin();
-      } else {
-        handleShiftContinue();
-      }
     }
   };
 
@@ -122,8 +60,8 @@ function Login({ onLogin }) {
     <main className="login-screen">
       <section className="login-visual">
         <div className="login-brand">
-            <div className="brand-mark large">H</div>
-            <div>
+          <div className="brand-mark large">H</div>
+          <div>
             <div className="brand-name">{CLINIC_NAME}</div>
             <div className="brand-meta">{DOCTOR_NAME}</div>
           </div>
@@ -131,10 +69,10 @@ function Login({ onLogin }) {
 
         <div className="login-copy">
           <div className="eyebrow">Clinic management workspace</div>
-          <h1>Premium patient care starts here.</h1>
+          <h1>{CLINIC_NAME}</h1>
           <p>
-            Secure access to patient records, appointments, invoices and clinic account
-            status from one polished command center.
+            Fast access to patient records, appointments, invoices, lab cases,
+            expenses and revenue tracking.
           </p>
         </div>
 
@@ -145,118 +83,60 @@ function Login({ onLogin }) {
           </div>
           <div>
             <strong>02</strong>
-            <span>Finance tracking</span>
+            <span>Revenue ledgers</span>
           </div>
           <div>
             <strong>03</strong>
-            <span>Planned sequence schedule</span>
+            <span>Expense control</span>
           </div>
         </div>
       </section>
 
-      <section className="login-card">
+      <form className="login-card" onSubmit={handleLogin}>
         <div className="login-card-header">
           <div className="eyebrow">Authorized access</div>
-          <h2>{step === "admin" ? "Admin login" : "Select shift"}</h2>
-          <p>
-            {step === "admin"
-              ? "Login with the admin account first."
-              : "Choose the working shift and enter its password to continue."}
-          </p>
+          <h2>Login</h2>
+          <p>Enter the clinic username and password once to continue.</p>
         </div>
 
         {error && <div className="notice danger">{error}</div>}
 
-        {step === "admin" ? (
-          <>
-            <label className="field">
-              <span>Username</span>
-              <input
-                type="text"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="admin"
-                autoComplete="username"
-              />
-            </label>
+        <label className="field">
+          <span>Username</span>
+          <input
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="hdc1122"
+            autoComplete="username"
+            autoFocus
+          />
+        </label>
 
-            <label className="field">
-              <span>Password</span>
-              <div className="password-field">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter admin password"
-                  autoComplete="current-password"
-                />
-                <button type="button" onClick={() => setShowPassword((visible) => !visible)}>
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </label>
-
-            <button className="btn btn-primary btn-full" onClick={handleAdminLogin} disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
+        <label className="field">
+          <span>Password</span>
+          <div className="password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Enter password"
+              autoComplete="current-password"
+            />
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)}>
+              {showPassword ? "Hide" : "Show"}
             </button>
-          </>
-        ) : (
-          <>
-            <div className="shift-choice-grid" role="group" aria-label="Select shift">
-              {SHIFT_OPTIONS.map((shift) => (
-                <button
-                  key={shift.id}
-                  type="button"
-                  className={`shift-choice${selectedShiftId === shift.id ? " active" : ""}`}
-                  onClick={() => {
-                    setSelectedShiftId(shift.id);
-                    setPassword("");
-                    setShowPassword(false);
-                    setError("");
-                    playSectionSound("section");
-                  }}
-                >
-                  <strong>{shift.label}</strong>
-                </button>
-              ))}
-            </div>
+          </div>
+        </label>
 
-            <label className="field">
-              <span>Shift Password</span>
-              <div className="password-field">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter selected shift password"
-                  autoComplete="current-password"
-                />
-                <button type="button" onClick={() => setShowPassword((visible) => !visible)}>
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </label>
-
-            <button className="btn btn-primary btn-full" onClick={handleShiftContinue}>
-              Continue
-            </button>
-          </>
-        )}
+        <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
+          {loading ? "Signing in..." : "Sign in"}
+        </button>
 
         <div className="login-help">
-          {step === "admin" ? (
-            <span>Use admin access, then choose Morning or Evening shift.</span>
-          ) : (
-            <>
-              <span>Morning shift opens morning records.</span>
-              <span>Evening shift opens evening records.</span>
-            </>
-          )}
+          <span>Username: hdc1122</span>
         </div>
-      </section>
+      </form>
     </main>
   );
 }

@@ -139,6 +139,19 @@ export const regNo = (patient) =>
 
 export const patientName = (patient) => bio(patient).patientName || "Unnamed patient";
 
+export const patientTitle = (patient) => String(bio(patient).title || "").trim();
+
+export const titledPatientName = (patient) => {
+  const title = patientTitle(patient);
+  const name = patientName(patient);
+
+  if (!title || name.toLowerCase().startsWith(title.toLowerCase())) {
+    return name;
+  }
+
+  return `${title} ${name}`.trim();
+};
+
 export const mobileNumber = (patient) => bio(patient).mobileNumber || "-";
 
 export const formatCurrency = (value) =>

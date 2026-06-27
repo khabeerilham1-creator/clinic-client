@@ -6,6 +6,7 @@ import {
   invoiceGroups,
   mobileNumber,
   patientName,
+  titledPatientName,
   paymentsTotal,
   regNo,
 } from "./patientHelpers";
@@ -146,7 +147,7 @@ const checkupPage = (patient, copyLabel, toothChartUrl) => {
       <div class="bio-grid">
         <div><b>Reg No</b><span>${escapeHtml(regNo(patient) || "-")}</span></div>
         <div><b>Date</b><span>${escapeHtml(formatDate(patientBio.date || new Date()))}</span></div>
-        <div><b>Patient</b><span>${escapeHtml(patientName(patient))}</span></div>
+        <div><b>Patient</b><span>${escapeHtml(titledPatientName(patient))}</span></div>
         <div><b>Mobile</b><span>${escapeHtml(mobileNumber(patient))}</span></div>
         <div><b>Doctor</b><span>${escapeHtml(patientBio.doctorName || DOCTOR_NAME)}</span></div>
         <div><b>Category</b><span>${escapeHtml(patientBio.category || "-")}</span></div>
@@ -204,7 +205,7 @@ const invoicePage = (patient, copyLabel, invoice) => {
         <div class="invoice-bio">
           <div><b>Reg</b><span>${escapeHtml(regNo(patient) || "-")}</span></div>
           <div><b>Date</b><span>${escapeHtml(formatDate(patientBio.date || new Date()))}</span></div>
-          <div><b>Name</b><span>${escapeHtml(patientName(patient))}</span></div>
+          <div><b>Name</b><span>${escapeHtml(titledPatientName(patient))}</span></div>
           <div><b>Mobile</b><span>${escapeHtml(mobileNumber(patient))}</span></div>
           <div><b>Doctor</b><span>${escapeHtml(patientBio.doctorName || DOCTOR_NAME)}</span></div>
           <div><b>Cat</b><span>${escapeHtml(patientBio.category || "-")}</span></div>
@@ -220,7 +221,7 @@ const invoicePage = (patient, copyLabel, invoice) => {
         <table class="invoice-totals">
           <tbody>
             <tr><td>Total</td><td>${escapeHtml(formatCurrencyBlank(total))}</td></tr>
-            <tr><td>Discount</td><td>${escapeHtml(formatCurrencyBlank(discount))}</td></tr>
+            ${discount > 0 ? `<tr><td>Discount</td><td>${escapeHtml(formatCurrencyBlank(discount))}</td></tr>` : ""}
             <tr class="net"><td>Net Amount</td><td>${escapeHtml(formatCurrencyBlank(net))}</td></tr>
             <tr><td>Total Paid</td><td>${escapeHtml(formatCurrencyBlank(paymentsTotal(patient)))}</td></tr>
             <tr><td>Total Remaining</td><td>${escapeHtml(formatCurrencyBlank(balanceDue(patient)))}</td></tr>

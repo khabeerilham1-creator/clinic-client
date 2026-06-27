@@ -130,23 +130,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     amount: "",
     description: "",
   });
-  const [doctorShareForm, setDoctorShareForm] = useState({
-    date: todayInputValue(),
-    amount: "",
-    status: "unpaid",
-  });
-  const [labExpenseForm, setLabExpenseForm] = useState({
-    labName: "",
-    details: "",
-    date: todayInputValue(),
-    amount: "",
-    status: "unpaid",
-  });
-  const [dentalMaterialForm, setDentalMaterialForm] = useState({
-    date: todayInputValue(),
-    amount: "",
-    status: "paid",
-  });
+  const [editingPaymentKey, setEditingPaymentKey] = useState(null);
 
   useEffect(() => {
     fetchPatients();
@@ -195,12 +179,8 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
   const totals = useMemo(() => {
     const dueAmount = filteredPatients.reduce((sum, patient) => sum + balanceDue(patient), 0);
     const paidAmount = filteredPatients.reduce((sum, patient) => sum + paymentsTotal(patient), 0);
-    const patientExpenses = filteredPatients.reduce(
-      (sum, patient) => sum + patientExpenseTotal(patient),
-      0
-    );
     const operatingExpenses = expenses.reduce((sum, expense) => sum + entryAmount(expense), 0);
-    const totalExpenses = patientExpenses + operatingExpenses;
+    const totalExpenses = operatingExpenses;
 
     return {
       dueAmount,
@@ -223,15 +203,8 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
           .reduce((ledgerSum, entry) => ledgerSum + ledgerEntryValue(entry), 0),
       0
     );
-    const patientExpenseEntries = patients.flatMap(allPatientExpenseEntries).filter((entry) =>
-      withinBounds(entry.date || entry.timestamp, bounds)
-    );
     const periodExpenses = expenses.filter((expense) =>
       withinBounds(expense.date || expense.createdAt, bounds)
-    );
-    const patientExpenseAmount = patientExpenseEntries.reduce(
-      (sum, entry) => sum + entryAmount(entry),
-      0
     );
     const operatingExpenseAmount = periodExpenses.reduce(
       (sum, expense) => sum + entryAmount(expense),
@@ -239,37 +212,31 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     );
     const breakdown = [
       {
-        label: "Doctor share",
-        amount: patientExpenseEntries
-          .filter((entry) => entry.category === "Doctor share")
-          .reduce((sum, entry) => sum + entryAmount(entry), 0),
-      },
-      {
-        label: "Lab expenses",
-        amount: patientExpenseEntries
-          .filter((entry) => entry.category === "Lab expenses")
-          .reduce((sum, entry) => sum + entryAmount(entry), 0),
-      },
-      {
-        label: "Dental material",
-        amount: patientExpenseEntries
-          .filter((entry) => entry.category === "Dental material")
-          .reduce((sum, entry) => sum + entryAmount(entry), 0),
-      },
-      {
-        label: "Clinical expenses",
+        label: "Administration",
         amount: periodExpenses
-          .filter((expense) => expense.category === "clinical")
-          .reduce((sum, expense) => sum + entryAmount(expense), 0),
+          .filter((expense) => expense.category === "administration")
+          .reduce((sum, expense) => sum + entryAmount(expense.totalAmount || expense.amount), 0),
       },
       {
-        label: "Home expenses",
+        label: "Team",
         amount: periodExpenses
-          .filter((expense) => expense.category === "home")
-          .reduce((sum, expense) => sum + entryAmount(expense), 0),
+          .filter((expense) => expense.category === "team")
+          .reduce((sum, expense) => sum + entryAmount(expense.netSalary || expense.amount), 0),
+      },
+      {
+        label: "Dental Material",
+        amount: periodExpenses
+          .filter((expense) => expense.category === "dental-material")
+          .reduce((sum, expense) => sum + entryAmount(expense.totalAmount || expense.amount), 0),
+      },
+      {
+        label: "Dental Implants",
+        amount: periodExpenses
+          .filter((expense) => expense.category === "dental-implants")
+          .reduce((sum, expense) => sum + entryAmount(expense.totalAmount || expense.amount), 0),
       },
     ];
-    const totalExpenses = patientExpenseAmount + operatingExpenseAmount;
+    const totalExpenses = operatingExpenseAmount;
 
     return {
       bounds,
@@ -313,6 +280,17 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     window.print();
   };
 
+  const ledgerEntryKey = (entry, index) => entry.id || String(index);
+
+  const resetPaymentForm = () => {
+    setEditingPaymentKey(null);
+    setPaymentForm({
+      date: todayInputValue(),
+      amount: "",
+      description: "",
+    });
+  };
+
   const handleAddPayment = async () => {
     if (!selectedPatient?._id || !Number(paymentForm.amount || 0)) {
       return;
@@ -326,21 +304,34 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     };
 
     try {
-      await api.post(`/patients/${selectedPatient._id}/ledger`, entry);
+      let savedEntry = entry;
+      let nextLedger = selectedPatient.accountLedger || [];
+
+      if (editingPaymentKey !== null) {
+        const response = await api.put(
+          `/patients/${selectedPatient._id}/ledger/${editingPaymentKey}`,
+          entry
+        );
+        savedEntry = response.data.entry || entry;
+        nextLedger = nextLedger.map((item, index) =>
+          ledgerEntryKey(item, index) === editingPaymentKey ? savedEntry : item
+        );
+      } else {
+        const response = await api.post(`/patients/${selectedPatient._id}/ledger`, entry);
+        savedEntry = response.data.entry || entry;
+        nextLedger = [...nextLedger, savedEntry];
+      }
+
       const updatedPatient = {
         ...selectedPatient,
-        accountLedger: [...(selectedPatient.accountLedger || []), entry],
+        accountLedger: nextLedger,
       };
 
       setSelectedPatient(updatedPatient);
       setPatients((current) =>
         current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
       );
-      setPaymentForm({
-        date: todayInputValue(),
-        amount: "",
-        description: "",
-      });
+      resetPaymentForm();
       playSectionSound("success");
     } catch (requestError) {
       console.error(requestError);
@@ -348,99 +339,40 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     }
   };
 
-  const updateSelectedPatient = async (updates) => {
-    const updatedPatient = {
-      ...selectedPatient,
-      ...updates,
-    };
-
-    await api.put(`/patients/${selectedPatient._id}`, updatedPatient);
-    setSelectedPatient(updatedPatient);
-    setPatients((current) =>
-      current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
-    );
-    playSectionSound("success");
+  const handleEditPayment = (entry, index) => {
+    setEditingPaymentKey(ledgerEntryKey(entry, index));
+    setPaymentForm({
+      date: entry.date || todayInputValue(),
+      amount: String(entry.amount || ""),
+      description: entry.description || "",
+    });
   };
 
-  const handleAddDoctorShare = async () => {
-    if (!selectedPatient?._id || !Number(doctorShareForm.amount || 0)) {
+  const handleDeletePayment = async (entry, index) => {
+    const key = ledgerEntryKey(entry, index);
+
+    if (!selectedPatient?._id || !window.confirm("Delete this payment?")) {
       return;
     }
 
-    const entry = {
-      date: doctorShareForm.date || todayInputValue(),
-      amount: Number(doctorShareForm.amount),
-      status: doctorShareForm.status || "unpaid",
-    };
-
     try {
-      await updateSelectedPatient({
-        doctorShare: [...(selectedPatient.doctorShare || []), entry],
-      });
-      setDoctorShareForm({
-        date: todayInputValue(),
-        amount: "",
-        status: "unpaid",
-      });
+      await api.delete(`/patients/${selectedPatient._id}/ledger/${key}`);
+      const updatedPatient = {
+        ...selectedPatient,
+        accountLedger: (selectedPatient.accountLedger || []).filter(
+          (item, itemIndex) => ledgerEntryKey(item, itemIndex) !== key
+        ),
+      };
+
+      setSelectedPatient(updatedPatient);
+      setPatients((current) =>
+        current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
+      );
+      resetPaymentForm();
+      playSectionSound("warning");
     } catch (requestError) {
       console.error(requestError);
-      alert("Doctor share could not be saved. Please try again.");
-    }
-  };
-
-  const handleAddLabExpense = async () => {
-    if (!selectedPatient?._id || !Number(labExpenseForm.amount || 0)) {
-      return;
-    }
-
-    const entry = {
-      labName: labExpenseForm.labName || "Lab",
-      details: labExpenseForm.details || "",
-      date: labExpenseForm.date || todayInputValue(),
-      amount: Number(labExpenseForm.amount),
-      status: labExpenseForm.status || "unpaid",
-    };
-
-    try {
-      await updateSelectedPatient({
-        labExpenses: [...(selectedPatient.labExpenses || []), entry],
-      });
-      setLabExpenseForm({
-        labName: "",
-        details: "",
-        date: todayInputValue(),
-        amount: "",
-        status: "unpaid",
-      });
-    } catch (requestError) {
-      console.error(requestError);
-      alert("Lab expense could not be saved. Please try again.");
-    }
-  };
-
-  const handleAddDentalMaterial = async () => {
-    if (!selectedPatient?._id || !Number(dentalMaterialForm.amount || 0)) {
-      return;
-    }
-
-    const entry = {
-      date: dentalMaterialForm.date || todayInputValue(),
-      amount: Number(dentalMaterialForm.amount),
-      status: dentalMaterialForm.status || "paid",
-    };
-
-    try {
-      await updateSelectedPatient({
-        dentalMaterials: [...(selectedPatient.dentalMaterials || []), entry],
-      });
-      setDentalMaterialForm({
-        date: todayInputValue(),
-        amount: "",
-        status: "paid",
-      });
-    } catch (requestError) {
-      console.error(requestError);
-      alert("Dental material expense could not be saved. Please try again.");
+      alert("Payment could not be deleted. Please try again.");
     }
   };
 
@@ -616,16 +548,6 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                 <strong>{formatCurrency(paymentsTotal(selectedPatient))}</strong>
               </div>
               <div>
-                <span>Expenses</span>
-                <strong>{formatCurrency(patientExpenseTotal(selectedPatient))}</strong>
-              </div>
-              <div>
-                <span>Net income</span>
-                <strong>
-                  {formatCurrency(paymentsTotal(selectedPatient) - patientExpenseTotal(selectedPatient))}
-                </strong>
-              </div>
-              <div>
                 <span>Remaining</span>
                 <strong>{formatCurrency(balanceDue(selectedPatient))}</strong>
               </div>
@@ -659,8 +581,13 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                 />
               </label>
               <button className="btn btn-primary" type="button" onClick={handleAddPayment}>
-                Save payment
+                {editingPaymentKey !== null ? "Update payment" : "Save payment"}
               </button>
+              {editingPaymentKey !== null && (
+                <button className="btn" type="button" onClick={resetPaymentForm}>
+                  Cancel
+                </button>
+              )}
             </div>
 
             <div className="data-table-wrap">
@@ -702,12 +629,13 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                       <th>Details</th>
                       <th>Amount</th>
                       <th>Remaining After Payment</th>
+                      <th className="no-print">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(selectedPatient.accountLedger || []).length === 0 && (
                       <tr>
-                        <td colSpan="4">No payment details recorded.</td>
+                        <td colSpan="5">No payment details recorded.</td>
                       </tr>
                     )}
 
@@ -722,6 +650,18 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                           <td>{entry.description || "Payment received"}</td>
                           <td>{formatCurrency(entry.amount)}</td>
                           <td>{formatCurrency(Math.max(netAmount(selectedPatient) - paidUntilNow, 0))}</td>
+                          <td className="row-actions no-print">
+                            <button className="btn btn-sm" type="button" onClick={() => handleEditPayment(entry, index)}>
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-danger"
+                              type="button"
+                              onClick={() => handleDeletePayment(entry, index)}
+                            >
+                              Delete
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
@@ -730,6 +670,8 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
               </div>
             </div>
 
+            {false && (
+              <>
             <div className="detail-card">
               <h3>Doctor Share</h3>
               <div className="payment-panel no-print">
@@ -963,6 +905,8 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                 </table>
               </div>
             </div>
+              </>
+            )}
           </section>
         )}
 
@@ -1015,7 +959,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                     </td>
                     <td className="no-print">
                       <button className="btn btn-sm" onClick={() => setSelectedPatient(patient)}>
-                        Open account
+                        Payment
                       </button>
                     </td>
                   </tr>
