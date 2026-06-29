@@ -1439,6 +1439,110 @@ textarea:focus {
   min-width: 220px;
 }
 
+.payment-panel.lab-case-form,
+.payment-panel.ledger-payment-form,
+.payment-panel.revenue-form {
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) auto auto;
+}
+
+.payment-panel.admin-expense-form,
+.payment-panel.team-expense-form,
+.payment-panel.stock-expense-form {
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) auto auto;
+}
+
+.calculated-field {
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.calculated-field span,
+.ledger-total-grid span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.calculated-field strong,
+.ledger-total-grid strong {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.ledger-total-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ledger-total-grid > div {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.ledger-total-grid span,
+.ledger-total-grid strong {
+  display: block;
+}
+
+.ledger-total-grid strong {
+  margin-top: 8px;
+}
+
+.revenue-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 16px;
+}
+
+.expense-lines,
+.session-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.expense-line,
+.session-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 150px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.session-row {
+  grid-template-columns: minmax(160px, 1fr) 140px 140px auto;
+}
+
+.expense-line input,
+.session-row input,
+.session-row select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 0 12px;
+  outline: none;
+}
+
+.revenue-patient-list {
+  max-height: 260px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .lab-switcher {
   align-items: stretch;
 }

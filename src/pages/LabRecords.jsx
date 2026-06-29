@@ -7,6 +7,7 @@ import {
   activeShiftId,
   filterPatientsForActiveShift,
   formatCurrency,
+  formatDateDisplay,
   initials,
   mobileNumber,
   patientArray,
@@ -17,7 +18,6 @@ import { CLINIC_NAME, DEFAULT_LABS, DOCTOR_NAME } from "../utils/clinicData";
 import { playSectionSound } from "../utils/sound";
 
 const LAB_STORAGE_KEY = "clinicLabs";
-const LAB_STATUS_OPTIONS = ["Sent", "In progress", "Received", "Delivered"];
 
 const todayInputValue = () => new Date().toISOString().split("T")[0];
 
@@ -27,9 +27,14 @@ const emptyForm = (patientId = "") => ({
   job: "",
   units: "",
   shade: "",
-  status: "Sent",
+  costPerUnit: "",
+});
+
+const emptyPaymentForm = () => ({
+  date: todayInputValue(),
   amount: "",
-  paymentStatus: "unpaid",
+  method: "",
+  note: "",
 });
 
 const makeRecordId = () => {
@@ -81,78 +86,51 @@ const saveLabs = (labs) => {
   localStorage.setItem(LAB_STORAGE_KEY, JSON.stringify(uniqueLabs(labs)));
 };
 
-const labTitle = (labName) => `${labName} record`;
+const paymentArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.payments)) {
+    return payload.payments;
+  }
+
+  return [];
+};
 
 const recordDate = (record) => record.date || record.sendingDate || "";
-
 const recordJob = (record) => record.job || record.details || "";
-
-const recordUnits = (record) => record.units || "";
-
+const recordUnits = (record) => Number(record.units || 0);
 const recordShade = (record) => record.shade || "";
+const recordCostPerUnit = (record) => {
+  const explicitCost = Number(record.costPerUnit || record.cost_per_unit || 0);
 
-const recordStatus = (record) => record.status || (record.receivingDate ? "Received" : "Sent");
-
-const recordPaymentStatus = (record) => record.paymentStatus || record.paidStatus || "unpaid";
-
-const recordAmount = (record) => Number(record.amount || 0);
-
-const detailsForAccount = (record) =>
-  [
-    recordJob(record) && `Job: ${recordJob(record)}`,
-    recordUnits(record) && `Units: ${recordUnits(record)}`,
-    recordShade(record) && `Shade: ${recordShade(record)}`,
-    recordStatus(record) && `Status: ${recordStatus(record)}`,
-  ]
-    .filter(Boolean)
-    .join(" | ");
-
-const labExpenseFromRecord = (record) => ({
-  id: `lab-expense-${record.id}`,
-  labRecordId: record.id,
-  labName: record.labName || "Lab",
-  details: detailsForAccount(record),
-  job: recordJob(record),
-  units: recordUnits(record),
-  shade: recordShade(record),
-  caseStatus: recordStatus(record),
-  date: recordDate(record) || todayInputValue(),
-  amount: recordAmount(record),
-  status: recordPaymentStatus(record),
-});
-
-const mergeLabExpense = (expenses, record) => {
-  const nextExpense = labExpenseFromRecord(record);
-  const existing = expenses || [];
-  const index = existing.findIndex(
-    (expense) => expense.labRecordId === record.id || expense.id === nextExpense.id
-  );
-
-  if (index === -1) {
-    return [nextExpense, ...existing];
+  if (explicitCost) {
+    return explicitCost;
   }
 
-  return existing.map((expense, expenseIndex) => (expenseIndex === index ? nextExpense : expense));
+  const units = recordUnits(record);
+  const total = Number(record.totalAmount || record.amount || 0);
+
+  return units ? total / units : total;
+};
+const recordTotalAmount = (record) => {
+  const explicitTotal = Number(record.totalAmount || record.total_amount || record.amount || 0);
+
+  if (explicitTotal) {
+    return explicitTotal;
+  }
+
+  return recordUnits(record) * recordCostPerUnit(record);
 };
 
-const removeLabExpense = (expenses, recordId) =>
-  (expenses || []).filter(
-    (expense) => expense.labRecordId !== recordId && expense.id !== `lab-expense-${recordId}`
-  );
-
-const statusClass = (status) => {
-  const clean = normalizeText(status);
-
-  if (clean.includes("received") || clean.includes("deliver")) {
-    return "pill success";
-  }
-
-  if (clean.includes("progress")) {
-    return "pill warning";
-  }
-
-  return "pill";
-};
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 function LabRecords({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
@@ -160,30 +138,37 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
   const [activeLab, setActiveLab] = useState(() => loadLabs()[0] || DEFAULT_LABS[0]);
   const [newLabName, setNewLabName] = useState("");
   const [patients, setPatients] = useState([]);
+  const [labPayments, setLabPayments] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patientSearch, setPatientSearch] = useState("");
   const [form, setForm] = useState(emptyForm());
+  const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
   const [editingId, setEditingId] = useState(null);
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchPatients();
+    fetchData();
   }, []);
 
-  const fetchPatients = async () => {
+  const fetchData = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const response = await api.get("/patients", {
-        params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
-      });
-      const list = filterPatientsForActiveShift(patientArray(response.data));
+      const [patientsResponse, paymentsResponse] = await Promise.all([
+        api.get("/patients", {
+          params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
+        }),
+        api.get("/lab-payments", { params: { limit: 1000 } }),
+      ]);
+      const list = filterPatientsForActiveShift(patientArray(patientsResponse.data));
 
       setPatients(list);
+      setLabPayments(paymentArray(paymentsResponse.data));
 
       if (selectedPatient?._id) {
         const refreshedPatient = list.find((patient) => patient._id === selectedPatient._id);
@@ -231,20 +216,32 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
     [patients, activeLab]
   );
 
+  const activeLabPayments = useMemo(
+    () =>
+      labPayments
+        .filter((payment) => normalizeText(payment.labName) === normalizeText(activeLab))
+        .sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))),
+    [labPayments, activeLab]
+  );
+
+  const ledgerTotals = useMemo(() => {
+    const totalBill = activeLabRows.reduce((sum, record) => sum + recordTotalAmount(record), 0);
+    const paid = activeLabPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+    return {
+      totalBill,
+      paid,
+      remaining: Math.max(totalBill - paid, 0),
+    };
+  }, [activeLabRows, activeLabPayments]);
+
   const selectedPatientRows = useMemo(
     () =>
       activeLabRows.filter((record) => selectedPatient?._id && record.patient?._id === selectedPatient._id),
     [activeLabRows, selectedPatient]
   );
 
-  const pendingCount = activeLabRows.filter((record) => {
-    const cleanStatus = normalizeText(recordStatus(record));
-    return !cleanStatus.includes("received") && !cleanStatus.includes("deliver");
-  }).length;
-
-  const unpaidAmount = activeLabRows
-    .filter((record) => recordPaymentStatus(record) !== "paid")
-    .reduce((sum, record) => sum + recordAmount(record), 0);
+  const currentTotalAmount = Number(form.units || 0) * Number(form.costPerUnit || 0);
 
   const showMessage = (text, type = "success") => {
     setMessage({ text, type });
@@ -281,6 +278,8 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
   const selectLab = (labName) => {
     setActiveLab(labName);
     setEditingId(null);
+    setEditingPaymentId(null);
+    setPaymentForm(emptyPaymentForm());
     setForm((current) => emptyForm(current.patientId));
     playSectionSound("section");
   };
@@ -298,7 +297,8 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
     const matchingPatient = patients.find(
       (patient) =>
         normalizeText(patientName(patient)) === normalizeText(value) ||
-        normalizeText(regNo(patient)) === normalizeText(value)
+        normalizeText(regNo(patient)) === normalizeText(value) ||
+        normalizeText(`${patientName(patient)} - ${regNo(patient)}`) === normalizeText(value)
     );
 
     if (matchingPatient) {
@@ -332,12 +332,12 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
       selectedPatient || patients.find((item) => item._id && item._id === form.patientId);
 
     if (!patient?._id) {
-      showMessage("Select a patient before saving a lab record.", "danger");
+      showMessage("Select a patient before saving a lab case.", "danger");
       return;
     }
 
-    if (!recordJob(form).trim() && !Number(form.amount || 0)) {
-      showMessage("Enter a job or amount before saving.", "danger");
+    if (!form.job.trim() && !currentTotalAmount) {
+      showMessage("Enter job or amount before saving.", "danger");
       return;
     }
 
@@ -346,11 +346,10 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
       labName: activeLab,
       date: form.date || todayInputValue(),
       job: form.job.trim(),
-      units: form.units.trim(),
+      units: Number(form.units || 0),
       shade: form.shade.trim(),
-      status: form.status || "Sent",
-      amount: Number(form.amount || 0),
-      paymentStatus: form.paymentStatus || "unpaid",
+      costPerUnit: Number(form.costPerUnit || 0),
+      totalAmount: currentTotalAmount,
       updatedAt: new Date().toISOString(),
     };
 
@@ -362,7 +361,6 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
     const updatedPatient = {
       ...patient,
       labRecords: nextRecords,
-      labExpenses: mergeLabExpense(patient.labExpenses || [], record),
     };
 
     setSaving(true);
@@ -370,10 +368,10 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
     try {
       await updatePatient(updatedPatient);
       resetForm(patient._id);
-      showMessage(editingId ? "Lab record updated and synced to patient account." : "Lab record saved and synced to patient account.");
+      showMessage(editingId ? "Lab case updated." : "Lab case saved.");
     } catch (requestError) {
       console.error(requestError);
-      showMessage("Lab record could not be saved. Please try again.", "danger");
+      showMessage("Lab case could not be saved. Please try again.", "danger");
     } finally {
       setSaving(false);
     }
@@ -389,16 +387,14 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
       date: recordDate(record) || todayInputValue(),
       patientId: patient?._id || "",
       job: recordJob(record),
-      units: recordUnits(record),
+      units: String(recordUnits(record) || ""),
       shade: recordShade(record),
-      status: recordStatus(record),
-      amount: record.amount ?? "",
-      paymentStatus: recordPaymentStatus(record),
+      costPerUnit: String(recordCostPerUnit(record) || ""),
     });
   };
 
   const handleDelete = async (record) => {
-    if (!window.confirm(`Delete ${activeLab} record for ${record.patientName}?`)) {
+    if (!window.confirm(`Delete ${activeLab} case for ${record.patientName}?`)) {
       return;
     }
 
@@ -406,17 +402,166 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
     const updatedPatient = {
       ...patient,
       labRecords: (patient.labRecords || []).filter((item) => item.id !== record.id),
-      labExpenses: removeLabExpense(patient.labExpenses || [], record.id),
     };
 
     try {
       await updatePatient(updatedPatient);
       resetForm(patient._id);
-      showMessage("Lab record deleted from lab and patient account.");
+      showMessage("Lab case deleted.");
     } catch (requestError) {
       console.error(requestError);
-      showMessage("Lab record could not be deleted.", "danger");
+      showMessage("Lab case could not be deleted.", "danger");
     }
+  };
+
+  const resetPaymentForm = () => {
+    setEditingPaymentId(null);
+    setPaymentForm(emptyPaymentForm());
+  };
+
+  const handleSavePayment = async () => {
+    if (!Number(paymentForm.amount || 0)) {
+      showMessage("Enter paid amount before saving.", "danger");
+      return;
+    }
+
+    const payload = {
+      labName: activeLab,
+      date: paymentForm.date || todayInputValue(),
+      amount: Number(paymentForm.amount || 0),
+      method: paymentForm.method,
+      note: paymentForm.note,
+    };
+
+    try {
+      if (editingPaymentId) {
+        const response = await api.put(`/lab-payments/${editingPaymentId}`, payload);
+        const savedPayment = response.data.payment || { ...payload, _id: editingPaymentId };
+        setLabPayments((current) =>
+          current.map((payment) => (payment._id === editingPaymentId ? savedPayment : payment))
+        );
+        showMessage("Lab payment updated.");
+      } else {
+        const response = await api.post("/lab-payments", payload);
+        setLabPayments((current) => [response.data.payment, ...current]);
+        showMessage("Lab payment saved.");
+      }
+
+      resetPaymentForm();
+    } catch (requestError) {
+      console.error(requestError);
+      showMessage("Lab payment could not be saved.", "danger");
+    }
+  };
+
+  const handleEditPayment = (payment) => {
+    setEditingPaymentId(payment._id);
+    setPaymentForm({
+      date: payment.date || todayInputValue(),
+      amount: String(payment.amount || ""),
+      method: payment.method || "",
+      note: payment.note || "",
+    });
+  };
+
+  const handleDeletePayment = async (payment) => {
+    if (!window.confirm("Delete this lab payment?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/lab-payments/${payment._id}`);
+      setLabPayments((current) => current.filter((item) => item._id !== payment._id));
+      resetPaymentForm();
+      showMessage("Lab payment deleted.");
+    } catch (requestError) {
+      console.error(requestError);
+      showMessage("Lab payment could not be deleted.", "danger");
+    }
+  };
+
+  const printLedger = () => {
+    const printWindow = window.open("", "", "width=1000,height=760");
+
+    if (!printWindow) {
+      window.alert("Print window could not open. Please allow popups for this site.");
+      return;
+    }
+
+    const caseRows = activeLabRows
+      .map(
+        (record, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(record.patientName)}</td>
+            <td>${escapeHtml(activeLab)}</td>
+            <td>${escapeHtml(recordJob(record))}</td>
+            <td>${escapeHtml(recordUnits(record))}</td>
+            <td>${escapeHtml(recordShade(record))}</td>
+            <td>${escapeHtml(formatCurrency(recordCostPerUnit(record)))}</td>
+            <td>${escapeHtml(formatCurrency(recordTotalAmount(record)))}</td>
+          </tr>
+        `
+      )
+      .join("");
+    const paymentRows = activeLabPayments
+      .map(
+        (payment, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(formatDateDisplay(payment.date))}</td>
+            <td>${escapeHtml(payment.method || "-")}</td>
+            <td>${escapeHtml(payment.note || "-")}</td>
+            <td>${escapeHtml(formatCurrency(payment.amount))}</td>
+          </tr>
+        `
+      )
+      .join("");
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${escapeHtml(activeLab)} Ledger</title>
+          <style>
+            body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:#111827}
+            h1{font-size:20px;margin:0 0 4px;text-transform:uppercase}
+            h2{font-size:15px;margin:0 0 18px;color:#475569}
+            h3{font-size:13px;margin:18px 0 8px;text-transform:uppercase}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #cbd5e1;padding:7px;text-align:left;font-size:11px}
+            th{background:#f1f5f9;text-transform:uppercase;font-size:10px}
+            .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+            .totals div{border:1px solid #cbd5e1;padding:10px}
+            .totals span{display:block;color:#64748b;font-size:10px;text-transform:uppercase}
+            .totals strong{display:block;margin-top:4px;font-size:15px}
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(CLINIC_NAME)}</h1>
+          <h2>${escapeHtml(activeLab)} Payment Ledger</h2>
+          <div class="totals">
+            <div><span>Total Bill</span><strong>${escapeHtml(formatCurrency(ledgerTotals.totalBill))}</strong></div>
+            <div><span>Paid</span><strong>${escapeHtml(formatCurrency(ledgerTotals.paid))}</strong></div>
+            <div><span>Remaining</span><strong>${escapeHtml(formatCurrency(ledgerTotals.remaining))}</strong></div>
+          </div>
+          <h3>Lab Cases</h3>
+          <table>
+            <thead>
+              <tr><th>S No</th><th>Patient Name</th><th>Lab Name</th><th>Job</th><th>Units</th><th>Shade</th><th>Cost Per Unit</th><th>Total Amount</th></tr>
+            </thead>
+            <tbody>${caseRows || `<tr><td colspan="8">No lab cases recorded.</td></tr>`}</tbody>
+          </table>
+          <h3>Payment Details</h3>
+          <table>
+            <thead><tr><th>S No</th><th>Paid Date</th><th>Method</th><th>Note</th><th>Paid</th></tr></thead>
+            <tbody>${paymentRows || `<tr><td colspan="5">No payments recorded.</td></tr>`}</tbody>
+          </table>
+          <script>window.onload=()=>setTimeout(()=>window.print(),250);<\/script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   return (
@@ -425,23 +570,21 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
         <section className="print-report-header">
           <strong>{CLINIC_NAME}</strong>
           <span>{shift?.label || DOCTOR_NAME}</span>
-          <span>{labTitle(activeLab)} - {shift?.label || "All shifts"}</span>
+          <span>{activeLab} Payment Ledger</span>
         </section>
 
         <section className="page-hero">
           <div>
-            <div className="eyebrow">Lab case register</div>
-            <h1>{labTitle(activeLab)}</h1>
-            <p>
-              Select a lab, attach a patient, and sync charges to patient accounts.
-            </p>
+            <div className="eyebrow">Lab module</div>
+            <h1>{activeLab}</h1>
+            <p>Lab cases with separate printable payment ledger for every lab.</p>
           </div>
 
           <div className="hero-actions no-print">
-            <button className="btn btn-primary" type="button" onClick={() => window.print()}>
-              Print
+            <button className="btn btn-primary" type="button" onClick={printLedger}>
+              Print ledger
             </button>
-            <button className="btn" type="button" onClick={fetchPatients}>
+            <button className="btn" type="button" onClick={fetchData}>
               Refresh
             </button>
           </div>
@@ -459,7 +602,7 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
                 className={normalizeText(activeLab) === normalizeText(lab) ? "active" : ""}
                 onClick={() => selectLab(lab)}
               >
-                {labTitle(lab)}
+                {lab}
               </button>
             ))}
           </div>
@@ -481,45 +624,52 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="metrics-grid">
+        <section className="metrics-grid printable-report">
           <div className="metric-card">
             <div className="metric-accent blue" />
-            <div className="metric-label">Labs</div>
-            <div className="metric-value">{labs.length}</div>
-            <div className="metric-detail">Saved lab subsections</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-accent green" />
-            <div className="metric-label">Active records</div>
+            <div className="metric-label">Lab Cases</div>
             <div className="metric-value">{loading ? "..." : activeLabRows.length}</div>
             <div className="metric-detail">{activeLab}</div>
           </div>
           <div className="metric-card">
-            <div className="metric-accent gold" />
-            <div className="metric-label">Pending</div>
-            <div className="metric-value">{loading ? "..." : pendingCount}</div>
-            <div className="metric-detail">Not received or delivered</div>
+            <div className="metric-accent rose" />
+            <div className="metric-label">Total Bill</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(ledgerTotals.totalBill)}</div>
+            <div className="metric-detail">All cases in this lab</div>
           </div>
           <div className="metric-card">
-            <div className="metric-accent rose" />
-            <div className="metric-label">Unpaid</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(unpaidAmount)}</div>
-            <div className="metric-detail">Lab account amount</div>
+            <div className="metric-accent green" />
+            <div className="metric-label">Paid</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(ledgerTotals.paid)}</div>
+            <div className="metric-detail">Lab payments</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-accent gold" />
+            <div className="metric-label">Remaining</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(ledgerTotals.remaining)}</div>
+            <div className="metric-detail">Still payable</div>
           </div>
         </section>
 
-        <section className="lab-layout printable-report">
+        <section className="lab-layout">
           <div className="panel patient-select-panel no-print">
             <div className="panel-heading">
               <div>
                 <h2>Patient Search</h2>
-                <p>Search by name, registration number, or mobile number.</p>
+                <p>Select the patient for this lab case.</p>
               </div>
             </div>
+
+            <datalist id="lab-patient-list">
+              {patients.map((patient) => (
+                <option key={patient._id || regNo(patient)} value={`${patientName(patient)} - ${regNo(patient)}`} />
+              ))}
+            </datalist>
 
             <label className="search-field">
               <span>Patient Name</span>
               <input
+                list="lab-patient-list"
                 value={patientSearch}
                 onChange={(event) => handlePatientSearch(event.target.value)}
                 placeholder="Select patient for lab job"
@@ -550,90 +700,56 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
             </div>
           </div>
 
-          <div className="panel printable-report">
+          <div className="panel">
             <div className="panel-heading">
               <div>
-                <h2>{labTitle(activeLab)}</h2>
+                <h2>{editingId ? "Update Lab Case" : "Add Lab Case"}</h2>
                 <p>
                   {selectedPatient
-                    ? `Selected: ${patientName(selectedPatient)} | Reg ${regNo(selectedPatient) || "-"} | ${mobileNumber(selectedPatient)}`
-                    : "Select a patient, enter lab job details, and save."}
+                    ? `Selected: ${patientName(selectedPatient)} | Reg ${regNo(selectedPatient) || "-"}`
+                    : "Select a patient and enter case details."}
                 </p>
               </div>
-              <span className="pill">{activeLabRows.length} records</span>
             </div>
 
-            <div className="payment-panel lab-form no-print">
+            <div className="payment-panel lab-case-form no-print">
               <label className="field">
                 <span>Date</span>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(event) => handleChange("date", event.target.value)}
-                />
+                <input type="date" value={form.date} onChange={(event) => handleChange("date", event.target.value)} />
               </label>
               <label className="field lab-patient-field">
                 <span>Patient Name</span>
                 <input
+                  list="lab-patient-list"
                   value={patientSearch}
                   onChange={(event) => handlePatientSearch(event.target.value)}
                   placeholder="Search and select patient"
                 />
               </label>
               <label className="field">
+                <span>Lab Name</span>
+                <input value={activeLab} readOnly />
+              </label>
+              <label className="field">
                 <span>Job</span>
-                <input
-                  value={form.job}
-                  onChange={(event) => handleChange("job", event.target.value)}
-                  placeholder="Crown, bridge, aligner..."
-                />
+                <input value={form.job} onChange={(event) => handleChange("job", event.target.value)} placeholder="Crown, bridge..." />
               </label>
               <label className="field">
                 <span>Units</span>
-                <input
-                  value={form.units}
-                  onChange={(event) => handleChange("units", event.target.value)}
-                  placeholder="Units"
-                />
+                <input type="number" min="0" value={form.units} onChange={(event) => handleChange("units", event.target.value)} />
               </label>
               <label className="field">
                 <span>Shade</span>
-                <input
-                  value={form.shade}
-                  onChange={(event) => handleChange("shade", event.target.value)}
-                  placeholder="Shade"
-                />
+                <input value={form.shade} onChange={(event) => handleChange("shade", event.target.value)} />
               </label>
               <label className="field">
-                <span>Status</span>
-                <select value={form.status} onChange={(event) => handleChange("status", event.target.value)}>
-                  {LAB_STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                <span>Cost Per Unit</span>
+                <input type="number" min="0" value={form.costPerUnit} onChange={(event) => handleChange("costPerUnit", event.target.value)} />
               </label>
-              <label className="field">
-                <span>Amount</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.amount}
-                  onChange={(event) => handleChange("amount", event.target.value)}
-                  placeholder="Amount"
-                />
-              </label>
-              <label className="field">
-                <span>Paid / Unpaid</span>
-                <select
-                  value={form.paymentStatus}
-                  onChange={(event) => handleChange("paymentStatus", event.target.value)}
-                >
-                  <option value="paid">Paid</option>
-                  <option value="unpaid">Unpaid</option>
-                </select>
-              </label>
+              <div className="calculated-field">
+                <span>Total Amount</span>
+                <strong>{formatCurrency(currentTotalAmount)}</strong>
+              </div>
               <button className="btn btn-primary" type="button" onClick={handleSubmit} disabled={saving}>
                 {saving ? "Saving..." : editingId ? "Update" : "Save"}
               </button>
@@ -643,82 +759,186 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
                 </button>
               )}
             </div>
-
-            <div className="data-table-wrap">
-              <table className="data-table lab-record-table">
-                <thead>
-                  <tr>
-                    <th>S No</th>
-                    <th>Date</th>
-                    <th>Patient</th>
-                    <th>Job</th>
-                    <th>Units</th>
-                    <th>Shade</th>
-                    <th>Status</th>
-                    <th>Amount</th>
-                    <th>Paid / Unpaid</th>
-                    <th className="no-print">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan="10">Loading lab records...</td>
-                    </tr>
-                  )}
-
-                  {!loading && activeLabRows.length === 0 && (
-                    <tr>
-                      <td colSpan="10">No records saved for {activeLab} yet.</td>
-                    </tr>
-                  )}
-
-                  {activeLabRows.map((record, index) => (
-                    <tr key={record.id || `${record.regNo}-${index}`}>
-                      <td>{index + 1}</td>
-                      <td>{recordDate(record) || "-"}</td>
-                      <td>
-                        <strong>{record.patientName}</strong>
-                        <small>Reg {record.regNo || "-"} | {record.mobileNumber}</small>
-                      </td>
-                      <td>{recordJob(record) || "-"}</td>
-                      <td>{recordUnits(record) || "-"}</td>
-                      <td>{recordShade(record) || "-"}</td>
-                      <td>
-                        <span className={statusClass(recordStatus(record))}>{recordStatus(record)}</span>
-                      </td>
-                      <td>{formatCurrency(recordAmount(record))}</td>
-                      <td>
-                        <span className={recordPaymentStatus(record) === "paid" ? "pill success" : "pill warning"}>
-                          {recordPaymentStatus(record) === "paid" ? "Paid" : "Unpaid"}
-                        </span>
-                      </td>
-                      <td className="row-actions no-print">
-                        <button className="btn btn-sm" type="button" onClick={() => handleEdit(record)}>
-                          Edit
-                        </button>
-                        <button className="btn btn-sm btn-danger" type="button" onClick={() => handleDelete(record)}>
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </section>
 
-        {selectedPatient && (
-          <section className="panel lab-recent-panel no-print">
-            <div className="panel-heading">
-              <div>
-                <h2>Selected Patient Lab History</h2>
-                <p>{patientName(selectedPatient)} has {selectedPatientRows.length} records in {activeLab}.</p>
-              </div>
+        <section className="panel no-print">
+          <div className="panel-heading">
+            <div>
+              <h2>Payment Details</h2>
+              <p>Total bill, paid, remaining, paid dates and payment method for {activeLab}.</p>
             </div>
-          </section>
-        )}
+            <button className="btn btn-dark" type="button" onClick={printLedger}>
+              Print
+            </button>
+          </div>
+
+          <div className="ledger-total-grid">
+            <div>
+              <span>Total Bill</span>
+              <strong>{formatCurrency(ledgerTotals.totalBill)}</strong>
+            </div>
+            <div>
+              <span>Paid</span>
+              <strong>{formatCurrency(ledgerTotals.paid)}</strong>
+            </div>
+            <div>
+              <span>Remaining</span>
+              <strong>{formatCurrency(ledgerTotals.remaining)}</strong>
+            </div>
+          </div>
+
+          <div className="payment-panel ledger-payment-form">
+            <label className="field">
+              <span>Paid Date</span>
+              <input
+                type="date"
+                value={paymentForm.date}
+                onChange={(event) => setPaymentForm((current) => ({ ...current, date: event.target.value }))}
+              />
+            </label>
+            <label className="field">
+              <span>Paid Amount</span>
+              <input
+                type="number"
+                min="0"
+                value={paymentForm.amount}
+                onChange={(event) => setPaymentForm((current) => ({ ...current, amount: event.target.value }))}
+                placeholder="Enter amount"
+              />
+            </label>
+            <label className="field">
+              <span>Method</span>
+              <input
+                value={paymentForm.method}
+                onChange={(event) => setPaymentForm((current) => ({ ...current, method: event.target.value }))}
+                placeholder="Cash, card, bank transfer..."
+              />
+            </label>
+            <label className="field">
+              <span>Note</span>
+              <input
+                value={paymentForm.note}
+                onChange={(event) => setPaymentForm((current) => ({ ...current, note: event.target.value }))}
+                placeholder="Payment note"
+              />
+            </label>
+            <button className="btn btn-primary" type="button" onClick={handleSavePayment}>
+              {editingPaymentId ? "Update payment" : "Save payment"}
+            </button>
+            {editingPaymentId && (
+              <button className="btn" type="button" onClick={resetPaymentForm}>
+                Cancel
+              </button>
+            )}
+          </div>
+
+          <div className="data-table-wrap">
+            <table className="data-table compact-table">
+              <thead>
+                <tr>
+                  <th>Paid Date</th>
+                  <th>Paid Amount</th>
+                  <th>Method</th>
+                  <th>Note</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeLabPayments.length === 0 && (
+                  <tr>
+                    <td colSpan="5">No lab payments recorded.</td>
+                  </tr>
+                )}
+
+                {activeLabPayments.map((payment) => (
+                  <tr key={payment._id}>
+                    <td>{formatDateDisplay(payment.date) || "-"}</td>
+                    <td>{formatCurrency(payment.amount)}</td>
+                    <td>{payment.method || "-"}</td>
+                    <td>{payment.note || "-"}</td>
+                    <td className="row-actions">
+                      <button className="btn btn-sm" type="button" onClick={() => handleEditPayment(payment)}>
+                        Edit
+                      </button>
+                      <button className="btn btn-sm btn-danger" type="button" onClick={() => handleDeletePayment(payment)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="panel printable-report">
+          <div className="panel-heading">
+            <div>
+              <h2>{activeLab} Cases</h2>
+              <p>
+                {selectedPatient
+                  ? `${patientName(selectedPatient)} has ${selectedPatientRows.length} cases in this lab.`
+                  : "All saved cases for the selected lab."}
+              </p>
+            </div>
+          </div>
+
+          <div className="data-table-wrap">
+            <table className="data-table lab-record-table">
+              <thead>
+                <tr>
+                  <th>S No</th>
+                  <th>Patient Name</th>
+                  <th>Lab Name</th>
+                  <th>Job</th>
+                  <th>Units</th>
+                  <th>Shade</th>
+                  <th>Cost Per Unit</th>
+                  <th>Total Amount</th>
+                  <th className="no-print">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan="9">Loading lab cases...</td>
+                  </tr>
+                )}
+
+                {!loading && activeLabRows.length === 0 && (
+                  <tr>
+                    <td colSpan="9">No cases saved for {activeLab} yet.</td>
+                  </tr>
+                )}
+
+                {activeLabRows.map((record, index) => (
+                  <tr key={record.id || `${record.regNo}-${index}`}>
+                    <td>{index + 1}</td>
+                    <td>
+                      <strong>{record.patientName}</strong>
+                      <small>Reg {record.regNo || "-"} | {record.mobileNumber}</small>
+                    </td>
+                    <td>{activeLab}</td>
+                    <td>{recordJob(record) || "-"}</td>
+                    <td>{recordUnits(record) || "-"}</td>
+                    <td>{recordShade(record) || "-"}</td>
+                    <td>{formatCurrency(recordCostPerUnit(record))}</td>
+                    <td>{formatCurrency(recordTotalAmount(record))}</td>
+                    <td className="row-actions no-print">
+                      <button className="btn btn-sm" type="button" onClick={() => handleEdit(record)}>
+                        Edit
+                      </button>
+                      <button className="btn btn-sm btn-danger" type="button" onClick={() => handleDelete(record)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </Layout>
   );
