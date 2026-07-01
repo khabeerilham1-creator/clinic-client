@@ -6,16 +6,20 @@ import Biography from "../components/patient/Biography";
 import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
+import AccountLedger from "../components/patient/AccountLedger";
 import toothChartImg from "../assets/tooth-chart.png";
 import {
   activeShift,
   applyShiftToPatient,
+  balanceDue,
   discountAmount,
   invoiceTotal,
   netAmount,
+  paymentsTotal,
   todayDisplayValue,
 } from "../utils/patientHelpers";
 import { printPatientFile } from "../utils/printPatientFile";
+import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
 
 const EMPTY_PATIENT = {
@@ -42,6 +46,7 @@ const TABS = [
   { id: "checkup", label: "Clinical Exam" },
   { id: "plannedSequence", label: "Planned" },
   { id: "invoice", label: "Invoice" },
+  { id: "account", label: "Account Status" },
 ];
 
 export default function Patients({ activePage, setActivePage, handleLogout }) {
@@ -98,6 +103,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       (data.invoices || []).some((invoice) =>
         (invoice.items || []).some((item) => item.details || Number(item.cost || 0) > 0)
       ),
+    account: (data.accountLedger || []).length > 0 || paymentsTotal(data) > 0 || balanceDue(data) > 0,
   };
 
   const pendingPaymentEntry = () => {
@@ -163,6 +169,9 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
         amount: "",
         description: "",
       });
+      await addActivityLog("Created patient", payload.biography?.patientName || "Patient", {
+        regNo: response.data.reg_no,
+      });
       notify(`Patient saved. Reg No: ${response.data.reg_no}`);
     } catch (error) {
       const detail = error?.response?.data?.detail;
@@ -190,6 +199,9 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       await api.put(`/patients/${data._id}`, payload);
       setData(payload);
       localStorage.removeItem("editPatient");
+      await addActivityLog("Updated patient", payload.biography?.patientName || "Patient", {
+        regNo: payload.biography?.regNo,
+      });
       notify("Patient updated successfully.");
     } catch (error) {
       notify(error?.response?.data?.detail || "Update failed.", "danger");
@@ -293,6 +305,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
                 setInitialPayment={setInitialPayment}
               />
             )}
+            {tab === "account" && <AccountLedger patientData={data} setPatientData={setData} />}
           </div>
 
           <div className="form-pager no-print">

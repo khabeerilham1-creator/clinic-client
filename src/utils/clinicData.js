@@ -8,14 +8,12 @@ export const SHIFT_OPTIONS = [
     label: "Morning Shift",
     doctorName: "Dr 1",
     doctorAliases: ["Dr Tufyl"],
-    password: "arabic",
   },
   {
     id: "evening",
     label: "Evening Shift",
     doctorName: "Dr 2",
     doctorAliases: ["Dr Abdur Rehman"],
-    password: "persian",
   },
 ];
 

@@ -5,6 +5,7 @@ import Layout from "../components/Layout";
 import toothChart from "../assets/tooth-chart.png";
 import { CATEGORY_OPTIONS, normalizeCategoryKey } from "../utils/clinicData";
 import { printPatientFile } from "../utils/printPatientFile";
+import { addActivityLog } from "../utils/activityLog";
 import {
   activeShift,
   activeShiftId,
@@ -92,14 +93,16 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       await api.delete(`/patients/${patient._id}`);
       setPatients((current) => current.filter((item) => item._id !== patient._id));
       setSelectedPatient(null);
+      await addActivityLog("Deleted patient", name, { regNo: regNo(patient) });
     } catch (requestError) {
       console.error(requestError);
       alert("Delete failed. Please try again.");
     }
   };
 
-  const handleEdit = (patient) => {
+  const handleEdit = async (patient) => {
     localStorage.setItem("editPatient", JSON.stringify({ ...patient, isEditing: true }));
+    await addActivityLog("Opened patient edit", patientName(patient), { regNo: regNo(patient) });
     setActivePage("patients");
   };
 

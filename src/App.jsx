@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Login from "./pages/Login";
 
 import Dashboard from "./pages/Dashboard";
+import RoleDashboard from "./pages/RoleDashboard";
 import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
 import PatientsList from "./pages/PatientsList";
@@ -11,11 +12,92 @@ import Inventory from "./pages/Inventory";
 import Expenses from "./pages/Expenses";
 import LabRecords from "./pages/LabRecords";
 import DentistRevenue from "./pages/DentistRevenue";
+import PlaceholderPage from "./pages/PlaceholderPage";
+import PatientStatusPage from "./pages/PatientStatusPage";
+import DentistWorkspace from "./pages/DentistWorkspace";
+import AdminLogs from "./pages/AdminLogs";
+import AdminFinance from "./pages/AdminFinance";
+import Notifications from "./pages/Notifications";
 
 const ROLE_PAGES = {
-  admin: ["dashboard", "patients", "patients-list", "appointments", "lab-records", "account-status", "dentist-revenue", "inventory", "expenses"],
-  doctor: ["patients", "appointments", "lab-records"],
-  receptionist: ["patients", "appointments", "lab-records"],
+  admin: [
+    "dashboard",
+    "patients",
+    "patients-list",
+    "appointments",
+    "lab-records",
+    "account-status",
+    "dentist-revenue",
+    "account-payable",
+    "account-receivable",
+    "inventory",
+    "expenses",
+    "logs",
+    "notifications",
+  ],
+  dentist: [
+    "dashboard",
+    "dentist-patients",
+    "dentist-summary",
+    "dentist-salary",
+    "dentist-percentage",
+    "dentist-referral",
+  ],
+  doctor: [
+    "dashboard",
+    "dentist-patients",
+    "dentist-summary",
+    "dentist-salary",
+    "dentist-percentage",
+    "dentist-referral",
+  ],
+  receptionist: [
+    "dashboard",
+    "patients",
+    "patients-list",
+    "appointments",
+    "lab-follow-up",
+    "inventory-status",
+    "maintenance",
+    "refurbishing",
+    "daily-expense",
+    "ongoing-patients",
+    "completed-patients",
+    "official-contact",
+  ],
+};
+
+const PLACEHOLDER_PAGES = {
+  "lab-follow-up": {
+    title: "Lab Cases Follow Up",
+    eyebrow: "Receptionist",
+    description: "Lab follow up format pending.",
+  },
+  "inventory-status": {
+    title: "Inventory Status",
+    eyebrow: "Receptionist",
+    description: "Inventory status format pending.",
+  },
+  maintenance: {
+    title: "Maintenance",
+    eyebrow: "Receptionist",
+    description: "Maintenance format pending.",
+  },
+  refurbishing: {
+    title: "Refurbishing",
+    eyebrow: "Receptionist",
+    description: "Refurbishing format pending.",
+  },
+  "daily-expense": {
+    title: "Daily Expense",
+    eyebrow: "Receptionist",
+    description: "Daily expense format pending.",
+  },
+  "official-contact": {
+    title: "Official Contact",
+    eyebrow: "Receptionist",
+    description: "Official contact format pending.",
+  },
 };
 
 const firstPageForRole = (role) => ROLE_PAGES[role]?.[0] || "dashboard";
@@ -101,6 +183,15 @@ function App() {
 
   // DASHBOARD
   if (activePage === "dashboard") {
+    if (currentRole !== "admin") {
+      return (
+        <RoleDashboard
+          activePage={activePage}
+          setActivePage={setActivePage}
+          handleLogout={handleLogout}
+        />
+      );
+    }
 
     return (
       <Dashboard
@@ -110,6 +201,84 @@ function App() {
       />
     );
 
+  }
+
+  if (PLACEHOLDER_PAGES[activePage]) {
+    return (
+      <PlaceholderPage
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+        {...PLACEHOLDER_PAGES[activePage]}
+      />
+    );
+  }
+
+  if (activePage === "ongoing-patients" || activePage === "completed-patients") {
+    return (
+      <PatientStatusPage
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+        mode={activePage === "ongoing-patients" ? "ongoing" : "completed"}
+      />
+    );
+  }
+
+  if (
+    activePage === "dentist-patients" ||
+    activePage === "dentist-summary" ||
+    activePage === "dentist-salary" ||
+    activePage === "dentist-percentage" ||
+    activePage === "dentist-referral"
+  ) {
+    const modeMap = {
+      "dentist-patients": "patients",
+      "dentist-summary": "summary",
+      "dentist-salary": "salary",
+      "dentist-percentage": "percentage",
+      "dentist-referral": "referral",
+    };
+
+    return (
+      <DentistWorkspace
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+        mode={modeMap[activePage]}
+      />
+    );
+  }
+
+  if (activePage === "account-payable" || activePage === "account-receivable") {
+    return (
+      <AdminFinance
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+        mode={activePage === "account-payable" ? "payable" : "receivable"}
+      />
+    );
+  }
+
+  if (activePage === "logs") {
+    return (
+      <AdminLogs
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (activePage === "notifications") {
+    return (
+      <Notifications
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
   }
 
   // PATIENT ENTRY

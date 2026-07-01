@@ -23,6 +23,7 @@ import {
   regNo,
 } from "../utils/patientHelpers";
 import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
+import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
 
 const todayInputValue = () => new Date().toISOString().split("T")[0];
@@ -249,8 +250,9 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     };
   }, [patients, expenses, reportDate, reportPeriod]);
 
-  const handleEdit = (patient) => {
+  const handleEdit = async (patient) => {
     localStorage.setItem("editPatient", JSON.stringify({ ...patient, isEditing: true }));
+    await addActivityLog("Opened patient account edit", patientName(patient), { regNo: regNo(patient) });
     setActivePage("patients");
   };
 
@@ -269,6 +271,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
       await api.delete(`/patients/${patient._id}`);
       setPatients((current) => current.filter((item) => item._id !== patient._id));
       setSelectedPatient(null);
+      await addActivityLog("Deleted patient account", patientName(patient), { regNo: regNo(patient) });
       playSectionSound("warning");
     } catch (requestError) {
       console.error(requestError);
@@ -331,6 +334,11 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
       setPatients((current) =>
         current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
       );
+      await addActivityLog(
+        editingPaymentKey !== null ? "Updated payment" : "Added payment",
+        patientName(selectedPatient),
+        { amount: entry.amount, date: entry.date }
+      );
       resetPaymentForm();
       playSectionSound("success");
     } catch (requestError) {
@@ -368,6 +376,10 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
       setPatients((current) =>
         current.map((patient) => (patient._id === selectedPatient._id ? updatedPatient : patient))
       );
+      await addActivityLog("Deleted payment", patientName(selectedPatient), {
+        amount: entry.amount,
+        date: entry.date,
+      });
       resetPaymentForm();
       playSectionSound("warning");
     } catch (requestError) {

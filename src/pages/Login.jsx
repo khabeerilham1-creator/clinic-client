@@ -2,13 +2,28 @@ import React, { useState } from "react";
 
 import api from "../api";
 import { CLINIC_NAME, DOCTOR_NAME, SHIFT_OPTIONS } from "../utils/clinicData";
+import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
+
+const ROLE_OPTIONS = [
+  { id: "receptionist", label: "Receptionist", helper: "Front desk workspace" },
+  { id: "dentist", label: "Dentist", helper: "Doctor patient workspace" },
+  { id: "admin", label: "Admin", helper: "Full management workspace" },
+];
+
+const DENTIST_OPTIONS = [
+  { id: "dr-tufyl", label: "Dr Tufyl" },
+  { id: "dr-abdur-rehman", label: "Dr Abdur Rehman" },
+];
 
 function Login({ onLogin }) {
   const [step, setStep] = useState("admin");
   const [username, setUsername] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedDentistId, setSelectedDentistId] = useState("");
   const [password, setPassword] = useState("");
+  const [roleCode, setRoleCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [adminSession, setAdminSession] = useState(null);
@@ -62,7 +77,7 @@ function Login({ onLogin }) {
     }
   };
 
-  const handleShiftContinue = (event) => {
+  const handleShiftContinue = async (event) => {
     event?.preventDefault();
     const selectedShift = SHIFT_OPTIONS.find((shift) => shift.id === selectedShiftId);
 
@@ -76,38 +91,113 @@ function Login({ onLogin }) {
       return;
     }
 
-    if (password.trim() !== selectedShift.password) {
-      setError("Invalid shift code.");
-      playSectionSound("warning");
-      return;
-    }
-
     if (!adminSession?.token) {
       setError("Please login with admin first.");
       setStep("admin");
       return;
     }
 
-    const shift = {
-      id: selectedShift.id,
-      label: selectedShift.label,
-      doctorName: selectedShift.doctorName,
-    };
-    const user = {
-      ...adminSession.user,
-      shiftId: shift.id,
-      shiftName: shift.label,
-      doctorName: shift.doctorName,
-    };
+    setLoading(true);
+    setError("");
 
-    sessionStorage.setItem("token", adminSession.token);
-    sessionStorage.setItem("role", user.role || "admin");
-    sessionStorage.setItem("user", JSON.stringify(user));
-    sessionStorage.setItem("shift", JSON.stringify(shift));
-    playSectionSound("success");
+    try {
+      const response = await api.post("/shift-access", {
+        shiftId: selectedShift.id,
+        accessCode: password.trim(),
+      });
+      const shift = {
+        id: response.data.shiftId || selectedShift.id,
+        label: response.data.shiftName || selectedShift.label,
+        doctorName: response.data.doctorName || selectedShift.doctorName,
+      };
 
-    if (onLogin) {
-      onLogin(adminSession.token);
+      setAdminSession((current) => ({
+        ...current,
+        shift,
+      }));
+      setSelectedRole("");
+      setSelectedDentistId("");
+      setRoleCode("");
+      setPassword("");
+      setStep("role");
+      playSectionSound("success");
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Invalid shift code.");
+      playSectionSound("warning");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleContinue = async (event) => {
+    event?.preventDefault();
+
+    if (!selectedRole) {
+      setError("Please select Receptionist, Dentist or Admin.");
+      return;
+    }
+
+    if (selectedRole === "dentist" && !selectedDentistId) {
+      setError("Please select a dentist.");
+      return;
+    }
+
+    if (!roleCode.trim()) {
+      setError("Please enter the access code.");
+      return;
+    }
+
+    if (!adminSession?.token || !adminSession?.shift) {
+      setError("Please login and select shift first.");
+      setStep("admin");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post("/role-access", {
+        role: selectedRole,
+        dentistId: selectedDentistId,
+        accessCode: roleCode.trim(),
+      });
+
+      const shift = adminSession.shift;
+      const roleData = response.data || {};
+      const user = {
+        ...adminSession.user,
+        name: roleData.name || adminSession.user.name,
+        role: roleData.role || selectedRole,
+        shiftId: shift.id,
+        shiftName: shift.label,
+        doctorName: roleData.dentistName || shift.doctorName,
+        dentistId: roleData.dentistId || selectedDentistId || "",
+        dentistName: roleData.dentistName || "",
+      };
+
+      sessionStorage.setItem("token", adminSession.token);
+      sessionStorage.setItem("role", user.role || "admin");
+      sessionStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("shift", JSON.stringify(shift));
+
+      await addActivityLog("Login", user.role, {
+        shift: shift.label,
+        dentistName: user.dentistName,
+      });
+
+      playSectionSound("success");
+
+      if (onLogin) {
+        onLogin(adminSession.token);
+      }
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Invalid access code.");
+      playSectionSound("warning");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -117,6 +207,25 @@ function Login({ onLogin }) {
     setSelectedShiftId("");
     setError("");
   };
+
+  const goBackToShift = () => {
+    setStep("shift");
+    setSelectedRole("");
+    setSelectedDentistId("");
+    setRoleCode("");
+    setError("");
+  };
+
+  const formSubmitHandler =
+    step === "admin" ? handleAdminLogin : step === "shift" ? handleShiftContinue : handleRoleContinue;
+
+  const cardTitle = step === "admin" ? "Admin login" : step === "shift" ? "Select shift" : "Select staff role";
+  const cardCopy =
+    step === "admin"
+      ? "Login with the admin account first."
+      : step === "shift"
+        ? "Choose Morning or Evening shift and enter its access code."
+        : "Choose the workspace and enter its access code.";
 
   return (
     <main className="login-screen">
@@ -154,15 +263,11 @@ function Login({ onLogin }) {
         </div>
       </section>
 
-      <form className="login-card" onSubmit={step === "admin" ? handleAdminLogin : handleShiftContinue}>
+      <form className="login-card" onSubmit={formSubmitHandler}>
         <div className="login-card-header">
           <div className="eyebrow">Authorized access</div>
-          <h2>{step === "admin" ? "Admin login" : "Select shift"}</h2>
-          <p>
-            {step === "admin"
-              ? "Login with the admin account first."
-              : "Choose Morning or Evening shift and enter its access code."}
-          </p>
+          <h2>{cardTitle}</h2>
+          <p>{cardCopy}</p>
         </div>
 
         {error && <div className="notice danger">{error}</div>}
@@ -198,7 +303,7 @@ function Login({ onLogin }) {
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </>
-        ) : (
+        ) : step === "shift" ? (
           <>
             <div className="shift-choice-grid" role="group" aria-label="Select shift">
               {SHIFT_OPTIONS.map((shift) => (
@@ -236,8 +341,73 @@ function Login({ onLogin }) {
               <button className="btn" type="button" onClick={goBackToAdmin}>
                 Back
               </button>
-              <button className="btn btn-primary" type="submit">
-                Continue
+              <button className="btn btn-primary" type="submit" disabled={loading}>
+                {loading ? "Checking..." : "Continue"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="shift-choice-grid role-choice-grid" role="group" aria-label="Select staff role">
+              {ROLE_OPTIONS.map((role) => (
+                <button
+                  key={role.id}
+                  type="button"
+                  className={`shift-choice${selectedRole === role.id ? " active" : ""}`}
+                  onClick={() => {
+                    setSelectedRole(role.id);
+                    setSelectedDentistId("");
+                    setRoleCode("");
+                    setError("");
+                    playSectionSound("section");
+                  }}
+                >
+                  <strong>{role.label}</strong>
+                  <span>{role.helper}</span>
+                </button>
+              ))}
+            </div>
+
+            {selectedRole === "dentist" && (
+              <div className="shift-choice-grid dentist-choice-grid" role="group" aria-label="Select dentist">
+                {DENTIST_OPTIONS.map((dentist) => (
+                  <button
+                    key={dentist.id}
+                    type="button"
+                    className={`shift-choice compact${selectedDentistId === dentist.id ? " active" : ""}`}
+                    onClick={() => {
+                      setSelectedDentistId(dentist.id);
+                      setRoleCode("");
+                      setError("");
+                      playSectionSound("section");
+                    }}
+                  >
+                    <strong>{dentist.label}</strong>
+                    <span>Dentist access</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <label className="field">
+              <span>Access Code</span>
+              <div className="password-field">
+                <input
+                  type="password"
+                  value={roleCode}
+                  onChange={(event) => setRoleCode(event.target.value)}
+                  placeholder="Enter role access code"
+                  autoComplete="off"
+                />
+              </div>
+            </label>
+
+            <div className="row-actions">
+              <button className="btn" type="button" onClick={goBackToShift}>
+                Back
+              </button>
+              <button className="btn btn-primary" type="submit" disabled={loading}>
+                {loading ? "Opening..." : "Open workspace"}
               </button>
             </div>
           </>
