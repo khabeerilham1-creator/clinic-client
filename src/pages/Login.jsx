@@ -6,10 +6,9 @@ import { playSectionSound } from "../utils/sound";
 
 function Login({ onLogin }) {
   const [step, setStep] = useState("admin");
-  const [username, setUsername] = useState("hdc1122");
+  const [username, setUsername] = useState("");
   const [selectedShiftId, setSelectedShiftId] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [adminSession, setAdminSession] = useState(null);
@@ -22,7 +21,7 @@ function Login({ onLogin }) {
     }
 
     if (!username.trim() || !password.trim()) {
-      setError("Please enter username and password.");
+      setError("Please enter your access details.");
       return;
     }
 
@@ -52,12 +51,11 @@ function Login({ onLogin }) {
       });
       setPassword("");
       setSelectedShiftId("");
-      setShowPassword(false);
       setStep("shift");
       playSectionSound("success");
     } catch (requestError) {
       console.error(requestError);
-      setError("Login failed. Use username hdc1122 and password drzaffar.");
+      setError("Login failed. Please check your access details.");
       playSectionSound("warning");
     } finally {
       setLoading(false);
@@ -74,12 +72,12 @@ function Login({ onLogin }) {
     }
 
     if (!password.trim()) {
-      setError("Please enter the shift password.");
+      setError("Please enter the shift code.");
       return;
     }
 
     if (password.trim() !== selectedShift.password) {
-      setError("Invalid shift password.");
+      setError("Invalid shift code.");
       playSectionSound("warning");
       return;
     }
@@ -163,7 +161,7 @@ function Login({ onLogin }) {
           <p>
             {step === "admin"
               ? "Login with the admin account first."
-              : "Choose Morning or Evening shift and enter its password."}
+              : "Choose Morning or Evening shift and enter its access code."}
           </p>
         </div>
 
@@ -172,30 +170,27 @@ function Login({ onLogin }) {
         {step === "admin" ? (
           <>
             <label className="field">
-              <span>Username</span>
+              <span>User ID</span>
               <input
                 type="text"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                placeholder="hdc1122"
-                autoComplete="username"
+                placeholder="Enter user ID"
+                autoComplete="off"
                 autoFocus
               />
             </label>
 
             <label className="field">
-              <span>Password</span>
+              <span>Access Code</span>
               <div className="password-field">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter admin password"
-                  autoComplete="current-password"
+                  placeholder="Enter access code"
+                  autoComplete="off"
                 />
-                <button type="button" onClick={() => setShowPassword((visible) => !visible)}>
-                  {showPassword ? "Hide" : "Show"}
-                </button>
               </div>
             </label>
 
@@ -214,7 +209,6 @@ function Login({ onLogin }) {
                   onClick={() => {
                     setSelectedShiftId(shift.id);
                     setPassword("");
-                    setShowPassword(false);
                     setError("");
                     playSectionSound("section");
                   }}
@@ -226,18 +220,15 @@ function Login({ onLogin }) {
             </div>
 
             <label className="field">
-              <span>Shift Password</span>
+              <span>Shift Code</span>
               <div className="password-field">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter selected shift password"
-                  autoComplete="current-password"
+                  placeholder="Enter selected shift code"
+                  autoComplete="off"
                 />
-                <button type="button" onClick={() => setShowPassword((visible) => !visible)}>
-                  {showPassword ? "Hide" : "Show"}
-                </button>
               </div>
             </label>
 
@@ -253,14 +244,7 @@ function Login({ onLogin }) {
         )}
 
         <div className="login-help">
-          {step === "admin" ? (
-            <span>Username: hdc1122</span>
-          ) : (
-            <>
-              <span>Morning shift password: 12345</span>
-              <span>Evening shift password: 6789</span>
-            </>
-          )}
+          <span>Authorized staff only.</span>
         </div>
       </form>
     </main>
