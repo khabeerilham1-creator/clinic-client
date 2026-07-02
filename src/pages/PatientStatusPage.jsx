@@ -20,7 +20,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const isOngoing = mode === "ongoing";
-  const title = isOngoing ? "On Going Patient" : "Completed Patient";
+  const title = isOngoing ? "On Going Client" : "Completed Client";
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -35,7 +35,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
         setPatients(filterPatientsForActiveShift(patientArray(response.data)));
       } catch (requestError) {
         console.error(requestError);
-        setError("Patient list could not be loaded.");
+        setError("Client list could not be loaded.");
       } finally {
         setLoading(false);
       }
@@ -57,9 +57,9 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
       <div className="page">
         <section className="page-hero accent-hero">
           <div>
-            <div className="eyebrow">Patient status</div>
+            <div className="eyebrow">Client status</div>
             <h1>{title}</h1>
-            <p>{visiblePatients.length} patient records found.</p>
+            <p>{visiblePatients.length} client records found.</p>
           </div>
         </section>
 
@@ -70,7 +70,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Patient</th>
+                  <th>Client</th>
                   <th>Reg No</th>
                   <th>Mobile</th>
                   <th>Appointments</th>
@@ -80,7 +80,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="5">Loading patients...</td>
+                    <td colSpan="5">Loading clients...</td>
                   </tr>
                 )}
                 {!loading && visiblePatients.length === 0 && (

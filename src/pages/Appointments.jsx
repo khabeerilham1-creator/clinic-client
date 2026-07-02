@@ -5,36 +5,23 @@ import Layout from "../components/Layout";
 import {
   activeShift,
   activeShiftId,
+  dateKey,
   filterPatientsForActiveShift,
   formatDateDisplay,
   initials,
   mobileNumber,
   patientArray,
   patientName,
-  parseLocalDate,
+  plannedVisitStatus,
   regNo,
 } from "../utils/patientHelpers";
-
-const toDateKey = (date) => {
-  const parsed = parseLocalDate(date);
-
-  if (!parsed) {
-    return "";
-  }
-
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
 
 function AppointmentCard({ appointment, tone }) {
   return (
     <div className={`schedule-card ${tone}`}>
       <div className="schedule-date">
         <strong>{appointment.dateLabel}</strong>
-        <span>Visit {appointment.visitNo || "-"}</span>
+        <span>{appointment.time || `Visit ${appointment.visitNo || "-"}`}</span>
       </div>
 
       <div className="patient-cell">
@@ -81,13 +68,15 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             registrationNo: regNo(patient),
             visitNo: visit.visitNo,
             date: visit.date,
-            dateKey: toDateKey(visit.date),
+            dateKey: dateKey(visit.date),
+            time: visit.time || "",
             procedure: visit.procedure || visit.treatment || visit.details,
+            status: plannedVisitStatus(visit),
             rawVisit: visit,
           }))
         )
         .filter((appointment) => appointment.dateKey)
-        .sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey)))
+        .sort((a, b) => `${a.dateKey} ${a.time}`.localeCompare(`${b.dateKey} ${b.time}`))
         .map((appointment) => ({
           ...appointment,
           dateLabel: formatDateDisplay(appointment.date),
@@ -102,18 +91,19 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     }
   };
 
-  const todayKey = toDateKey(new Date());
+  const todayKey = dateKey(new Date());
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowKey = toDateKey(tomorrow);
+  const tomorrowKey = dateKey(tomorrow);
 
   const grouped = useMemo(() => {
-    const today = appointments.filter((appointment) => appointment.dateKey === todayKey);
-    const tomorrowList = appointments.filter((appointment) => appointment.dateKey === tomorrowKey);
-    const upcoming = appointments.filter((appointment) => appointment.dateKey > tomorrowKey);
-    const overdue = appointments.filter((appointment) => appointment.dateKey < todayKey);
+    const activeAppointments = appointments.filter((appointment) => appointment.status !== "Done");
+    const today = activeAppointments.filter((appointment) => appointment.dateKey === todayKey);
+    const tomorrowList = activeAppointments.filter((appointment) => appointment.dateKey === tomorrowKey);
+    const upcoming = activeAppointments.filter((appointment) => appointment.dateKey > tomorrowKey);
+    const done = appointments.filter((appointment) => appointment.status === "Done");
 
-    return { today, tomorrow: tomorrowList, upcoming, overdue };
+    return { today, tomorrow: tomorrowList, upcoming, done };
   }, [appointments, todayKey, tomorrowKey]);
 
   return (
@@ -128,7 +118,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Planned sequence calendar</div>
             <h1>{shift?.label ? `${shift.label} Appointments` : "Appointments"}</h1>
             <p>
-              All scheduled visits are pulled directly from patient treatment plans.
+              All scheduled visits are pulled directly from client treatment plans.
             </p>
           </div>
 
@@ -229,22 +219,23 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Patient</th>
-                    <th>Reg No</th>
-                    <th>Mobile</th>
-                    <th>Procedure</th>
+                  <th>Client</th>
+                  <th>Reg No</th>
+                  <th>Mobile</th>
+                  <th>Time</th>
+                  <th>Procedure</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="5">Loading upcoming appointments...</td>
+                      <td colSpan="6">Loading upcoming appointments...</td>
                     </tr>
                   )}
 
                   {!loading && grouped.upcoming.length === 0 && (
                     <tr>
-                      <td colSpan="5">No upcoming appointments found.</td>
+                      <td colSpan="6">No upcoming appointments found.</td>
                     </tr>
                   )}
 
@@ -258,6 +249,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                       </td>
                       <td>{appointment.registrationNo || "-"}</td>
                       <td>{appointment.mobileNumber}</td>
+                      <td>{appointment.time || "-"}</td>
                       <td>{appointment.procedure || "-"}</td>
                     </tr>
                   ))}
@@ -266,22 +258,22 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             </div>
           </div>
 
-          {grouped.overdue.length > 0 && (
+          {grouped.done.length > 0 && (
             <div className="panel wide">
               <div className="panel-heading">
                 <div>
-                  <h2>Overdue Follow-ups</h2>
-                  <p>Past planned dates that may need a call.</p>
+                  <h2>Done Visits</h2>
+                  <p>Past planned dates are completed automatically.</p>
                 </div>
-                <span className="pill danger">{grouped.overdue.length}</span>
+                <span className="pill success">{grouped.done.length}</span>
               </div>
 
               <div className="schedule-stack dense">
-                {grouped.overdue.slice(0, 8).map((appointment, index) => (
+                {grouped.done.slice(0, 8).map((appointment, index) => (
                   <AppointmentCard
-                    key={`${appointment.registrationNo}-overdue-${index}`}
+                    key={`${appointment.registrationNo}-done-${index}`}
                     appointment={appointment}
-                    tone="overdue"
+                    tone="done"
                   />
                 ))}
               </div>

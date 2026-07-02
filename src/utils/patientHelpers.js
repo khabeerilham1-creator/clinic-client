@@ -137,7 +137,7 @@ export const applyShiftToPatient = (patient, shift = activeShift()) => {
 export const regNo = (patient) =>
   bio(patient).regNo || bio(patient).registrationNo || "";
 
-export const patientName = (patient) => bio(patient).patientName || "Unnamed patient";
+export const patientName = (patient) => bio(patient).patientName || "Unnamed client";
 
 export const patientTitle = (patient) => String(bio(patient).title || "").trim();
 
@@ -265,8 +265,6 @@ export const paymentsTotal = (patient) =>
 export const balanceDue = (patient) =>
   Math.max(netAmount(patient) - paymentsTotal(patient), 0);
 
-export const upcomingVisits = (patient) => patient?.plannedSequence || [];
-
 export const patientRecordDate = (patient) =>
   bio(patient).date || patient?.createdAt || patient?.updatedAt || "";
 
@@ -300,6 +298,58 @@ export const parseLocalDate = (value) => {
 
   return Number.isNaN(date.getTime()) ? null : date;
 };
+
+export const dateKey = (value) => {
+  const date = parseLocalDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+export const plannedVisitStatus = (visit, reference = new Date()) => {
+  const savedStatus = String(visit?.status || "").trim().toLowerCase();
+
+  if (savedStatus === "done" || savedStatus === "completed") {
+    return "Done";
+  }
+
+  const visitKey = dateKey(visit?.date);
+  const todayKey = dateKey(reference);
+
+  if (!visitKey || !todayKey) {
+    return "Planned";
+  }
+
+  if (visitKey < todayKey) {
+    return "Done";
+  }
+
+  if (visitKey === todayKey) {
+    return "Today";
+  }
+
+  return "Planned";
+};
+
+export const upcomingVisits = (patient) =>
+  (patient?.plannedSequence || []).filter((visit) => {
+    const hasContent = Boolean(
+      visit?.date ||
+        visit?.time ||
+        visit?.procedure ||
+        visit?.treatment ||
+        visit?.details
+    );
+
+    return hasContent && plannedVisitStatus(visit) !== "Done";
+  });
 
 export const formatDateDisplay = (value) => {
   const date = parseLocalDate(value);
@@ -343,7 +393,7 @@ export const matchesPeriod = (value, selectedMonth, selectedYear) => {
 };
 
 export const initials = (name) =>
-  (name || "Patient")
+  (name || "Client")
     .split(" ")
     .filter(Boolean)
     .map((part) => part[0])

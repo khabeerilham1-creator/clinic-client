@@ -20,6 +20,7 @@ import {
   mobileNumber,
   patientArray,
   patientName,
+  plannedVisitStatus,
   regNo,
 } from "../utils/patientHelpers";
 
@@ -48,7 +49,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       setPatients(filterPatientsForActiveShift(patientArray(response.data)));
     } catch (requestError) {
       console.error(requestError);
-      setError("Patients could not be loaded. Please check the backend connection.");
+      setError("Clients could not be loaded. Please check the backend connection.");
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
   const handleDelete = async (patient) => {
     const name = patientName(patient);
-    const confirmed = window.confirm(`Delete patient record for ${name}?`);
+    const confirmed = window.confirm(`Delete client record for ${name}?`);
 
     if (!confirmed) {
       return;
@@ -93,7 +94,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       await api.delete(`/patients/${patient._id}`);
       setPatients((current) => current.filter((item) => item._id !== patient._id));
       setSelectedPatient(null);
-      await addActivityLog("Deleted patient", name, { regNo: regNo(patient) });
+      await addActivityLog("Deleted client", name, { regNo: regNo(patient) });
     } catch (requestError) {
       console.error(requestError);
       alert("Delete failed. Please try again.");
@@ -102,7 +103,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
   const handleEdit = async (patient) => {
     localStorage.setItem("editPatient", JSON.stringify({ ...patient, isEditing: true }));
-    await addActivityLog("Opened patient edit", patientName(patient), { regNo: regNo(patient) });
+    await addActivityLog("Opened client edit", patientName(patient), { regNo: regNo(patient) });
     setActivePage("patients");
   };
 
@@ -119,8 +120,8 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       <div className="page">
         <section className="page-hero">
           <div>
-            <div className="eyebrow">Patient command file</div>
-            <h1>{shift?.label ? `${shift.label} Patient Records` : "Patient Records"}</h1>
+            <div className="eyebrow">Client command file</div>
+            <h1>{shift?.label ? `${shift.label} Client Records` : "Client Records"}</h1>
             <p>
               Search, audit, edit, print and manage every dental record from one premium view.
             </p>
@@ -129,7 +130,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
           <div className="hero-actions no-print">
             <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
               <span className="btn-icon">+</span>
-              New patient
+              New client
             </button>
             <button className="btn" onClick={fetchPatients}>Refresh</button>
           </div>
@@ -184,7 +185,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
             <table className="data-table patient-table">
               <thead>
                 <tr>
-                  <th>Patient</th>
+                  <th>Client</th>
                   <th>Reg No</th>
                   <th>Mobile</th>
                   <th>Category</th>
@@ -196,13 +197,13 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="7">Loading patient records...</td>
+                    <td colSpan="7">Loading client records...</td>
                   </tr>
                 )}
 
                 {!loading && filteredPatients.length === 0 && (
                   <tr>
-                    <td colSpan="7">No matching patients found.</td>
+                    <td colSpan="7">No matching clients found.</td>
                   </tr>
                 )}
 
@@ -216,7 +217,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                           <span className="patient-avatar">{initials(patientName(patient))}</span>
                           <div>
                             <strong>{patientName(patient)}</strong>
-                            <small>{patientBio.patientType || "Patient"}</small>
+                            <small>{patientBio.patientType || "Client"}</small>
                           </div>
                         </div>
                       </td>
@@ -273,7 +274,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                   <dl>
                     <dt>Category</dt>
                     <dd>{bio(selectedPatient).category || "-"}</dd>
-                    <dt>Patient type</dt>
+                    <dt>Client type</dt>
                     <dd>{bio(selectedPatient).patientType || "-"}</dd>
                     <dt>Age</dt>
                     <dd>{bio(selectedPatient).age || "-"}</dd>
@@ -305,13 +306,15 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                       <tr>
                         <th>Visit</th>
                         <th>Date</th>
+                        <th>Time</th>
                         <th>Procedure</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(selectedPatient.plannedSequence || []).length === 0 && (
                         <tr>
-                          <td colSpan="3">No planned visits recorded.</td>
+                          <td colSpan="5">No planned visits recorded.</td>
                         </tr>
                       )}
 
@@ -319,7 +322,13 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                         <tr key={`${visit.visitNo}-${index}`}>
                           <td>{visit.visitNo || index + 1}</td>
                           <td>{formatDateDisplay(visit.date) || "-"}</td>
+                          <td>{visit.time || "-"}</td>
                           <td>{visit.procedure || visit.treatment || "-"}</td>
+                          <td>
+                            <span className={plannedVisitStatus(visit) === "Done" ? "pill success" : "pill"}>
+                              {plannedVisitStatus(visit)}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

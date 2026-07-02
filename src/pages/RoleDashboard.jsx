@@ -29,7 +29,7 @@ function RoleAction({ short, title, detail, onClick, tone = "blue" }) {
     <button type="button" className={`role-action-card ${tone}`} onClick={onClick}>
       <span>{short}</span>
       <strong>{title}</strong>
-      <small>{detail}</small>
+      {detail && <small>{detail}</small>}
     </button>
   );
 }
@@ -134,11 +134,11 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             <div>
               <div className="eyebrow">Dentist workspace</div>
               <h1>{dentistName}</h1>
-              <p>{dateLabel}. Patient list and summary for the selected dentist.</p>
+              <p>{dateLabel}. Client list and summary for the selected dentist.</p>
             </div>
             <div className="hero-actions no-print">
               <button className="btn btn-primary" onClick={() => setActivePage("dentist-patients")}>
-                Patient list
+                Client list
               </button>
               <button className="btn" onClick={() => setActivePage("dentist-summary")}>
                 Summary
@@ -151,7 +151,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           <section className="metrics-grid">
             <div className="metric-card gold-bordered">
               <div className="metric-accent blue" />
-              <div className="metric-label">Patients</div>
+              <div className="metric-label">Clients</div>
               <div className="metric-value">{loading ? "..." : dentistPatients.length}</div>
               <div className="metric-detail">Records linked with this dentist</div>
             </div>
@@ -161,7 +161,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
               <div className="metric-value">
                 {loading ? "..." : dentistPatients.filter((patient) => upcomingVisits(patient).length > 0).length}
               </div>
-              <div className="metric-detail">Patients with appointments</div>
+              <div className="metric-detail">Clients with appointments</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent rose" />
@@ -183,7 +183,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             <div className="panel xl gold-bordered">
               <div className="panel-heading">
                 <div>
-                  <h2>Patient List</h2>
+                  <h2>Client List</h2>
                   <p>{dentistPatients.length} records available.</p>
                 </div>
               </div>
@@ -192,7 +192,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Patient</th>
+                      <th>Client</th>
                       <th>Reg No</th>
                       <th>Mobile</th>
                       <th>Status</th>
@@ -202,12 +202,12 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
                   <tbody>
                     {loading && (
                       <tr>
-                        <td colSpan="5">Loading patients...</td>
+                        <td colSpan="5">Loading clients...</td>
                       </tr>
                     )}
                     {!loading && dentistPatients.length === 0 && (
                       <tr>
-                        <td colSpan="5">No patients found.</td>
+                        <td colSpan="5">No clients found.</td>
                       </tr>
                     )}
                     {dentistPatients.slice(0, 12).map((patient) => (
@@ -238,7 +238,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             <div className="panel gold-bordered">
               <div className="panel-heading">
                 <div>
-                  <h2>Summary of Patients</h2>
+                  <h2>Summary of Clients</h2>
                   <p>Table format can be expanded when shared.</p>
                 </div>
               </div>
@@ -266,11 +266,10 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
       <div className="page">
-        <section className="page-hero accent-hero receptionist-hero">
+        <section className="page-hero accent-hero receptionist-hero shift-hero">
           <div>
-            <div className="eyebrow">Receptionist dashboard</div>
             <h1>{shift?.label || "Front Desk"}</h1>
-            <p>{dateLabel}. New entries, registered clients and appointments.</p>
+            <p>{dateLabel}</p>
           </div>
         </section>
 
@@ -279,43 +278,46 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
         <section className="role-action-grid">
           <RoleAction
             short="+"
-            title="New Patient Entry"
-            detail="Open a fresh patient file"
+            title="New Client Entry"
+            detail="Open a fresh client file"
             tone="blue"
             onClick={() => setActivePage("patients")}
           />
           <RoleAction
             short="R"
             title="Registered Client"
-            detail="Search and open patient records"
+            detail="Search and open client records"
             tone="green"
             onClick={() => setActivePage("patients-list")}
           />
           <RoleAction
             short="A"
             title="Appointments"
-            detail="View scheduled patients"
+            detail="View scheduled clients"
             tone="gold"
             onClick={() => setActivePage("appointments")}
           />
         </section>
 
-        <section className="metrics-grid three compact-role-metrics">
-          <div className="metric-card gold-bordered">
-            <div className="metric-label">Registered clients</div>
-            <div className="metric-value">{loading ? "..." : patients.length}</div>
-            <div className="metric-detail">All visible patient files</div>
-          </div>
-          <div className="metric-card gold-bordered">
-            <div className="metric-label">On going patient</div>
-            <div className="metric-value">{loading ? "..." : ongoingPatients.length}</div>
-            <div className="metric-detail">Patients with appointments</div>
-          </div>
-          <div className="metric-card gold-bordered">
-            <div className="metric-label">Completed patient</div>
-            <div className="metric-value">{loading ? "..." : completedPatients.length}</div>
-            <div className="metric-detail">No appointment pending</div>
-          </div>
+        <section className="role-action-grid receptionist-status-grid">
+          <RoleAction
+            short="R"
+            title="Registered Clients"
+            tone="green"
+            onClick={() => setActivePage("patients-list")}
+          />
+          <RoleAction
+            short="O"
+            title="On Going Client"
+            tone="blue"
+            onClick={() => setActivePage("ongoing-patients")}
+          />
+          <RoleAction
+            short="C"
+            title="Completed Client"
+            tone="gold"
+            onClick={() => setActivePage("completed-patients")}
+          />
         </section>
       </div>
     </Layout>

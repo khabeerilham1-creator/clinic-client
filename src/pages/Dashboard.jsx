@@ -175,14 +175,14 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Clinic overview</div>
             <h1>{shift?.label || "Executive Dashboard"}</h1>
             <p>
-              {dateLabel}. Patient flow, treatment plans and account health at a glance.
+              {dateLabel}. Client flow, treatment plans and account health at a glance.
             </p>
           </div>
 
           <div className="hero-actions no-print">
             <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
               <span className="btn-icon">+</span>
-              New patient
+              New client
             </button>
             <button className="btn" onClick={() => setActivePage("appointments")}>
               Appointments
@@ -251,18 +251,18 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             accent="rose"
           />
           <StatCard
-            label="Patients"
+            label="Clients"
             value={loading ? "..." : periodMetrics.patients}
-            detail="Filtered by patient record date"
+            detail="Filtered by client record date"
             accent="blue"
           />
         </section>
 
         <section className="metrics-grid">
           <StatCard
-            label="Total patients"
+            label="Total clients"
             value={loading ? "..." : metrics.totalPatients}
-            detail="Complete patient records"
+            detail="Complete client records"
             accent="blue"
           />
           <StatCard
@@ -361,7 +361,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
           <div className="panel xl">
             <div className="panel-heading">
               <div>
-                <h2>Selected Period Patients A-Z</h2>
+                <h2>Selected Period Clients A-Z</h2>
                 <p>{periodMetrics.patients} records match the current dashboard filter.</p>
               </div>
               <button className="btn btn-sm" onClick={() => setActivePage("patients-list")}>
@@ -373,7 +373,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Patient</th>
+                    <th>Client</th>
                     <th>Reg No</th>
                     <th>Mobile</th>
                     <th>Total</th>
@@ -383,13 +383,13 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="5">Loading recent patients...</td>
+                      <td colSpan="5">Loading recent clients...</td>
                     </tr>
                   )}
 
                   {!loading && selectedPeriodPatients.length === 0 && (
                     <tr>
-                      <td colSpan="5">No patients found for the selected period.</td>
+                      <td colSpan="5">No clients found for the selected period.</td>
                     </tr>
                   )}
 

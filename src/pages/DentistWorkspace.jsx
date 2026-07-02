@@ -18,29 +18,29 @@ import {
 
 const PAGE_COPY = {
   patients: {
-    title: "Patient List",
+    title: "Client List",
     eyebrow: "Dentist",
-    description: "Patients linked with the selected dentist.",
+    description: "Clients linked with the selected dentist.",
   },
   summary: {
-    title: "Summary of Patients",
+    title: "Summary of Clients",
     eyebrow: "Dentist",
     description: "Summary table ready for the detailed format.",
   },
   salary: {
-    title: "Patient List Salary Based",
+    title: "Client List Salary Based",
     eyebrow: "Dentist",
-    description: "Salary based patient list.",
+    description: "Salary based client list.",
   },
   percentage: {
-    title: "Patient List Percentage Base",
+    title: "Client List Percentage Base",
     eyebrow: "Dentist",
-    description: "Percentage based patient list.",
+    description: "Percentage based client list.",
   },
   referral: {
-    title: "Patient List Referral Based",
+    title: "Client List Referral Based",
     eyebrow: "Dentist",
-    description: "Referral based patient list.",
+    description: "Referral based client list.",
   },
 };
 
@@ -65,7 +65,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
         setPatients(filterPatientsForActiveShift(patientArray(response.data)));
       } catch (requestError) {
         console.error(requestError);
-        setError("Dentist patients could not be loaded.");
+        setError("Dentist clients could not be loaded.");
       } finally {
         setLoading(false);
       }
@@ -101,7 +101,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
 
         <section className="metrics-grid">
           <div className="metric-card gold-bordered">
-            <div className="metric-label">Patients</div>
+            <div className="metric-label">Clients</div>
             <div className="metric-value">{loading ? "..." : totals.patients}</div>
             <div className="metric-detail">Visible records</div>
           </div>
@@ -127,7 +127,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Patient</th>
+                  <th>Client</th>
                   <th>Reg No</th>
                   <th>Mobile</th>
                   <th>Status</th>
@@ -138,12 +138,12 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="6">Loading patients...</td>
+                    <td colSpan="6">Loading clients...</td>
                   </tr>
                 )}
                 {!loading && patients.length === 0 && (
                   <tr>
-                    <td colSpan="6">No patients found.</td>
+                    <td colSpan="6">No clients found.</td>
                   </tr>
                 )}
                 {patients.map((patient) => (

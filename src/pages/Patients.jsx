@@ -136,7 +136,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
   const handleSave = async () => {
     if (!data.biography?.patientName?.trim()) {
-      notify("Patient name is required before saving.", "danger");
+      notify("Client name is required before saving.", "danger");
       return;
     }
 
@@ -169,16 +169,16 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
         amount: "",
         description: "",
       });
-      await addActivityLog("Created patient", payload.biography?.patientName || "Patient", {
+      await addActivityLog("Created client", payload.biography?.patientName || "Client", {
         regNo: response.data.reg_no,
       });
-      notify(`Patient saved. Reg No: ${response.data.reg_no}`);
+      notify(`Client saved. Reg No: ${response.data.reg_no}`);
     } catch (error) {
       const detail = error?.response?.data?.detail;
       notify(
         (typeof detail === "string" && detail) ||
           error?.message ||
-          "Error saving patient. Try again.",
+          "Error saving client. Try again.",
         "danger"
       );
     } finally {
@@ -199,10 +199,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       await api.put(`/patients/${data._id}`, payload);
       setData(payload);
       localStorage.removeItem("editPatient");
-      await addActivityLog("Updated patient", payload.biography?.patientName || "Patient", {
+      await addActivityLog("Updated client", payload.biography?.patientName || "Client", {
         regNo: payload.biography?.regNo,
       });
-      notify("Patient updated successfully.");
+      notify("Client updated successfully.");
     } catch (error) {
       notify(error?.response?.data?.detail || "Update failed.", "danger");
     } finally {
@@ -211,7 +211,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   };
 
   const handleClear = () => {
-    if (!window.confirm("Clear all fields and start a new patient?")) {
+    if (!window.confirm("Clear all fields and start a new client?")) {
       return;
     }
 
@@ -240,7 +240,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           </button>
 
           <div>
-            <div className="topbar-title">{data.isEditing ? "Edit Patient" : "Patient Entry"}</div>
+            <div className="topbar-title">{data.isEditing ? "Edit Client" : "Client Entry"}</div>
             {data.biography?.regNo && (
               <span style={{ fontSize: "12px", color: "var(--muted)" }}>Reg #{data.biography.regNo}</span>
             )}
@@ -345,11 +345,11 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
           {data.isEditing ? (
             <button className="btn btn-success btn-lg" onClick={handleUpdate} disabled={loading}>
-              {loading ? <><div className="spinner" /> Updating...</> : "Update Patient"}
+              {loading ? <><div className="spinner" /> Updating...</> : "Update Client"}
             </button>
           ) : (
             <button className="btn btn-navy btn-lg" onClick={handleSave} disabled={loading}>
-              {loading ? <><div className="spinner" /> Saving...</> : "Save Patient"}
+              {loading ? <><div className="spinner" /> Saving...</> : "Save Client"}
             </button>
           )}
         </div>

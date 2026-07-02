@@ -5,7 +5,7 @@ import { isSoundEnabled, playSectionSound, setSoundEnabled } from "../utils/soun
 
 const NAV_ITEMS = [
   { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "patients", label: "New Patient Entry", short: "+", section: "Receptionist", roles: ["admin", "receptionist"] },
+  { page: "patients", label: "New Client Entry", short: "+", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "patients-list", label: "Registered Client", short: "R", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "appointments", label: "Appointments", short: "A", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "lab-follow-up", label: "Lab Cases Follow Up", short: "L", section: "Receptionist", roles: ["receptionist"] },
@@ -13,14 +13,14 @@ const NAV_ITEMS = [
   { page: "maintenance", label: "Maintenance", short: "M", section: "Receptionist", roles: ["receptionist"] },
   { page: "refurbishing", label: "Refurbishing", short: "RF", section: "Receptionist", roles: ["receptionist"] },
   { page: "daily-expense", label: "Daily Expense", short: "DE", section: "Receptionist", roles: ["receptionist"] },
-  { page: "ongoing-patients", label: "On Going Patient", short: "O", section: "Receptionist", roles: ["receptionist"] },
-  { page: "completed-patients", label: "Completed Patient", short: "C", section: "Receptionist", roles: ["receptionist"] },
+  { page: "ongoing-patients", label: "On Going Client", short: "O", section: "Receptionist", roles: ["receptionist"] },
+  { page: "completed-patients", label: "Completed Client", short: "C", section: "Receptionist", roles: ["receptionist"] },
   { page: "official-contact", label: "Official Contact", short: "OC", section: "Receptionist", roles: ["receptionist"] },
-  { page: "dentist-patients", label: "Patient List", short: "P", section: "Dentist", roles: ["dentist", "doctor"] },
-  { page: "dentist-summary", label: "Summary of Patients", short: "S", section: "Dentist", roles: ["dentist", "doctor"] },
-  { page: "dentist-salary", label: "Patient List Salary Based", short: "SB", section: "Dentist", roles: ["dentist", "doctor"] },
-  { page: "dentist-percentage", label: "Patient List Percentage Base", short: "%", section: "Dentist", roles: ["dentist", "doctor"] },
-  { page: "dentist-referral", label: "Patient List Referral Based", short: "RF", section: "Dentist", roles: ["dentist", "doctor"] },
+  { page: "dentist-patients", label: "Client List", short: "CL", section: "Dentist", roles: ["dentist", "doctor"] },
+  { page: "dentist-summary", label: "Summary of Clients", short: "S", section: "Dentist", roles: ["dentist", "doctor"] },
+  { page: "dentist-salary", label: "Client List Salary Based", short: "SB", section: "Dentist", roles: ["dentist", "doctor"] },
+  { page: "dentist-percentage", label: "Client List Percentage Base", short: "%", section: "Dentist", roles: ["dentist", "doctor"] },
+  { page: "dentist-referral", label: "Client List Referral Based", short: "RF", section: "Dentist", roles: ["dentist", "doctor"] },
   { page: "lab-records", label: "Lab Records", short: "L", section: "Clinic", roles: ["admin"] },
   { page: "account-status", label: "Account Status", short: "$", section: "Finance", roles: ["admin"] },
   { page: "dentist-revenue", label: "Dentist Revenue", short: "25", section: "Finance", roles: ["admin"] },
@@ -159,27 +159,23 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
           })}
         </nav>
 
-        <div className="sidebar-upgrade">
-          <div className="upgrade-title">{CLINIC_NAME}</div>
-          <div className="upgrade-copy">
-            Patient care, appointments, finance and treatment records in one place.
-          </div>
+        <div className="sidebar-footer">
           <button className="sound-toggle" type="button" onClick={toggleSound}>
             Section sound: {soundOn ? "On" : "Off"}
           </button>
-        </div>
 
-        <div className="sidebar-user">
-          <div className="user-avatar">{profile.initials || "AD"}</div>
-          <div className="user-details">
-            <div className="user-name">{profile.name}</div>
-            <div className="user-role">
-              {[profile.roleLabel, profile.dentistName, profile.shiftLabel].filter(Boolean).join(" | ")}
+          <div className="sidebar-user">
+            <div className="user-avatar">{profile.initials || "AD"}</div>
+            <div className="user-details">
+              <div className="user-name">{profile.name}</div>
+              <div className="user-role">
+                {[profile.roleLabel, profile.dentistName, profile.shiftLabel].filter(Boolean).join(" | ")}
+              </div>
             </div>
+            <button className="logout-button" type="button" onClick={logout} aria-label="Logout">
+              Out
+            </button>
           </div>
-          <button className="logout-button" type="button" onClick={logout} aria-label="Logout">
-            Out
-          </button>
         </div>
       </aside>
 

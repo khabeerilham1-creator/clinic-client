@@ -10,6 +10,7 @@ import {
   todayDisplayValue,
 } from "../../utils/patientHelpers";
 import { playSectionSound } from "../../utils/sound";
+import PriceListPanel from "./PriceListPanel";
 
 const emptyPayment = () => ({
   date: todayDisplayValue(),
@@ -115,7 +116,7 @@ function AccountLedger({ patientData, setPatientData }) {
 
       <section className="account-status-summary">
         <div className="metric-card gold-bordered">
-          <div className="metric-label">Patient total amount</div>
+          <div className="metric-label">Client total amount</div>
           <div className="metric-value">{formatCurrency(patientTotal)}</div>
           <div className="metric-detail">Invoice net amount</div>
         </div>
@@ -127,9 +128,11 @@ function AccountLedger({ patientData, setPatientData }) {
         <div className="metric-card gold-bordered">
           <div className="metric-label">Remaining</div>
           <div className="metric-value">{formatCurrency(remaining)}</div>
-          <div className="metric-detail">Patient balance</div>
+          <div className="metric-detail">Client balance</div>
         </div>
       </section>
+
+      <PriceListPanel category={patientData.biography?.category} />
 
       <section className="payment-panel account-ledger-form no-print">
         <label className="field">

@@ -1,5 +1,11 @@
 import React, { useEffect } from "react";
-import { capitalizeFirstWord } from "../../utils/patientHelpers";
+import {
+  capitalizeFirstWord,
+  dateKey,
+  formatDateDisplay,
+  plannedVisitStatus,
+  todayDisplayValue,
+} from "../../utils/patientHelpers";
 
 function PlannedSequence({
   patientData,
@@ -20,6 +26,7 @@ function PlannedSequence({
           {
             visitNo: 1,
             date: "",
+            time: "",
             procedure: "",
           },
         ],
@@ -53,6 +60,7 @@ function PlannedSequence({
       {
         visitNo: rows.length + 1,
         date: "",
+        time: "",
         procedure: "",
       },
     ];
@@ -86,7 +94,7 @@ function PlannedSequence({
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
 
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-2xl font-bold text-black">
           Planned Sequence Treatment
         </h2>
 
@@ -102,9 +110,9 @@ function PlannedSequence({
       {/* TABLE */}
       <div className="overflow-x-auto">
 
-        <table className="w-full border border-gray-300">
+        <table className="data-table planned-sequence-table">
 
-          <thead className="bg-gray-100">
+          <thead>
 
             <tr>
 
@@ -117,7 +125,15 @@ function PlannedSequence({
               </th>
 
               <th className="border p-3">
+                Time
+              </th>
+
+              <th className="border p-3">
                 Procedure
+              </th>
+
+              <th className="border p-3">
+                Status
               </th>
 
               <th className="border p-3">
@@ -132,7 +148,7 @@ function PlannedSequence({
 
             {rows.map((row, index) => (
 
-              <tr key={index}>
+              <tr key={index} className={plannedVisitStatus(row) === "Done" ? "planned-row-done" : ""}>
 
                 {/* VISIT NO */}
                 <td className="border p-2 text-center">
@@ -143,8 +159,8 @@ function PlannedSequence({
                 <td className="border p-2">
 
                   <input
-                    type="text"
-                    value={row.date}
+                    type="date"
+                    value={dateKey(row.date)}
                     onChange={(e) =>
                       handleChange(
                         index,
@@ -153,8 +169,25 @@ function PlannedSequence({
                       )
                     }
                     className="w-full p-2 border rounded"
-                    placeholder="dd/mm/yyyy"
-                    inputMode="numeric"
+                    max="9999-12-31"
+                  />
+
+                </td>
+
+                {/* TIME */}
+                <td className="border p-2">
+
+                  <input
+                    type="time"
+                    value={row.time || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        index,
+                        "time",
+                        e.target.value
+                      )
+                    }
+                    className="w-full p-2 border rounded"
                   />
 
                 </td>
@@ -180,6 +213,24 @@ function PlannedSequence({
 
                 </td>
 
+                {/* STATUS */}
+                <td className="border p-2 text-center">
+                  <span className={`pill ${
+                    plannedVisitStatus(row) === "Done"
+                      ? "success"
+                      : plannedVisitStatus(row) === "Today"
+                        ? "warning"
+                        : ""
+                  }`}>
+                    {plannedVisitStatus(row)}
+                  </span>
+                  {plannedVisitStatus(row) === "Done" && row.date && (
+                    <small className="planned-done-date">
+                      {formatDateDisplay(row.date)}
+                    </small>
+                  )}
+                </td>
+
                 {/* DELETE */}
                 <td className="border p-2 text-center">
 
@@ -202,6 +253,10 @@ function PlannedSequence({
 
         </table>
 
+      </div>
+
+      <div className="planned-sequence-note">
+        Visits before {todayDisplayValue()} are marked Done automatically.
       </div>
 
     </div>
