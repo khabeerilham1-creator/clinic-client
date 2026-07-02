@@ -3,24 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f5f7fb;
+  --bg: #f7f9fc;
   --surface: #ffffff;
-  --surface-soft: #f8fafc;
+  --surface-soft: #f8fbff;
   --ink: #172033;
   --ink-soft: #334155;
   --muted: #64748b;
   --line: #dfe7ef;
   --line-strong: #cbd5e1;
-  --navy: #122238;
-  --navy-2: #193653;
-  --blue: #2563eb;
-  --blue-soft: #eaf1ff;
+  --navy: #10233b;
+  --navy-2: #16405a;
+  --blue: #2864e8;
+  --blue-soft: #e8f0ff;
   --green: #0f9f7a;
-  --green-soft: #e8f8f3;
-  --gold: #b7791f;
-  --gold-soft: #fff7e6;
-  --rose: #d84f57;
-  --rose-soft: #fff0f1;
+  --green-soft: #e7f8f2;
+  --gold: #bd841f;
+  --gold-soft: #fff5d9;
+  --rose: #d84f6b;
+  --rose-soft: #fff0f4;
+  --cyan: #0891b2;
+  --cyan-soft: #e6f8fc;
+  --violet: #7c3aed;
+  --violet-soft: #f1ecff;
+  --coral: #f97316;
+  --coral-soft: #fff1e8;
   --shadow: 0 24px 70px rgba(23, 32, 51, 0.12);
   --shadow-soft: 0 14px 45px rgba(23, 32, 51, 0.08);
 }
@@ -63,22 +69,24 @@ button:disabled {
   min-height: 100vh;
   display: flex;
   background:
-    radial-gradient(circle at 78% 6%, rgba(15, 159, 122, 0.11), transparent 28%),
-    linear-gradient(135deg, #f8fafc 0%, #eef3f9 100%);
+    linear-gradient(135deg, rgba(40, 100, 232, 0.08), rgba(15, 159, 122, 0.08) 46%, rgba(189, 132, 31, 0.09)),
+    linear-gradient(180deg, #fbfdff 0%, #eef6f7 100%);
 }
 
 .sidebar {
   width: 292px;
   min-height: 100vh;
+  max-height: 100vh;
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  background: linear-gradient(180deg, var(--navy) 0%, #101824 100%);
+  background: linear-gradient(180deg, #10233b 0%, #0f3a3d 56%, #171d2c 100%);
   color: #fff;
   box-shadow: 24px 0 60px rgba(18, 34, 56, 0.18);
   position: sticky;
   top: 0;
+  overflow-y: auto;
 }
 
 .main-wrapper {
@@ -100,7 +108,7 @@ button:disabled {
   border-radius: 14px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #f6c65b 0%, #0f9f7a 100%);
+  background: linear-gradient(135deg, #f6c65b 0%, #22c1a8 55%, #2f6fed 100%);
   color: #101824;
   font-weight: 900;
   box-shadow: 0 14px 35px rgba(246, 198, 91, 0.22);
@@ -148,6 +156,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-height: 0;
 }
 
 .nav-section {
@@ -182,6 +191,7 @@ button:disabled {
 .nav-item.active {
   background: #fff;
   color: var(--navy);
+  border-color: rgba(189, 132, 31, 0.55);
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.22);
 }
 
@@ -202,7 +212,7 @@ button:disabled {
 }
 
 .sidebar-upgrade {
-  margin-top: auto;
+  margin-top: 8px;
   padding: 16px;
   border-radius: 16px;
   border: 1px solid rgba(246, 198, 91, 0.22);
@@ -382,6 +392,30 @@ button:disabled {
   border-color: var(--ink);
   background: var(--ink);
   color: #fff;
+}
+
+.gold-bordered {
+  border-color: rgba(189, 132, 31, 0.34) !important;
+  box-shadow: 0 14px 45px rgba(40, 100, 232, 0.07), 0 0 0 1px rgba(189, 132, 31, 0.08);
+}
+
+.accent-hero {
+  border-color: rgba(189, 132, 31, 0.32);
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.82)),
+    linear-gradient(135deg, rgba(40, 100, 232, 0.18), rgba(15, 159, 122, 0.15) 54%, rgba(246, 198, 91, 0.2));
+}
+
+.admin-hero {
+  border-color: rgba(124, 58, 237, 0.22);
+}
+
+.dentist-hero {
+  border-color: rgba(8, 145, 178, 0.28);
+}
+
+.receptionist-hero {
+  border-color: rgba(15, 159, 122, 0.28);
 }
 
 .btn-sm {
@@ -602,6 +636,76 @@ button:disabled {
   color: var(--blue);
 }
 
+.role-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 18px 0;
+}
+
+.role-action-card {
+  min-height: 156px;
+  padding: 20px;
+  border: 1px solid rgba(189, 132, 31, 0.28);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  box-shadow: var(--shadow-soft);
+  transition: 0.16s ease;
+}
+
+.role-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 48px rgba(23, 32, 51, 0.12);
+}
+
+.role-action-card span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.role-action-card strong,
+.role-action-card small {
+  display: block;
+}
+
+.role-action-card strong {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.role-action-card small {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.role-action-card.blue span {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.role-action-card.green span {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.role-action-card.gold span {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.compact-role-metrics .metric-card {
+  min-height: 124px;
+}
+
 .data-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -686,6 +790,26 @@ button:disabled {
   border-color: #fecdd3;
   color: var(--ink);
   text-align: left;
+}
+
+.alert-blue {
+  background: var(--blue-soft);
+  border-color: rgba(40, 100, 232, 0.24);
+}
+
+.alert-green {
+  background: var(--green-soft);
+  border-color: rgba(15, 159, 122, 0.24);
+}
+
+.alert-gold {
+  background: var(--gold-soft);
+  border-color: rgba(189, 132, 31, 0.28);
+}
+
+.alert-rose {
+  background: var(--rose-soft);
+  border-color: rgba(216, 79, 107, 0.24);
 }
 
 .alert-row small {
@@ -1042,6 +1166,14 @@ textarea:focus {
   margin-bottom: 18px;
 }
 
+.role-choice-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dentist-choice-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .shift-choice {
   min-height: 112px;
   padding: 16px;
@@ -1068,6 +1200,10 @@ textarea:focus {
 .shift-choice strong {
   font-size: 16px;
   font-weight: 900;
+}
+
+.shift-choice.compact {
+  min-height: 84px;
 }
 
 .shift-choice span {
@@ -1105,6 +1241,7 @@ textarea:focus {
 
 .password-field button {
   width: 78px;
+  min-height: 48px;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
   background: var(--surface-soft);
@@ -1376,6 +1513,28 @@ textarea:focus {
   margin-bottom: 18px;
 }
 
+.account-status-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 18px;
+}
+
+.account-status-summary .metric-card {
+  min-height: 120px;
+}
+
+.account-ledger-form {
+  grid-template-columns: 180px 180px minmax(220px, 1fr) auto auto;
+}
+
+.mini-finance-card {
+  min-width: 220px;
+  min-height: 96px;
+  padding: 16px;
+  box-shadow: none;
+}
+
 .lab-layout {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
@@ -1639,11 +1798,14 @@ textarea:focus {
   .metrics-grid,
   .metrics-grid.three,
   .record-summary,
+  .role-action-grid,
+  .account-status-summary,
   .dashboard-grid,
   .schedule-layout,
   .modal-grid,
   .invoice-total-panel,
   .payment-panel,
+  .account-ledger-form,
   .lab-layout {
     grid-template-columns: 1fr 1fr;
   }
@@ -1756,6 +1918,8 @@ textarea:focus {
   .metrics-grid,
   .metrics-grid.three,
   .record-summary,
+  .role-action-grid,
+  .account-status-summary,
   .dashboard-grid,
   .schedule-layout,
   .modal-grid,
@@ -1765,6 +1929,7 @@ textarea:focus {
     .clinical-grid,
     .invoice-total-panel,
     .payment-panel,
+    .account-ledger-form,
     .shift-choice-grid,
     .lab-layout {
     grid-template-columns: 1fr;

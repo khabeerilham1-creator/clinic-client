@@ -40,7 +40,7 @@ function AdminUsers() {
 
       {users.length === 0 && <p>No pending users found.</p>}
 
-      {users.map(u => (
+      {users.map((u, index) => (
         <div
           key={u._id}
           style={{
@@ -50,7 +50,7 @@ function AdminUsers() {
             borderRadius: "8px"
           }}
         >
-          <p><strong>Username:</strong> {u.username}</p>
+          <p><strong>User:</strong> Pending staff #{index + 1}</p>
           <p><strong>Role:</strong> {u.role}</p>
 
           <button onClick={() => approve(u._id)}>

@@ -119,6 +119,20 @@ function Checkup({ patientData, setPatientData }) {
   const softRows = checkupData.softTissueRecords || [];
   const hardRows = checkupData.hardTissueRecords || [];
   const selectedToothNo = checkupData.selectedToothNo || "";
+  const selectedToothNos = Array.isArray(checkupData.selectedToothNos)
+    ? checkupData.selectedToothNos
+    : selectedToothNo
+      ? String(selectedToothNo)
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+  const selectedToothLabel =
+    selectedToothNos.length === 0
+      ? "Click teeth above"
+      : selectedToothNos.length === 32
+        ? "All 32 teeth selected"
+        : selectedToothNos.map((toothNo) => `#${toothNo}`).join(", ");
 
   const setCheckup = (updates) => {
     setPatientData((prev) => ({
@@ -181,7 +195,12 @@ function Checkup({ patientData, setPatientData }) {
           condition,
           treatment,
           source,
-          ...(section === "hard" ? { toothNo: selectedToothNo } : {}),
+          ...(section === "hard"
+            ? {
+                toothNo: selectedToothNos.join(", ") || selectedToothNo,
+                toothNos: selectedToothNos,
+              }
+            : {}),
         },
       ],
       ...(source === "manual"
@@ -203,9 +222,16 @@ function Checkup({ patientData, setPatientData }) {
     playSectionSound("warning");
   };
 
-  const handleToothSelect = (toothNo) => {
+  const handleToothSelect = (toothNos) => {
+    const nextToothNos = Array.isArray(toothNos)
+      ? toothNos.map((toothNo) => String(toothNo))
+      : toothNos
+        ? [String(toothNos)]
+        : [];
+
     setCheckup({
-      selectedToothNo: toothNo,
+      selectedToothNos: nextToothNos,
+      selectedToothNo: nextToothNos.join(", "),
       selectedToothClickId: Date.now(),
     });
     playSectionSound("section");
@@ -253,8 +279,8 @@ function Checkup({ patientData, setPatientData }) {
 
       <section className="clinical-chart-card">
         <div className="selected-tooth-strip">
-          <span>Selected Tooth</span>
-          <strong>{selectedToothNo ? `#${selectedToothNo}` : "Click a tooth above"}</strong>
+          <span>Selected Teeth</span>
+          <strong>{selectedToothLabel}</strong>
         </div>
 
         <ClinicalSelector
@@ -275,7 +301,15 @@ function Checkup({ patientData, setPatientData }) {
           onDelete={(index) => deleteFinding("hard", index)}
           emptyText="No hard tissue findings selected yet."
           firstColumnLabel="Tooth No"
-          firstValue={(row) => (row.toothNo ? `#${row.toothNo}` : "-")}
+          firstValue={(row) => {
+            if (Array.isArray(row.toothNos) && row.toothNos.length) {
+              return row.toothNos.length === 32
+                ? "All 32"
+                : row.toothNos.map((toothNo) => `#${toothNo}`).join(", ");
+            }
+
+            return row.toothNo ? `#${row.toothNo}` : "-";
+          }}
         />
       </section>
     </div>

@@ -40,7 +40,7 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
     const storedUser = JSON.parse(sessionStorage.getItem("user") || "{}");
     const storedShift = JSON.parse(sessionStorage.getItem("shift") || "null");
     const role = sessionStorage.getItem("role") || storedUser.role || "Administrator";
-    const name = user?.name || storedUser.name || storedUser.username || "HDC Admin";
+    const name = user?.name || storedUser.name || "Staff";
     const dentistName = storedUser.dentistName || "";
     const roleLabel =
       role === "admin"

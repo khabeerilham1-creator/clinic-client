@@ -24,6 +24,9 @@ function Login({ onLogin }) {
   const [selectedDentistId, setSelectedDentistId] = useState("");
   const [password, setPassword] = useState("");
   const [roleCode, setRoleCode] = useState("");
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showShiftPassword, setShowShiftPassword] = useState(false);
+  const [showRolePassword, setShowRolePassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [adminSession, setAdminSession] = useState(null);
@@ -70,7 +73,7 @@ function Login({ onLogin }) {
       playSectionSound("success");
     } catch (requestError) {
       console.error(requestError);
-      setError("Login failed. Please check your access details.");
+      setError("Login failed.");
       playSectionSound("warning");
     } finally {
       setLoading(false);
@@ -290,12 +293,20 @@ function Login({ onLogin }) {
               <span>Access Code</span>
               <div className="password-field">
                 <input
-                  type="password"
+                  type={showAdminPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter access code"
                   autoComplete="off"
                 />
+                <button
+                  type="button"
+                  className="password-eye-button"
+                  onClick={() => setShowAdminPassword((visible) => !visible)}
+                  aria-label={showAdminPassword ? "Hide access code" : "Show access code"}
+                >
+                  {showAdminPassword ? "Hide" : "Show"}
+                </button>
               </div>
             </label>
 
@@ -328,12 +339,20 @@ function Login({ onLogin }) {
               <span>Shift Code</span>
               <div className="password-field">
                 <input
-                  type="password"
+                  type={showShiftPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter selected shift code"
                   autoComplete="off"
                 />
+                <button
+                  type="button"
+                  className="password-eye-button"
+                  onClick={() => setShowShiftPassword((visible) => !visible)}
+                  aria-label={showShiftPassword ? "Hide shift code" : "Show shift code"}
+                >
+                  {showShiftPassword ? "Hide" : "Show"}
+                </button>
               </div>
             </label>
 
@@ -393,12 +412,20 @@ function Login({ onLogin }) {
               <span>Access Code</span>
               <div className="password-field">
                 <input
-                  type="password"
+                  type={showRolePassword ? "text" : "password"}
                   value={roleCode}
                   onChange={(event) => setRoleCode(event.target.value)}
                   placeholder="Enter role access code"
                   autoComplete="off"
                 />
+                <button
+                  type="button"
+                  className="password-eye-button"
+                  onClick={() => setShowRolePassword((visible) => !visible)}
+                  aria-label={showRolePassword ? "Hide role access code" : "Show role access code"}
+                >
+                  {showRolePassword ? "Hide" : "Show"}
+                </button>
               </div>
             </label>
 

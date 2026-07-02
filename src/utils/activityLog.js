@@ -14,7 +14,7 @@ export const currentActor = () => {
   const user = safeJson(sessionStorage.getItem("user"), {}) || {};
 
   return {
-    actor: user.name || user.username || "Staff",
+    actor: user.name || "Staff",
     role: sessionStorage.getItem("role") || user.role || "staff",
     shift: user.shiftName || safeJson(sessionStorage.getItem("shift"), {})?.label || "",
   };

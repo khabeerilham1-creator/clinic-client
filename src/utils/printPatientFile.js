@@ -65,9 +65,18 @@ const selectedClinicalRows = (patient) => {
   });
 
   safeList(checkup.hardTissueRecords).forEach((item) => {
+    const toothLabel =
+      Array.isArray(item.toothNos) && item.toothNos.length
+        ? item.toothNos.length === 32
+          ? "All 32"
+          : item.toothNos.map((toothNo) => `#${toothNo}`).join(", ")
+        : item.toothNo
+          ? `#${item.toothNo}`
+          : rows.length + 1;
+
     rows.push(`
       <tr>
-        <td>${escapeHtml(item.toothNo ? `#${item.toothNo}` : rows.length + 1)}</td>
+        <td>${escapeHtml(toothLabel)}</td>
         <td>Hard Tissue</td>
         <td>${escapeHtml(item.condition)}</td>
         <td>${escapeHtml(item.treatment)}</td>

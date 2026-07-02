@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 
 const UPPER = [
   { num: 1, name: "Upper Right 3rd Molar", shape: "molar" },
@@ -38,6 +38,24 @@ const LOWER = [
   { num: 17, name: "Lower Left 3rd Molar", shape: "molar_lo" },
 ];
 
+const ALL_TEETH = [...UPPER, ...LOWER];
+const ALL_TOOTH_NUMBERS = ALL_TEETH.map((tooth) => tooth.num);
+
+const normalizeSelection = (selection) => {
+  const values = Array.isArray(selection)
+    ? selection
+    : String(selection || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+  const numeric = values
+    .map((item) => Number(item))
+    .filter((item) => ALL_TOOTH_NUMBERS.includes(item));
+
+  return ALL_TOOTH_NUMBERS.filter((toothNo) => numeric.includes(toothNo));
+};
+
 function ToothSVG({ shape, selected }) {
   const fill = selected ? "#E6F1FB" : "#f8fafc";
   const stroke = selected ? "#185FA5" : "#64748b";
@@ -60,14 +78,26 @@ function ToothSVG({ shape, selected }) {
 }
 
 export default function ToothChart({ patientData, setPatientData, onToothSelect }) {
-  const [selected, setSelected] = useState(null);
   const notes = patientData?.toothNotes || "";
+  const selectedNumbers = normalizeSelection(
+    patientData?.checkup?.selectedToothNos || patientData?.checkup?.selectedToothNo
+  );
+  const selectedCount = selectedNumbers.length;
 
   const clickTooth = (tooth) => {
-    const selection = { ...tooth, selectedAt: Date.now() };
+    const nextNumbers = selectedNumbers.includes(tooth.num)
+      ? selectedNumbers.filter((toothNo) => toothNo !== tooth.num)
+      : ALL_TOOTH_NUMBERS.filter((toothNo) => [...selectedNumbers, tooth.num].includes(toothNo));
 
-    setSelected(selection);
-    onToothSelect?.(tooth.num, selection);
+    onToothSelect?.(nextNumbers.map(String), tooth);
+  };
+
+  const selectAllTeeth = () => {
+    onToothSelect?.(ALL_TOOTH_NUMBERS.map(String));
+  };
+
+  const clearSelection = () => {
+    onToothSelect?.([]);
   };
 
   const saveNotes = (value) => {
@@ -77,7 +107,7 @@ export default function ToothChart({ patientData, setPatientData, onToothSelect 
   const JawRow = ({ teeth, numPos }) => (
     <div style={{ display: "flex", gap: "3px", justifyContent: "center", overflowX: "auto", paddingBottom: "4px" }}>
       {teeth.map((tooth) => {
-        const isSelected = selected?.num === tooth.num;
+        const isSelected = selectedNumbers.includes(tooth.num);
 
         return (
           <div
@@ -141,16 +171,31 @@ export default function ToothChart({ patientData, setPatientData, onToothSelect 
         <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "6px", textAlign: "right", paddingRight: "4px" }}>Lower jaw (mandibular) 17-32</div>
       </div>
 
-      {selected ? (
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", margin: "0 0 14px" }}>
+        <button className="btn btn-primary btn-sm" type="button" onClick={selectAllTeeth}>
+          Select all 32 teeth
+        </button>
+        <button className="btn btn-sm" type="button" onClick={clearSelection}>
+          Clear selection
+        </button>
+      </div>
+
+      {selectedCount > 0 ? (
         <div style={{ background: "#E6F1FB", border: "1px solid #B5D4F4", borderRadius: "12px", padding: "12px 16px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: "700", color: "#0C447C", fontSize: "13.5px" }}>{selected.name} - Tooth #{selected.num}</div>
+            <div style={{ fontWeight: "700", color: "#0C447C", fontSize: "13.5px" }}>
+              {selectedCount === 32
+                ? "All 32 teeth selected"
+                : `${selectedCount} tooth${selectedCount === 1 ? "" : "s"} selected`}
+            </div>
             <div style={{ fontSize: "12px", color: "#185FA5", marginTop: "2px" }}>
-              Ready for hard tissue condition and treatment entry.
+              {selectedCount === 32
+                ? "Ready for full-mouth hard tissue entry."
+                : selectedNumbers.map((toothNo) => `#${toothNo}`).join(", ")}
             </div>
           </div>
           <button
-            onClick={() => setSelected(null)}
+            onClick={clearSelection}
             type="button"
             style={{ background: "#fff", border: "1px solid #B5D4F4", borderRadius: "8px", padding: "5px 12px", cursor: "pointer", fontSize: "12px", color: "#0C447C", fontWeight: "600" }}
           >
@@ -159,7 +204,7 @@ export default function ToothChart({ patientData, setPatientData, onToothSelect 
         </div>
       ) : (
         <div style={{ background: "#f8fafc", border: "1px dashed #e2e8f0", borderRadius: "12px", padding: "10px 16px", marginBottom: "14px", fontSize: "12.5px", color: "#94a3b8", textAlign: "center" }}>
-          Click any tooth to select it
+          Click one or more teeth to select them
         </div>
       )}
 
