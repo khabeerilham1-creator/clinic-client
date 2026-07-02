@@ -208,10 +208,10 @@ function Login({ onLogin }) {
       sessionStorage.setItem("user", JSON.stringify(user));
       sessionStorage.setItem("shift", JSON.stringify(shift));
 
-      await addActivityLog("Login", user.role, {
+      addActivityLog("Login", user.role, {
         shift: shift.label,
         dentistName: user.dentistName,
-      });
+      }).catch((logError) => console.warn("Login activity could not be saved.", logError));
 
       playSectionSound("success");
 

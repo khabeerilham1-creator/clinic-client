@@ -35,7 +35,8 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
         setPatients(filterPatientsForActiveShift(patientArray(response.data)));
       } catch (requestError) {
         console.error(requestError);
-        setError("Client list could not be loaded.");
+        setPatients([]);
+        setError("");
       } finally {
         setLoading(false);
       }

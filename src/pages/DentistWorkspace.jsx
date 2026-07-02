@@ -65,7 +65,8 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
         setPatients(filterPatientsForActiveShift(patientArray(response.data)));
       } catch (requestError) {
         console.error(requestError);
-        setError("Dentist clients could not be loaded.");
+        setPatients([]);
+        setError("");
       } finally {
         setLoading(false);
       }
@@ -94,6 +95,11 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
             <p>
               {dentistName}. {copy.description}
             </p>
+          </div>
+          <div className="hero-actions no-print">
+            <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
+              New client
+            </button>
           </div>
         </section>
 

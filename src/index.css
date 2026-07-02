@@ -3,20 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f7f9fc;
+  --bg: #eefaf5;
   --surface: #ffffff;
-  --surface-soft: #f8fbff;
-  --ink: #172033;
-  --ink-soft: #334155;
-  --muted: #64748b;
+  --surface-soft: #f6fffb;
+  --ink: #050505;
+  --ink-soft: #111111;
+  --muted: #111111;
   --line: #dfe7ef;
   --line-strong: #cbd5e1;
-  --navy: #10233b;
-  --navy-2: #16405a;
-  --blue: #2864e8;
+  --navy: #071411;
+  --navy-2: #103d32;
+  --blue: #1667d9;
   --blue-soft: #e8f0ff;
-  --green: #0f9f7a;
-  --green-soft: #e7f8f2;
+  --green: #047857;
+  --green-soft: #dff7ed;
   --gold: #bd841f;
   --gold-soft: #fff5d9;
   --rose: #d84f6b;
@@ -1745,6 +1745,204 @@ textarea:focus {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.login-screen {
+  min-height: 100vh;
+  display: block;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.9), transparent 28%),
+    linear-gradient(135deg, #023c2c 0%, #047857 50%, #0b1512 100%);
+}
+
+.login-stage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 22px;
+}
+
+.login-center-brand {
+  max-width: min(920px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  color: #fff;
+}
+
+.login-center-brand h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 1.04;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.login-card {
+  border: 1px solid rgba(201, 154, 58, 0.72);
+  border-radius: 18px;
+}
+
+.login-card-wide {
+  width: min(1050px, calc(100% - 48px));
+}
+
+.login-card-header.centered {
+  text-align: center;
+}
+
+.login-card-header.centered h2 {
+  margin-top: 0;
+}
+
+.login-option-grid {
+  margin-bottom: 18px;
+}
+
+.login-tile {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 2px solid rgba(201, 154, 58, 0.8);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.login-tile strong {
+  font-size: 24px;
+}
+
+.login-tile.admin {
+  background: #e2f7ed;
+}
+
+.login-tile.receptionist {
+  background: #e8f0ff;
+}
+
+.login-tile.dentist {
+  background: #fff6d8;
+}
+
+.login-tile.active,
+.login-tile:hover {
+  border-color: #d5a53b;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(5, 5, 5, 0.16);
+}
+
+.login-access-panel {
+  width: min(460px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.centered-actions {
+  justify-content: center;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #06110f 0%, #09241e 58%, #050505 100%);
+  overflow: hidden;
+}
+
+.sidebar .brand-name {
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.nav-stack {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.nav-item {
+  border-radius: 10px;
+}
+
+.sidebar-footer {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-user {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shift-hero {
+  min-height: 132px;
+  justify-content: center;
+  text-align: center;
+}
+
+.shift-hero h1 {
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.shift-hero p {
+  color: #111;
+  font-weight: 800;
+}
+
+.receptionist-status-grid .role-action-card {
+  min-height: 120px;
+  text-align: center;
+}
+
+.price-list-panel {
+  margin: 18px 0;
+}
+
+.price-list-table {
+  min-width: 760px;
+}
+
+.active-price-category {
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+  font-weight: 900;
+}
+
+.planned-sequence-table {
+  min-width: 880px;
+}
+
+.planned-row-done {
+  background: rgba(4, 120, 87, 0.08);
+}
+
+.planned-done-date {
+  display: block;
+  margin-top: 4px;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.planned-sequence-note {
+  margin-top: 12px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.schedule-card.done {
+  border-color: rgba(4, 120, 87, 0.28);
+  background: var(--green-soft);
 }
 
 .progress-tabs {

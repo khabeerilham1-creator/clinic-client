@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
 import Layout from "../components/Layout";
+import PriceListPanel from "../components/patient/PriceListPanel";
 import {
   activeShift,
   activeShiftId,
@@ -155,7 +156,9 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
       setExpenses(expenseArray(expensesResponse.data));
     } catch (requestError) {
       console.error(requestError);
-      setError("Account data could not be loaded. Please check the backend connection.");
+      setPatients([]);
+      setExpenses([]);
+      setError("");
     } finally {
       setLoading(false);
     }
@@ -601,6 +604,8 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
                 </button>
               )}
             </div>
+
+            <PriceListPanel category={bio(selectedPatient).category} />
 
             <div className="data-table-wrap">
               <table className="data-table">

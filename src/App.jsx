@@ -37,6 +37,7 @@ const ROLE_PAGES = {
   ],
   dentist: [
     "dashboard",
+    "patients",
     "dentist-patients",
     "dentist-summary",
     "dentist-salary",
@@ -45,6 +46,7 @@ const ROLE_PAGES = {
   ],
   doctor: [
     "dashboard",
+    "patients",
     "dentist-patients",
     "dentist-summary",
     "dentist-salary",

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
 import Layout from "../components/Layout";
+import PriceListPanel from "../components/patient/PriceListPanel";
 import {
   balanceDue,
   expenseArray,
@@ -50,7 +51,9 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
         setExpenses(expenseArray(expensesResponse.data));
       } catch (requestError) {
         console.error(requestError);
-        setError("Finance data could not be loaded.");
+        setPatients([]);
+        setExpenses([]);
+        setError("");
       } finally {
         setLoading(false);
       }
@@ -97,6 +100,8 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
         </section>
 
         {error && <div className="notice danger">{error}</div>}
+
+        <PriceListPanel />
 
         <section className="panel gold-bordered">
           <div className="data-table-wrap">

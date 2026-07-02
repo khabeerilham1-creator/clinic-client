@@ -47,10 +47,11 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       });
 
       setPatients(filterPatientsForActiveShift(patientArray(response.data)));
-    } catch (requestError) {
-      console.error(requestError);
-      setError("Clients could not be loaded. Please check the backend connection.");
-    } finally {
+      } catch (requestError) {
+        console.error(requestError);
+      setPatients([]);
+      setError("");
+      } finally {
       setLoading(false);
     }
   };

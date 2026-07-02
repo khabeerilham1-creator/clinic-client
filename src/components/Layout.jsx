@@ -5,7 +5,7 @@ import { isSoundEnabled, playSectionSound, setSoundEnabled } from "../utils/soun
 
 const NAV_ITEMS = [
   { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "patients", label: "New Client Entry", short: "+", section: "Receptionist", roles: ["admin", "receptionist"] },
+  { page: "patients", label: "New Client Entry", short: "+", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
   { page: "patients-list", label: "Registered Client", short: "R", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "appointments", label: "Appointments", short: "A", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "lab-follow-up", label: "Lab Cases Follow Up", short: "L", section: "Receptionist", roles: ["receptionist"] },

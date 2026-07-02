@@ -68,14 +68,32 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
     if (stored) {
       try {
-        setData(applyShiftToPatient(JSON.parse(stored)));
+        setData(applyUserToClient(applyShiftToPatient(JSON.parse(stored))));
       } catch (error) {
         console.error(error);
       }
     } else {
-      setData(applyShiftToPatient(EMPTY_PATIENT));
+      setData(applyUserToClient(applyShiftToPatient(EMPTY_PATIENT)));
     }
   }, []);
+
+  const applyUserToClient = (client) => {
+    if (!["dentist", "doctor"].includes(user.role) || !user.dentistName) {
+      return client;
+    }
+
+    return {
+      ...client,
+      dentistId: user.dentistId || client.dentistId || "",
+      dentistName: user.dentistName,
+      biography: {
+        ...(client.biography || {}),
+        doctorName: (client.biography || {}).doctorName || user.dentistName,
+        dentistId: user.dentistId || (client.biography || {}).dentistId || "",
+        dentistName: user.dentistName,
+      },
+    };
+  };
 
   const notify = (text, type = "success") => {
     setMessage({ text, type });
@@ -148,7 +166,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      const shiftedData = applyShiftToPatient(data);
+      const shiftedData = applyUserToClient(applyShiftToPatient(data));
       const paymentEntry = pendingPaymentEntry();
       const payload = paymentEntry
         ? {
@@ -195,7 +213,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      const payload = applyShiftToPatient(data);
+      const payload = applyUserToClient(applyShiftToPatient(data));
       await api.put(`/patients/${data._id}`, payload);
       setData(payload);
       localStorage.removeItem("editPatient");
@@ -216,7 +234,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     }
 
     localStorage.removeItem("editPatient");
-    setData(applyShiftToPatient(EMPTY_PATIENT));
+    setData(applyUserToClient(applyShiftToPatient(EMPTY_PATIENT)));
     setTab("biography");
     notify("Form cleared. Ready for new patient.");
   };

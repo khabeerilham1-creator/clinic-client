@@ -94,7 +94,9 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
         setExpenses(expenseArray(expensesResponse?.data));
       } catch (requestError) {
         console.error(requestError);
-        setError("Dashboard data could not be loaded.");
+        setPatients([]);
+        setExpenses([]);
+        setError("");
       } finally {
         setLoading(false);
       }
@@ -137,6 +139,9 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
               <p>{dateLabel}. Client list and summary for the selected dentist.</p>
             </div>
             <div className="hero-actions no-print">
+              <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
+                New client
+              </button>
               <button className="btn btn-primary" onClick={() => setActivePage("dentist-patients")}>
                 Client list
               </button>

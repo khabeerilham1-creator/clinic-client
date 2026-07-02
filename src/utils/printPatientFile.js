@@ -6,6 +6,7 @@ import {
   invoiceGroups,
   mobileNumber,
   patientName,
+  plannedVisitStatus,
   titledPatientName,
   paymentsTotal,
   regNo,
@@ -100,16 +101,21 @@ const selectedClinicalRows = (patient) => {
 
 const plannedSequenceRows = (patient) =>
   safeList(patient?.plannedSequence)
-    .filter((visit) => visit.date || visit.procedure || visit.treatment || visit.details)
+    .filter((visit) => visit.date || visit.time || visit.procedure || visit.treatment || visit.details)
     .map(
-      (visit, index) => `
+      (visit, index) => {
+        const status = plannedVisitStatus(visit) === "Done" ? "Done" : "Planned";
+
+        return `
         <tr>
           <td>${index + 1}</td>
           <td>${escapeHtml(formatDate(visit.date))}</td>
+          <td>${escapeHtml(visit.time || "-")}</td>
           <td>${escapeHtml(visit.procedure || visit.treatment || visit.details)}</td>
-          <td>${escapeHtml(visit.status || "Planned")}</td>
+          <td>${escapeHtml(status)}</td>
         </tr>
-      `
+      `;
+      }
     );
 
 const invoiceItemRows = (items) =>
@@ -186,9 +192,9 @@ const checkupPage = (patient, copyLabel, toothChartUrl) => {
         <h3>Planned Sequence</h3>
         <table>
           <thead>
-            <tr><th>S No</th><th>Date</th><th>Procedure</th><th>Status</th></tr>
+            <tr><th>S No</th><th>Date</th><th>Time</th><th>Procedure</th><th>Status</th></tr>
           </thead>
-          <tbody>${rowsOrEmpty(plannedRows, 4, "No planned sequence selected.")}</tbody>
+          <tbody>${rowsOrEmpty(plannedRows, 5, "No planned sequence selected.")}</tbody>
         </table>
       </div>
     </section>

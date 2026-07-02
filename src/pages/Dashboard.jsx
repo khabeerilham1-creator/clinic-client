@@ -72,7 +72,8 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
         setPatients(filterPatientsForActiveShift(patientArray(response.data)));
       } catch (requestError) {
         console.error(requestError);
-        setError("Dashboard data could not be loaded. Please check the API connection.");
+        setPatients([]);
+        setError("");
       } finally {
         setLoading(false);
       }
