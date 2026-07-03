@@ -283,14 +283,14 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
         <section className="role-action-grid">
           <RoleAction
             short="+"
-            title="New Client Entry"
+            title="New Entry"
             detail="Open a fresh client file"
             tone="blue"
             onClick={() => setActivePage("patients")}
           />
           <RoleAction
             short="R"
-            title="Registered Client"
+            title="Registered Clients"
             detail="Search and open client records"
             tone="green"
             onClick={() => setActivePage("patients-list")}
@@ -313,13 +313,13 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           />
           <RoleAction
             short="O"
-            title="On Going Client"
+            title="On Going Cases"
             tone="blue"
             onClick={() => setActivePage("ongoing-patients")}
           />
           <RoleAction
             short="C"
-            title="Completed Client"
+            title="Complet cases"
             tone="gold"
             onClick={() => setActivePage("completed-patients")}
           />
