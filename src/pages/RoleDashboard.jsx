@@ -306,10 +306,10 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
 
         <section className="role-action-grid receptionist-status-grid">
           <RoleAction
-            short="R"
-            title="Registered Clients"
-            tone="green"
-            onClick={() => setActivePage("patients-list")}
+            short="OC"
+            title="Official Contacts"
+            tone="cyan"
+            onClick={() => setActivePage("official-contact")}
           />
           <RoleAction
             short="O"
@@ -319,9 +319,27 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           />
           <RoleAction
             short="C"
-            title="Complet cases"
+            title="Completed Cases"
             tone="gold"
             onClick={() => setActivePage("completed-patients")}
+          />
+          <RoleAction
+            short="AR"
+            title="Receivables"
+            tone="green"
+            onClick={() => setActivePage("account-receivable")}
+          />
+          <RoleAction
+            short="L"
+            title="Lab Cases Follow Up"
+            tone="violet"
+            onClick={() => setActivePage("lab-follow-up")}
+          />
+          <RoleAction
+            short="DE"
+            title="Daily Expense"
+            tone="rose"
+            onClick={() => setActivePage("daily-expense")}
           />
         </section>
       </div>

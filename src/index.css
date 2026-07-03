@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --bg: #eefaf5;
-  --surface: #ffffff;
-  --surface-soft: #f6fffb;
+  --bg: #d8f2e8;
+  --surface: #eef8ef;
+  --surface-soft: #e2f5ec;
   --ink: #050505;
   --ink-soft: #111111;
   --muted: #111111;
-  --line: #dfe7ef;
-  --line-strong: #cbd5e1;
+  --line: #b7d4c7;
+  --line-strong: #96bfad;
   --navy: #071411;
   --navy-2: #103d32;
   --blue: #1667d9;
   --blue-soft: #e8f0ff;
   --green: #047857;
   --green-soft: #dff7ed;
-  --gold: #bd841f;
-  --gold-soft: #fff5d9;
+  --gold: #c9962e;
+  --gold-soft: #fff0bf;
   --rose: #d84f6b;
   --rose-soft: #fff0f4;
   --cyan: #0891b2;
@@ -69,8 +69,8 @@ button:disabled {
   min-height: 100vh;
   display: flex;
   background:
-    linear-gradient(135deg, rgba(40, 100, 232, 0.08), rgba(15, 159, 122, 0.08) 46%, rgba(189, 132, 31, 0.09)),
-    linear-gradient(180deg, #fbfdff 0%, #eef6f7 100%);
+    linear-gradient(135deg, rgba(201, 150, 46, 0.18), rgba(10, 122, 86, 0.12) 46%, rgba(8, 145, 178, 0.13)),
+    linear-gradient(180deg, #d8f2e8 0%, #e9f4df 100%);
 }
 
 .sidebar {
@@ -93,6 +93,9 @@ button:disabled {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(10, 122, 86, 0.12), rgba(201, 150, 46, 0.11) 48%, rgba(8, 145, 178, 0.1)),
+    #dff3ea;
 }
 
 .brand-block,
@@ -121,9 +124,17 @@ button:disabled {
 }
 
 .brand-name {
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 850;
   letter-spacing: 0;
+}
+
+.brand-system {
+  margin-top: 1px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
 }
 
 .brand-meta {
@@ -308,8 +319,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 22px;
   background:
-    linear-gradient(110deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.78)),
-    linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 159, 122, 0.12));
+    linear-gradient(135deg, #e6f7ef 0%, #f4edce 58%, #dcedee 100%);
   box-shadow: var(--shadow-soft);
 }
 
@@ -355,9 +365,9 @@ button:disabled {
   justify-content: center;
   gap: 8px;
   padding: 0 16px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid rgba(201, 150, 46, 0.5);
   border-radius: 12px;
-  background: #fff;
+  background: #f0f7e9;
   color: var(--ink);
   font-weight: 800;
   box-shadow: 0 8px 24px rgba(23, 32, 51, 0.06);
@@ -395,15 +405,13 @@ button:disabled {
 }
 
 .gold-bordered {
-  border-color: rgba(189, 132, 31, 0.34) !important;
-  box-shadow: 0 14px 45px rgba(40, 100, 232, 0.07), 0 0 0 1px rgba(189, 132, 31, 0.08);
+  border-color: rgba(201, 150, 46, 0.54) !important;
+  box-shadow: 0 14px 45px rgba(7, 78, 58, 0.08), 0 0 0 1px rgba(201, 150, 46, 0.12);
 }
 
 .accent-hero {
-  border-color: rgba(189, 132, 31, 0.32);
-  background:
-    linear-gradient(110deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.82)),
-    linear-gradient(135deg, rgba(40, 100, 232, 0.18), rgba(15, 159, 122, 0.15) 54%, rgba(246, 198, 91, 0.2));
+  border-color: rgba(201, 150, 46, 0.52);
+  background: linear-gradient(135deg, #e2f7ed 0%, #f5edcb 58%, #d8f0ee 100%);
 }
 
 .admin-hero {
@@ -646,9 +654,9 @@ button:disabled {
 .role-action-card {
   min-height: 156px;
   padding: 20px;
-  border: 1px solid rgba(189, 132, 31, 0.28);
+  border: 2px solid rgba(201, 150, 46, 0.58);
   border-radius: 18px;
-  background: #fff;
+  background: linear-gradient(135deg, #eef8ef 0%, #f6efcf 100%);
   color: var(--ink);
   text-align: left;
   box-shadow: var(--shadow-soft);
@@ -692,14 +700,53 @@ button:disabled {
   color: var(--blue);
 }
 
+.role-action-card.blue {
+  background: linear-gradient(135deg, #e8f0ff 0%, #dff8f2 100%);
+}
+
 .role-action-card.green span {
   background: var(--green-soft);
   color: var(--green);
 }
 
+.role-action-card.green {
+  background: linear-gradient(135deg, #dff7ed 0%, #f1f4c9 100%);
+}
+
 .role-action-card.gold span {
   background: var(--gold-soft);
   color: var(--gold);
+}
+
+.role-action-card.gold {
+  background: linear-gradient(135deg, #fff0bf 0%, #e6f7ef 100%);
+}
+
+.role-action-card.cyan {
+  background: linear-gradient(135deg, #dff8fb 0%, #e9f7d6 100%);
+}
+
+.role-action-card.cyan span {
+  background: var(--cyan-soft);
+  color: var(--cyan);
+}
+
+.role-action-card.violet {
+  background: linear-gradient(135deg, #f1ecff 0%, #e5f6ed 100%);
+}
+
+.role-action-card.violet span {
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+
+.role-action-card.rose {
+  background: linear-gradient(135deg, #fff0f4 0%, #f4efcb 100%);
+}
+
+.role-action-card.rose span {
+  background: var(--rose-soft);
+  color: var(--rose);
 }
 
 .compact-role-metrics .metric-card {
@@ -1284,7 +1331,7 @@ textarea:focus {
 .card {
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: #fff;
+  background: var(--surface);
   padding: 22px;
   box-shadow: var(--shadow-soft);
 }
@@ -1751,8 +1798,7 @@ textarea:focus {
   min-height: 100vh;
   display: block;
   background:
-    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.9), transparent 28%),
-    linear-gradient(135deg, #023c2c 0%, #047857 50%, #0b1512 100%);
+    linear-gradient(135deg, #013426 0%, #047857 52%, #06110f 100%);
 }
 
 .login-stage {
@@ -1782,9 +1828,36 @@ textarea:focus {
   letter-spacing: 0;
 }
 
+.login-wordmark {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  color: #fff;
+}
+
+.login-wordmark-hdc {
+  font-size: clamp(58px, 10vw, 120px);
+  line-height: 0.86;
+  font-weight: 1000;
+  letter-spacing: 0;
+  text-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.login-wordmark-system {
+  font-size: clamp(24px, 4.2vw, 56px);
+  line-height: 1.06;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
 .login-card {
-  border: 1px solid rgba(201, 154, 58, 0.72);
+  border: 2px solid rgba(213, 165, 59, 0.86);
   border-radius: 18px;
+  background: linear-gradient(145deg, #0d6f53 0%, #086044 52%, #073d31 100%);
+  color: #fff;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
 }
 
 .login-card-wide {
@@ -1797,6 +1870,7 @@ textarea:focus {
 
 .login-card-header.centered h2 {
   margin-top: 0;
+  color: #fff;
 }
 
 .login-option-grid {
@@ -1811,6 +1885,7 @@ textarea:focus {
   border: 2px solid rgba(201, 154, 58, 0.8);
   border-radius: 16px;
   text-align: center;
+  color: #050505;
 }
 
 .login-tile strong {
@@ -1832,17 +1907,54 @@ textarea:focus {
 .login-tile.active,
 .login-tile:hover {
   border-color: #d5a53b;
-  background: #ffffff;
+  background: #eaf7d8;
   box-shadow: 0 18px 44px rgba(5, 5, 5, 0.16);
+}
+
+.shift-choice-grid:not(.role-choice-grid) .login-tile:nth-child(1) {
+  background: linear-gradient(135deg, #dff7ed 0%, #f4efcb 100%);
+}
+
+.shift-choice-grid:not(.role-choice-grid) .login-tile:nth-child(2) {
+  background: linear-gradient(135deg, #dff8fb 0%, #e9f7d6 100%);
 }
 
 .login-access-panel {
   width: min(460px, 100%);
   margin: 0 auto;
   padding: 16px;
-  border: 1px solid var(--line);
+  border: 2px solid rgba(213, 165, 59, 0.78);
   border-radius: 16px;
-  background: var(--surface-soft);
+  background: linear-gradient(135deg, #0a7558 0%, #0b4d3d 100%);
+  color: #fff;
+}
+
+.login-card .field span {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.login-card .field input,
+.login-card .password-field input {
+  border-color: rgba(213, 165, 59, 0.72);
+  background: #e5f7ee;
+  color: #050505;
+}
+
+.login-card .field input::placeholder,
+.login-card .password-field input::placeholder {
+  color: rgba(5, 5, 5, 0.45);
+}
+
+.login-card .password-field button,
+.login-access-panel .btn:not(.btn-primary) {
+  border-color: rgba(213, 165, 59, 0.72);
+  background: #f2edce;
+  color: #050505;
+}
+
+.login-card .btn-primary {
+  border-color: #d5a53b;
+  background: linear-gradient(135deg, #1c6dd9 0%, #008a69 100%);
 }
 
 .centered-actions {
@@ -1855,14 +1967,32 @@ textarea:focus {
 }
 
 .sidebar .brand-name {
-  font-size: 17px;
+  font-size: 28px;
   line-height: 1.15;
+  font-weight: 950;
 }
 
 .nav-stack {
   flex: 1;
   overflow-y: auto;
   padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(213, 165, 59, 0.9) rgba(255, 255, 255, 0.08);
+}
+
+.nav-stack::-webkit-scrollbar {
+  width: 9px;
+}
+
+.nav-stack::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-stack::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(6, 17, 15, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d5a53b 0%, #21b893 100%);
 }
 
 .nav-item {

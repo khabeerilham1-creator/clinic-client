@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import api from "../api";
-import { CLINIC_NAME, DOCTOR_NAME, SHIFT_OPTIONS } from "../utils/clinicData";
+import { SHIFT_OPTIONS } from "../utils/clinicData";
 import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
 
@@ -15,6 +15,9 @@ const DENTIST_OPTIONS = [
   { id: "dr-tufyl", label: "Dr Tufyl" },
   { id: "dr-abdur-rehman", label: "Dr Abdur Rehman" },
 ];
+
+const dentistIdForShift = (shiftId) =>
+  shiftId === "evening" ? "dr-abdur-rehman" : "dr-tufyl";
 
 const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
@@ -227,41 +230,29 @@ function Login({ onLogin }) {
     }
   };
 
-  const goBackToAdmin = () => {
-    setStep("admin");
-    setPassword("");
-    setSelectedShiftId("");
-    setError("");
-  };
-
-  const goBackToShift = () => {
-    setStep("shift");
-    setSelectedRole("");
-    setSelectedDentistId("");
-    setRoleCode("");
-    setError("");
-  };
-
   const formSubmitHandler =
     step === "admin" ? handleAdminLogin : step === "shift" ? handleShiftContinue : handleRoleContinue;
 
   const selectedShift = SHIFT_OPTIONS.find((shift) => shift.id === selectedShiftId);
   const selectedRoleOption = ROLE_OPTIONS.find((role) => role.id === selectedRole);
-  const shouldShowRolePassword = selectedRole && (selectedRole !== "dentist" || selectedDentistId);
+  const selectedDentist = DENTIST_OPTIONS.find((dentist) => dentist.id === selectedDentistId);
 
   return (
     <main className={`login-screen login-step-${step}`}>
       <section className="login-stage">
         <div className="login-center-brand">
-          <div className="brand-mark large">H</div>
-          <h1>{CLINIC_NAME}</h1>
+          <div className="login-wordmark">
+            <div className="login-wordmark-hdc">HDC</div>
+            <div className="login-wordmark-system">Dental Intelligence System</div>
+          </div>
         </div>
 
         <form className={`login-card${step !== "admin" ? " login-card-wide" : ""}`} onSubmit={formSubmitHandler}>
-          <div className="login-card-header centered">
-            <h2>{step === "admin" ? "Login" : step === "shift" ? "Select Shift" : "Select Account"}</h2>
-            {step !== "admin" && <p>{step === "shift" ? "Choose your clinic shift." : "Choose the account to open."}</p>}
-          </div>
+          {step === "admin" && (
+            <div className="login-card-header centered">
+              <h2>Login</h2>
+            </div>
+          )}
 
           {error && <div className="notice danger">{error}</div>}
 
@@ -304,7 +295,7 @@ function Login({ onLogin }) {
                 {loading ? "Logging in..." : "Login"}
               </button>
             </>
-          ) : step === "shift" ? (
+          ) : step === "shift" && !selectedShift ? (
             <>
               <div className="shift-choice-grid login-option-grid" role="group" aria-label="Select shift">
                 {SHIFT_OPTIONS.map((shift) => (
@@ -320,48 +311,51 @@ function Login({ onLogin }) {
                     }}
                   >
                     <strong>{shift.label}</strong>
-                    <span>{shift.doctorName}</span>
                   </button>
                 ))}
               </div>
-
-              {selectedShift && (
-                <div className="login-access-panel">
-                  <label className="field">
-                    <span>{selectedShift.label} Password</span>
-                    <div className="password-field">
-                      <input
-                        type={showShiftPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        placeholder="Enter shift password"
-                        autoComplete="off"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        className="password-eye-button"
-                        onClick={() => setShowShiftPassword((visible) => !visible)}
-                        aria-label={showShiftPassword ? "Hide shift password" : "Show shift password"}
-                      >
-                        {showShiftPassword ? "Hide" : "Show"}
-                      </button>
-                    </div>
-                  </label>
-
-                  <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
-                    {loading ? "Checking..." : "Continue"}
+            </>
+          ) : step === "shift" ? (
+            <div className="login-access-panel">
+              <label className="field">
+                <span>{selectedShift.label} Password</span>
+                <div className="password-field">
+                  <input
+                    type={showShiftPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Enter shift password"
+                    autoComplete="off"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="password-eye-button"
+                    onClick={() => setShowShiftPassword((visible) => !visible)}
+                    aria-label={showShiftPassword ? "Hide shift password" : "Show shift password"}
+                  >
+                    {showShiftPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-              )}
+              </label>
 
-              <div className="row-actions centered-actions">
-                <button className="btn" type="button" onClick={goBackToAdmin}>
-                  Back
-                </button>
-              </div>
-            </>
-          ) : (
+              <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
+                {loading ? "Checking..." : "Continue"}
+              </button>
+
+              <button
+                className="btn btn-full"
+                type="button"
+                onClick={() => {
+                  setSelectedShiftId("");
+                  setPassword("");
+                  setError("");
+                }}
+              >
+                Back
+              </button>
+            </div>
+          ) : !selectedRole ? (
             <>
               <div className="shift-choice-grid role-choice-grid login-option-grid" role="group" aria-label="Select account">
                 {ROLE_OPTIONS.map((role) => (
@@ -371,7 +365,7 @@ function Login({ onLogin }) {
                     className={`shift-choice login-tile role-tile ${role.tone}${selectedRole === role.id ? " active" : ""}`}
                     onClick={() => {
                       setSelectedRole(role.id);
-                      setSelectedDentistId("");
+                      setSelectedDentistId(role.id === "dentist" ? dentistIdForShift(adminSession?.shift?.id) : "");
                       setRoleCode("");
                       setError("");
                       playSectionSound("section");
@@ -382,69 +376,52 @@ function Login({ onLogin }) {
                   </button>
                 ))}
               </div>
-
-              {selectedRole === "dentist" && (
-                <div className="shift-choice-grid dentist-choice-grid" role="group" aria-label="Select dentist">
-                  {DENTIST_OPTIONS.map((dentist) => (
-                    <button
-                      key={dentist.id}
-                      type="button"
-                      className={`shift-choice compact login-tile${selectedDentistId === dentist.id ? " active" : ""}`}
-                      onClick={() => {
-                        setSelectedDentistId(dentist.id);
-                        setRoleCode("");
-                        setError("");
-                        playSectionSound("section");
-                      }}
-                    >
-                      <strong>{dentist.label}</strong>
-                      <span>Dentist access</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {shouldShowRolePassword && (
-                <div className="login-access-panel">
-                  <label className="field">
-                    <span>{selectedRoleOption?.label || "Account"} Password</span>
-                    <div className="password-field">
-                      <input
-                        type={showRolePassword ? "text" : "password"}
-                        value={roleCode}
-                        onChange={(event) => setRoleCode(event.target.value)}
-                        placeholder="Enter account password"
-                        autoComplete="off"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        className="password-eye-button"
-                        onClick={() => setShowRolePassword((visible) => !visible)}
-                        aria-label={showRolePassword ? "Hide account password" : "Show account password"}
-                      >
-                        {showRolePassword ? "Hide" : "Show"}
-                      </button>
-                    </div>
-                  </label>
-
-                  <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
-                    {loading ? "Opening..." : "Open Account"}
+            </>
+          ) : (
+            <div className="login-access-panel">
+              <label className="field">
+                <span>
+                  {selectedRoleOption?.label || "Account"} Password
+                  {selectedDentist ? ` - ${selectedDentist.label}` : ""}
+                </span>
+                <div className="password-field">
+                  <input
+                    type={showRolePassword ? "text" : "password"}
+                    value={roleCode}
+                    onChange={(event) => setRoleCode(event.target.value)}
+                    placeholder="Enter account password"
+                    autoComplete="off"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="password-eye-button"
+                    onClick={() => setShowRolePassword((visible) => !visible)}
+                    aria-label={showRolePassword ? "Hide account password" : "Show account password"}
+                  >
+                    {showRolePassword ? "Hide" : "Show"}
                   </button>
                 </div>
-              )}
+              </label>
 
-              <div className="row-actions centered-actions">
-                <button className="btn" type="button" onClick={goBackToShift}>
-                  Back
-                </button>
-              </div>
-            </>
+              <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
+                {loading ? "Opening..." : "Open Account"}
+              </button>
+
+              <button
+                className="btn btn-full"
+                type="button"
+                onClick={() => {
+                  setSelectedRole("");
+                  setSelectedDentistId("");
+                  setRoleCode("");
+                  setError("");
+                }}
+              >
+                Back
+              </button>
+            </div>
           )}
-
-          <div className="login-help">
-            <span>Authorized staff only.</span>
-          </div>
         </form>
       </section>
     </main>

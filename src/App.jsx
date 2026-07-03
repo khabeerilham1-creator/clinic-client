@@ -58,6 +58,7 @@ const ROLE_PAGES = {
     "patients",
     "patients-list",
     "appointments",
+    "account-receivable",
     "lab-follow-up",
     "inventory-status",
     "maintenance",

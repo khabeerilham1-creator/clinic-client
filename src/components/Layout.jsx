@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from "react";
-import { CLINIC_NAME } from "../utils/clinicData";
 import { addActivityLog } from "../utils/activityLog";
 import { isSoundEnabled, playSectionSound, setSoundEnabled } from "../utils/sound";
 
@@ -25,7 +24,7 @@ const NAV_ITEMS = [
   { page: "account-status", label: "Account Status", short: "$", section: "Finance", roles: ["admin"] },
   { page: "dentist-revenue", label: "Dentist Revenue", short: "25", section: "Finance", roles: ["admin"] },
   { page: "account-payable", label: "Account Payable", short: "AP", section: "Finance", roles: ["admin"] },
-  { page: "account-receivable", label: "Account Receivables", short: "AR", section: "Finance", roles: ["admin"] },
+  { page: "account-receivable", label: "Account Receivables", short: "AR", section: "Finance", roles: ["admin", "receptionist"] },
   { page: "expenses", label: "Expenses", short: "E", section: "Finance", roles: ["admin"] },
   { page: "inventory", label: "Inventory", short: "I", section: "Operations", roles: ["admin"] },
   { page: "logs", label: "Logs", short: "LG", section: "Admin", roles: ["admin"] },
@@ -126,9 +125,9 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
 
       <aside className={`sidebar no-print${mobileOpen ? " open" : ""}`}>
         <div className="brand-block">
-          <div className="brand-mark">H</div>
           <div>
-            <div className="brand-name">{CLINIC_NAME}</div>
+            <div className="brand-name">HDC</div>
+            <div className="brand-system">Dental Intelligence System</div>
             <div className="brand-meta">Dr Zaffar Iqbal</div>
           </div>
         </div>
