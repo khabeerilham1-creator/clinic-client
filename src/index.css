@@ -1912,11 +1912,13 @@ textarea:focus {
 }
 
 .shift-choice-grid:not(.role-choice-grid) .login-tile:nth-child(1) {
-  background: linear-gradient(135deg, #dff7ed 0%, #f4efcb 100%);
+  background: #569dee;
+  color: #fff;
 }
 
 .shift-choice-grid:not(.role-choice-grid) .login-tile:nth-child(2) {
-  background: linear-gradient(135deg, #dff8fb 0%, #e9f7d6 100%);
+  background: #1e2b58;
+  color: #fff;
 }
 
 .login-access-panel {
