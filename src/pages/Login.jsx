@@ -368,7 +368,7 @@ function Login({ onLogin }) {
               <button
                 key={shift.id}
                 type="button"
-                className={`auth-image-choice auth-shift-choice ${shift.id}`}
+                 className={`auth-image-choice auth-shift-choice ${shift.id}`}
                 style={{ "--auth-choice-bg": `url(/auth-assets/shift-${shift.id}-card.png)` }}
                 onClick={() => {
                   setSelectedShiftId(shift.id);
@@ -417,7 +417,7 @@ function Login({ onLogin }) {
               <button
                 key={role.id}
                 type="button"
-                className={`auth-image-choice auth-account-choice ${role.tone}`}
+                className={`auth-account-choice ${role.tone}`}
                 style={{ "--auth-choice-bg": `url(/auth-assets/account-${role.id}-card.png)` }}
                 onClick={() => {
                   setSelectedRole(role.id);
