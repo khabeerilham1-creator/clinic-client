@@ -418,7 +418,12 @@ function Login({ onLogin }) {
                 key={role.id}
                 type="button"
                 className={`auth-account-choice ${role.tone}`}
-                style={{ "--auth-choice-bg": `url(/auth-assets/account-${role.id}-card.png)` }}
+                style={{
+  backgroundImage: `url(/auth-assets/account-${role.id}-card.png)`,
+  backgroundSize: "contain",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "center",
+}}
                 onClick={() => {
                   setSelectedRole(role.id);
                   setSelectedDentistId(role.id === "dentist" ? dentistIdForShift(adminSession?.shift?.id) : "");
