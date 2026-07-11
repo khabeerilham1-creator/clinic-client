@@ -177,19 +177,17 @@ function App() {
 
   }
 
-  const currentRole = sessionStorage.getItem("role") || "admin";
+  const savedRole = sessionStorage.getItem("role") || "admin";
+  const currentRole = ROLE_PAGES[savedRole] ? savedRole : "admin";
   const allowedPages = ROLE_PAGES[currentRole] || ROLE_PAGES.admin;
-
-  if (!allowedPages.includes(activePage)) {
-    return null;
-  }
+  const currentPage = allowedPages.includes(activePage) ? activePage : firstPageForRole(currentRole);
 
   // DASHBOARD
-  if (activePage === "dashboard") {
+  if (currentPage === "dashboard") {
     if (currentRole !== "admin") {
       return (
         <RoleDashboard
-          activePage={activePage}
+          activePage={currentPage}
           setActivePage={setActivePage}
           handleLogout={handleLogout}
         />
@@ -198,7 +196,7 @@ function App() {
 
     return (
       <Dashboard
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -206,34 +204,34 @@ function App() {
 
   }
 
-  if (PLACEHOLDER_PAGES[activePage]) {
+  if (PLACEHOLDER_PAGES[currentPage]) {
     return (
       <PlaceholderPage
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
-        {...PLACEHOLDER_PAGES[activePage]}
+        {...PLACEHOLDER_PAGES[currentPage]}
       />
     );
   }
 
-  if (activePage === "ongoing-patients" || activePage === "completed-patients") {
+  if (currentPage === "ongoing-patients" || currentPage === "completed-patients") {
     return (
       <PatientStatusPage
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
-        mode={activePage === "ongoing-patients" ? "ongoing" : "completed"}
+        mode={currentPage === "ongoing-patients" ? "ongoing" : "completed"}
       />
     );
   }
 
   if (
-    activePage === "dentist-patients" ||
-    activePage === "dentist-summary" ||
-    activePage === "dentist-salary" ||
-    activePage === "dentist-percentage" ||
-    activePage === "dentist-referral"
+    currentPage === "dentist-patients" ||
+    currentPage === "dentist-summary" ||
+    currentPage === "dentist-salary" ||
+    currentPage === "dentist-percentage" ||
+    currentPage === "dentist-referral"
   ) {
     const modeMap = {
       "dentist-patients": "patients",
@@ -245,39 +243,39 @@ function App() {
 
     return (
       <DentistWorkspace
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
-        mode={modeMap[activePage]}
+        mode={modeMap[currentPage]}
       />
     );
   }
 
-  if (activePage === "account-payable" || activePage === "account-receivable") {
+  if (currentPage === "account-payable" || currentPage === "account-receivable") {
     return (
       <AdminFinance
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
-        mode={activePage === "account-payable" ? "payable" : "receivable"}
+        mode={currentPage === "account-payable" ? "payable" : "receivable"}
       />
     );
   }
 
-  if (activePage === "logs") {
+  if (currentPage === "logs") {
     return (
       <AdminLogs
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
     );
   }
 
-  if (activePage === "notifications") {
+  if (currentPage === "notifications") {
     return (
       <Notifications
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -285,11 +283,11 @@ function App() {
   }
 
   // PATIENT ENTRY
-  if (activePage === "patients") {
+  if (currentPage === "patients") {
 
     return (
       <Patients
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -298,11 +296,11 @@ function App() {
   }
 
   // APPOINTMENTS
-  if (activePage === "appointments") {
+  if (currentPage === "appointments") {
 
     return (
       <Appointments
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -310,11 +308,11 @@ function App() {
 
   }
 
-  if (activePage === "lab-records") {
+  if (currentPage === "lab-records") {
 
     return (
       <LabRecords
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -323,11 +321,11 @@ function App() {
   }
 
   // PATIENTS RECORDS
-  if (activePage === "patients-list") {
+  if (currentPage === "patients-list") {
 
     return (
       <PatientsList
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -336,11 +334,11 @@ function App() {
   }
 
   // ACCOUNT STATUS
-  if (activePage === "account-status") {
+  if (currentPage === "account-status") {
 
     return (
       <AccountStatus
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -348,11 +346,11 @@ function App() {
 
   }
 
-  if (activePage === "inventory") {
+  if (currentPage === "inventory") {
 
     return (
       <Inventory
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -360,11 +358,11 @@ function App() {
 
   }
 
-  if (activePage === "expenses") {
+  if (currentPage === "expenses") {
 
     return (
       <Expenses
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />
@@ -372,11 +370,11 @@ function App() {
 
   }
 
-  if (activePage === "dentist-revenue") {
+  if (currentPage === "dentist-revenue") {
 
     return (
       <DentistRevenue
-        activePage={activePage}
+        activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
       />

@@ -14,6 +14,8 @@ const ROLE_OPTIONS = [
 const dentistIdForShift = (shiftId) =>
   shiftId === "evening" ? "dr-abdur-rehman" : "dr-tufyl";
 
+const authAsset = (fileName) => `${process.env.PUBLIC_URL || ""}/auth-assets/${fileName}`;
+
 const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
 const apiPostWithRetry = async (url, payload) => {
@@ -250,16 +252,16 @@ function Login({ onLogin }) {
         : "";
   const backgroundImage =
     screenMode === "welcome"
-      ? "/auth-assets/welcome.png"
+      ? authAsset("welcome.png")
       : screenMode === "login"
-        ? "/auth-assets/login.png"
+        ? authAsset("login.png")
         : screenMode === "shift"
-          ? "/auth-assets/shift.png"
+          ? authAsset("shift.png")
           : screenMode === "shift-password"
-            ? `/auth-assets/shift-${selectedShift?.id || "morning"}.png`
+            ? authAsset(`shift-${selectedShift?.id || "morning"}.png`)
             : screenMode === "account"
-              ? "/auth-assets/accounts.png"
-              : `/auth-assets/account-${selectedRole || "admin"}.png`;
+              ? authAsset("accounts.png")
+              : authAsset(`account-${selectedRole || "admin"}.png`);
 
   const handleBack = () => {
     setError("");
@@ -417,13 +419,8 @@ function Login({ onLogin }) {
               <button
                 key={role.id}
                 type="button"
-                className={`auth-account-choice ${role.tone}`}
-                style={{
-  backgroundImage: `url(/auth-assets/account-${role.id}-card.png)`,
-  backgroundSize: "contain",
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "center",
-}}
+                className={`auth-image-choice auth-account-choice ${role.tone}`}
+                style={{ "--auth-choice-bg": `url(${authAsset(`account-${role.id}-card.png`)})` }}
                 onClick={() => {
                   setSelectedRole(role.id);
                   setSelectedDentistId(role.id === "dentist" ? dentistIdForShift(adminSession?.shift?.id) : "");
