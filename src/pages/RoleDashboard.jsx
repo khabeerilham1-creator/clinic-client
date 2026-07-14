@@ -6,23 +6,19 @@ import {
   activeShift,
   activeShiftId,
   balanceDue,
-  bio,
+  dentistProfileForUser,
   expenseArray,
+  filterPatientsForDentist,
   filterPatientsForActiveShift,
   formatCurrency,
   initials,
   mobileNumber,
+  normalizeText,
   patientArray,
   patientName,
   regNo,
   upcomingVisits,
 } from "../utils/patientHelpers";
-
-const normalize = (value) =>
-  String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
 
 function RoleAction({ short, title, detail, onClick, tone = "blue" }) {
   return (
@@ -36,24 +32,6 @@ function RoleAction({ short, title, detail, onClick, tone = "blue" }) {
 
 function patientStatus(patient) {
   return upcomingVisits(patient).length > 0 ? "On going" : "Completed";
-}
-
-function dentistPatientMatch(patient, dentistName) {
-  const cleanDentist = normalize(dentistName);
-
-  if (!cleanDentist) {
-    return true;
-  }
-
-  const patientBio = bio(patient);
-  const doctorFields = [
-    patientBio.doctorName,
-    patientBio.dentistName,
-    patient.doctorName,
-    patient.dentistName,
-  ].map(normalize);
-
-  return doctorFields.some((field) => field && (field === cleanDentist || field.includes(cleanDentist)));
 }
 
 function RoleDashboard({ activePage, setActivePage, handleLogout }) {
@@ -85,7 +63,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           }),
         ];
 
-        if (role === "dentist") {
+        if (["dentist", "doctor"].includes(role)) {
           requests.push(api.get("/expenses", { params: { category: "team", limit: 300 } }));
         }
 
@@ -114,21 +92,21 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
     [patients]
   );
 
-  const dentistName = user.dentistName || user.name || "Dentist";
-  const dentistPatients = useMemo(() => {
-    const matched = patients.filter((patient) => dentistPatientMatch(patient, dentistName));
-
-    return matched.length ? matched : patients;
-  }, [patients, dentistName]);
+  const dentistProfile = dentistProfileForUser({ ...user, role });
+  const dentistName = dentistProfile.dentistName || user.name || "Dentist";
+  const dentistPatients = useMemo(
+    () => filterPatientsForDentist(patients, { ...user, role }),
+    [patients, user.dentistId, user.dentistName, user.doctorName, user.name, role]
+  );
 
   const dentistSalary = useMemo(() => {
-    const cleanDentist = normalize(dentistName);
-    const match = expenses.find((entry) => normalize(entry.name).includes(cleanDentist));
+    const cleanDentist = normalizeText(dentistName);
+    const match = expenses.find((entry) => normalizeText(entry.name).includes(cleanDentist));
 
     return Number(match?.netSalary || match?.basicSalary || 0);
   }, [expenses, dentistName]);
 
-  if (role === "dentist") {
+  if (["dentist", "doctor"].includes(role)) {
     return (
       <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
         <div className="page">

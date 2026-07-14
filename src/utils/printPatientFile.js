@@ -5,6 +5,7 @@ import {
   formatDateDisplay,
   invoiceGroups,
   mobileNumber,
+  netAmount,
   patientName,
   plannedVisitStatus,
   titledPatientName,
@@ -39,6 +40,8 @@ const formatDate = (value) => {
 
   return formatted || value || "";
 };
+
+const formatOptionalDate = (value) => (value ? formatDateDisplay(value) || value : "");
 
 const rowsOrEmpty = (rows, columns, emptyText) => {
   if (!rows.length) {
@@ -146,6 +149,208 @@ const paymentRows = (patient) =>
         </tr>
       `
     );
+
+const plainValue = (value) => escapeHtml(value || "-");
+
+const tableRows = (rows, columns, emptyText) =>
+  rowsOrEmpty(
+    rows.map((cells) => `<tr>${cells.map((cell) => `<td>${plainValue(cell)}</td>`).join("")}</tr>`),
+    columns,
+    emptyText
+  );
+
+const specialtyBioGrid = (patient, includeFileNo = false) => {
+  const patientBio = bio(patient);
+  const rows = [
+    ["Name", titledPatientName(patient), "Date", formatDate(patientBio.date || new Date())],
+    ["Birthdate", patientBio.birthDate || "", "Gender", patientBio.gender || ""],
+    ["Address", patientBio.address || "", "Cell No", patientBio.cellNo || mobileNumber(patient)],
+  ];
+
+  if (includeFileNo) {
+    rows.splice(1, 0, ["Age", patientBio.age || "", "File No", patientBio.fileNo || regNo(patient)]);
+  }
+
+  return `
+    <table class="specialty-bio">
+      <tbody>
+        ${rows
+          .map(
+            ([leftLabel, leftValue, rightLabel, rightValue]) => `
+              <tr>
+                <th>${escapeHtml(leftLabel)}</th>
+                <td>${plainValue(leftValue)}</td>
+                <th>${escapeHtml(rightLabel)}</th>
+                <td>${plainValue(rightValue)}</td>
+              </tr>
+            `
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+};
+
+const optionValue = (value, options) =>
+  options.map((option) => `${value === option ? "[x]" : "[ ]"} ${option}`).join("   ");
+
+const orthodonticAssessmentPage = (patient) => {
+  const assessment = patient?.orthodonticAssessment || {};
+  const diagnosis = safeList(assessment.diagnosis);
+  const habits = safeList(assessment.habits);
+
+  return `
+    <section class="specialty-page">
+      <h1>Orthodontic Assessment Sheet</h1>
+      ${specialtyBioGrid(patient)}
+
+      <h2>Extra Oral Assessment</h2>
+      <table class="line-table">
+        <tbody>
+          <tr><th>Facial Profile</th><td>${escapeHtml(optionValue(assessment.facialProfile, ["Concave", "Convex", "Straight"]))}</td></tr>
+          <tr><th>Lips</th><td>${escapeHtml(optionValue(assessment.lips, ["Together at Rest", "Apart at Rest"]))}</td></tr>
+          <tr><th>Habits</th><td>${escapeHtml(["Thumb Sucking", "Tongue Thrusting", "Bruxism"].map((habit) => `${habits.includes(habit) ? "[x]" : "[ ]"} ${habit}`).join("   "))}</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Intra Oral Assessment</h2>
+      <table class="line-table">
+        <tbody>
+          <tr><th>Arch Space</th><td>${escapeHtml(optionValue(assessment.archSpace, ["Adequate", "Deficient"]))}</td></tr>
+          <tr><th>Midline deviation</th><td>${escapeHtml(optionValue(assessment.midlineDeviation, ["Yes", "No"]))}</td></tr>
+          <tr><th>Cross Bite</th><td>${escapeHtml(optionValue(assessment.crossBite, ["Yes", "No"]))}</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Occlusal Assessment</h2>
+      <table class="line-table">
+        <tbody>
+          <tr><th>Permanent Molars</th><td>${escapeHtml(optionValue(assessment.permanentMolars, ["Class I", "Class II", "Class III"]))}</td></tr>
+          <tr><th>Canines</th><td>${escapeHtml(optionValue(assessment.canines, ["Class I", "Class II", "Class III"]))}</td></tr>
+          <tr><th>Over jet</th><td>${plainValue(assessment.overjet)} mm</td></tr>
+          <tr><th>Deep Bite</th><td>${plainValue(assessment.deepBite)} mm</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Diagnosis</h2>
+      <table class="diagnosis-print">
+        <tbody>
+          ${Array.from({ length: 7 }, (_, index) => `
+            <tr><th>${index + 1}</th><td>${plainValue(diagnosis[index])}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+};
+
+const orthodonticAdjustmentsPage = (patient) => {
+  const savedRows = safeList(patient?.orthodonticAdjustments);
+  const rows = savedRows.length >= 18 ? savedRows : [...savedRows, ...Array.from({ length: 18 - savedRows.length }, () => ({}))];
+
+  return `
+    <section class="specialty-page">
+      <h1>Monthly Adjustment Sheet</h1>
+      ${specialtyBioGrid(patient)}
+      <table class="line-table adjustment-print">
+        <thead><tr><th>Visit #</th><th>Date</th><th>Procedure</th></tr></thead>
+        <tbody>
+          ${rows
+            .map(
+              (row, index) => `
+                <tr>
+                  <td>${plainValue(row.visit || index + 1)}</td>
+                  <td>${plainValue(formatOptionalDate(row.date))}</td>
+                  <td>${plainValue(row.procedure)}</td>
+                </tr>
+              `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
+};
+
+const fullDenturePage = (patient) => {
+  const denture = patient?.fullDenture || {};
+  const procedures = ["Initial Impression", "Bite registration OVD", "Trial", "Final Impression", "Final Insertion"].map(
+    (procedure, index) => ({
+      procedure,
+      ...(denture.clinicalProcedure?.[index] || {}),
+    })
+  );
+
+  return `
+    <section class="specialty-page">
+      <h1>Full Denture Sheet</h1>
+      ${specialtyBioGrid(patient, true)}
+
+      <h2>Dental History</h2>
+      <table class="line-table">
+        <tbody>
+          <tr><th>Edentulous Months/Years</th><td>${plainValue(denture.edentulousDuration)}</td></tr>
+          <tr><th>Reason For Loss of teeth</th><td>${plainValue(denture.reasonForLoss)}</td></tr>
+          <tr><th>Previous Dentures</th><td>${plainValue(denture.previousDentures)}</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Clinical Procedure</h2>
+      <table class="line-table">
+        <thead><tr><th>Date</th><th>Procedure</th><th>Comments</th></tr></thead>
+        <tbody>${tableRows(procedures.map((row) => [formatOptionalDate(row.date), row.procedure, row.comments]), 3, "No procedure recorded.")}</tbody>
+      </table>
+
+      <h2>Comments</h2>
+      <div class="comments-box">${plainValue(denture.comments)}</div>
+      <div class="signature-line">Signature ${plainValue(denture.signature)}</div>
+    </section>
+  `;
+};
+
+const implantCommencementPage = (patient) => `
+  <section class="specialty-page">
+    <h1>Implant Commencement Sheet</h1>
+    ${specialtyBioGrid(patient)}
+    <div class="blank-implant"></div>
+  </section>
+`;
+
+const accountStatusPage = (patient) => {
+  const patientTotal = netAmount(patient);
+  let paidRunning = 0;
+  const ledgerRows = safeList(patient?.accountLedger)
+    .filter((entry) => Number(entry.amount || 0) > 0)
+    .map((entry, index) => {
+      paidRunning += Number(entry.amount || 0);
+
+      return [
+        index + 1,
+        formatDate(entry.date || entry.timestamp),
+        formatCurrencyBlank(entry.amount),
+        formatCurrencyBlank(paidRunning),
+        formatCurrencyBlank(Math.max(patientTotal - paidRunning, 0)),
+      ];
+    });
+
+  return `
+    <section class="specialty-page">
+      <h1>Account Status</h1>
+      ${specialtyBioGrid(patient)}
+      <table class="line-table account-print">
+        <thead><tr><th>S No</th><th>Date</th><th>Amount</th><th>Paid</th><th>Balance</th></tr></thead>
+        <tbody>${tableRows(ledgerRows, 5, "No account entries recorded.")}</tbody>
+      </table>
+      <table class="invoice-totals account-summary">
+        <tbody>
+          <tr><td>Total</td><td>${escapeHtml(formatCurrencyBlank(patientTotal))}</td></tr>
+          <tr><td>Total Paid</td><td>${escapeHtml(formatCurrencyBlank(paymentsTotal(patient)))}</td></tr>
+          <tr class="net"><td>Balance</td><td>${escapeHtml(formatCurrencyBlank(balanceDue(patient)))}</td></tr>
+        </tbody>
+      </table>
+    </section>
+  `;
+};
 
 const checkupPage = (patient, copyLabel, toothChartUrl) => {
   const patientBio = bio(patient);
@@ -270,8 +475,9 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
 
   const toothChartUrl = new URL(toothChartSrc, window.location.origin).href;
   const invoices = invoiceGroups(patient);
-  const shouldPrintCheckup = mode === "all" || mode === "checkup";
-  const shouldPrintInvoice = mode === "all" || mode === "invoice";
+  const normalizedMode = ["biography", "plannedSequence"].includes(mode) ? "checkup" : mode;
+  const shouldPrintCheckup = normalizedMode === "all" || normalizedMode === "checkup";
+  const shouldPrintInvoice = normalizedMode === "all" || normalizedMode === "invoice";
   const checkupPages = shouldPrintCheckup
     ? `
         ${checkupPage(patient, "Clinic Copy", toothChartUrl)}
@@ -288,6 +494,14 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
         )
         .join("")
     : "";
+  const specialtyPages = [
+    normalizedMode === "implant" ? implantCommencementPage(patient) : "",
+    normalizedMode === "orthodontic" ? orthodonticAssessmentPage(patient) : "",
+    normalizedMode === "orthodonticAdjustments" ? orthodonticAdjustmentsPage(patient) : "",
+    normalizedMode === "fullDenture" ? fullDenturePage(patient) : "",
+    normalizedMode === "account" ? accountStatusPage(patient) : "",
+  ].join("");
+  const pages = checkupPages || invoicePages || specialtyPages ? `${checkupPages}${invoicePages}${specialtyPages}` : checkupPage(patient, "Clinic Copy", toothChartUrl);
 
   printWindow.document.write(`
     <!DOCTYPE html>
@@ -343,7 +557,26 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
           .invoice-totals .net td{font-weight:900;background:#edfdf8}
           .invoice-signatures{display:flex;justify-content:space-between;gap:.6cm;margin-top:.45cm}
           .invoice-signatures span{width:5.5cm;border-top:1px solid #111827;text-align:center;padding-top:.12cm;font-size:9px}
+          .specialty-page{page:clinicLetterhead;width:${PRINT_PAGE_WIDTH_CM}cm;min-height:${PRINT_PAGE_HEIGHT_CM}cm;padding:${LETTERHEAD_TOP_CM}cm ${LETTERHEAD_SIDE_CM}cm ${LETTERHEAD_BOTTOM_CM}cm;background:#fff;page-break-after:always}
+          .specialty-page>*{width:min(${PRINT_BODY_WIDTH_CM}cm,100%);margin-left:auto;margin-right:auto}
+          .specialty-page h1{margin:0 auto .3cm;text-align:center;font-size:16px;text-decoration:underline}
+          .specialty-page h2{margin:.28cm auto .12cm;font-size:11px;text-decoration:underline;color:#111827}
+          .specialty-bio,.line-table,.diagnosis-print{margin-bottom:.16cm}
+          .specialty-bio th,.line-table th,.diagnosis-print th{background:#fff;color:#111827;text-transform:none;letter-spacing:0;font-size:10px}
+          .specialty-bio th{width:2.3cm}
+          .specialty-bio td{height:.62cm}
+          .line-table th{width:4.2cm}
+          .line-table td,.line-table th,.diagnosis-print td,.diagnosis-print th{height:.55cm}
+          .diagnosis-print th{width:.9cm;text-align:center}
+          .adjustment-print th:first-child,.adjustment-print td:first-child{width:1.7cm;text-align:center}
+          .adjustment-print th:nth-child(2),.adjustment-print td:nth-child(2){width:3cm}
+          .account-print th:first-child,.account-print td:first-child{width:1.3cm;text-align:center}
+          .comments-box{min-height:2.1cm;border:1px solid #b8c2cc;padding:.18cm;margin-bottom:.6cm}
+          .signature-line{width:7cm;margin-left:0;border-top:1px solid #111827;padding-top:.12cm}
+          .blank-implant{height:13.8cm;border:1px solid #b8c2cc;background:repeating-linear-gradient(0deg,#fff 0,#fff .78cm,#d1d5db .8cm)}
+          .account-summary{margin-top:.3cm}
           .checkup-page:last-child,.invoice-page:last-child{page-break-after:auto}
+          .specialty-page:last-child{page-break-after:auto}
           @page clinicLetterhead{size:A4;margin:0}
           @page invoiceLetterhead{size:${INVOICE_PAGE_WIDTH_CM}cm ${INVOICE_PAGE_HEIGHT_CM}cm;margin:0}
           @media print{
@@ -353,8 +586,7 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
         </style>
       </head>
       <body>
-        ${checkupPages}
-        ${invoicePages}
+        ${pages}
         <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
       </body>
     </html>

@@ -38,11 +38,47 @@ export const expenseArray = (payload) => {
 
 export const bio = (patient) => patient?.biography || {};
 
-const normalizeText = (value) =>
+export const normalizeText = (value) =>
   String(value || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
+
+const DENTIST_PROFILES = [
+  {
+    id: "dr-tufyl",
+    shiftId: "morning",
+    names: ["Dr Tufyl", "Tufyl"],
+  },
+  {
+    id: "dr-abdur-rehman",
+    shiftId: "evening",
+    names: ["Dr Abdur Rehman", "Abdur Rehman"],
+  },
+];
+
+const uniqueValues = (values) =>
+  Array.from(new Set(values.filter(Boolean)));
+
+const dentistProfileByIdentity = (dentistId, dentistName) => {
+  const cleanId = normalizeText(dentistId);
+  const cleanName = normalizeText(dentistName);
+
+  return (
+    DENTIST_PROFILES.find((profile) => {
+      const profileId = normalizeText(profile.id);
+      const profileNames = profile.names.map(normalizeText);
+
+      return (
+        (cleanId && profileId === cleanId) ||
+        (cleanName &&
+          profileNames.some(
+            (name) => name === cleanName || name.includes(cleanName) || cleanName.includes(name)
+          ))
+      );
+    }) || null
+  );
+};
 
 export const shiftById = (shiftId) => {
   const cleanId = normalizeText(shiftId);
@@ -103,6 +139,92 @@ export const patientShiftId = (patient) => {
 };
 
 export const patientShift = (patient) => shiftById(patientShiftId(patient));
+
+export const dentistProfileForUser = (user = {}) => {
+  const role = user.role || (typeof window !== "undefined" ? sessionStorage.getItem("role") : "") || "";
+  const shift = shiftById(user.shiftId) || activeShift();
+  const rawDentistId = user.dentistId || "";
+  const rawDentistName =
+    user.dentistName ||
+    user.doctorName ||
+    (["dentist", "doctor"].includes(role) ? user.name : "") ||
+    "";
+  const profile =
+    dentistProfileByIdentity(rawDentistId, rawDentistName) ||
+    DENTIST_PROFILES.find((item) => item.shiftId === shift?.id) ||
+    null;
+  const shiftDetails = profile ? shiftById(profile.shiftId) : shift;
+  const profileNames = profile?.names || [];
+  const shiftNames = shiftDetails ? [shiftDetails.doctorName, ...(shiftDetails.doctorAliases || [])] : [];
+  const names = uniqueValues([rawDentistName, ...profileNames, ...shiftNames]);
+
+  return {
+    role,
+    dentistId: profile?.id || rawDentistId,
+    dentistName: rawDentistName || profileNames[0] || shiftDetails?.doctorName || "",
+    names,
+    shiftId: profile?.shiftId || shift?.id || "",
+  };
+};
+
+export const patientMatchesDentist = (patient, userOrProfile = {}) => {
+  const profile = Array.isArray(userOrProfile.names)
+    ? userOrProfile
+    : dentistProfileForUser(userOrProfile);
+  const cleanDentistId = normalizeText(profile.dentistId);
+  const expectedNames = uniqueValues([profile.dentistName, ...(profile.names || [])]).map(normalizeText);
+
+  if (!cleanDentistId && expectedNames.length === 0) {
+    return true;
+  }
+
+  const patientBio = bio(patient);
+  const patientIds = [
+    patient?.dentistId,
+    patient?.doctorId,
+    patientBio.dentistId,
+    patientBio.doctorId,
+  ]
+    .map(normalizeText)
+    .filter(Boolean);
+
+  if (cleanDentistId && patientIds.includes(cleanDentistId)) {
+    return true;
+  }
+
+  const patientNames = [
+    patient?.dentistName,
+    patient?.doctorName,
+    patientBio.dentistName,
+    patientBio.doctorName,
+  ]
+    .map(normalizeText)
+    .filter(Boolean);
+
+  if (
+    patientNames.some((name) =>
+      expectedNames.some((expected) => name === expected || name.includes(expected) || expected.includes(name))
+    )
+  ) {
+    return true;
+  }
+
+  const hasDoctorIdentity = patientIds.length > 0 || patientNames.length > 0;
+
+  return !hasDoctorIdentity && Boolean(profile.shiftId) && patientShiftId(patient) === profile.shiftId;
+};
+
+export const filterPatientsForDentist = (patients, user = {}) => {
+  const role = user.role || (typeof window !== "undefined" ? sessionStorage.getItem("role") : "") || "";
+
+  if (!["dentist", "doctor"].includes(role)) {
+    return patients || [];
+  }
+
+  const profile = dentistProfileForUser(user);
+
+  return (patients || []).filter((patient) => patientMatchesDentist(patient, profile));
+};
 
 export const belongsToActiveShift = (patient) => {
   const shift = activeShift();

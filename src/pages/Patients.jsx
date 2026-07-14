@@ -7,6 +7,12 @@ import Checkup from "../components/patient/Checkup";
 import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
 import AccountLedger from "../components/patient/AccountLedger";
+import {
+  FullDentureSheet,
+  ImplantCommencementSheet,
+  OrthodonticAdjustmentsSheet,
+  OrthodonticAssessmentSheet,
+} from "../components/patient/SpecialtySheets";
 import toothChartImg from "../assets/tooth-chart.png";
 import {
   activeShift,
@@ -23,9 +29,14 @@ import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
 
 const EMPTY_PATIENT = {
+  entrySheetType: "routine",
   biography: {},
   checkup: {},
   plannedSequence: [],
+  implantCommencement: {},
+  orthodonticAssessment: {},
+  orthodonticAdjustments: [],
+  fullDenture: {},
   invoices: [],
   invoice: [],
   discount: 0,
@@ -49,10 +60,42 @@ const TABS = [
   { id: "account", label: "Account Status" },
 ];
 
+const SHEETS = [
+  { id: "routine", label: "Routine Entry" },
+  { id: "implant", label: "Implant Commencement Sheet" },
+  { id: "orthodontic", label: "Orthodontic Assessment Sheet" },
+  { id: "fullDenture", label: "Full Denture Sheet" },
+];
+
+const SHEET_TABS = {
+  routine: TABS,
+  implant: [
+    { id: "implantSheet", label: "Commencement" },
+    { id: "invoice", label: "Invoice" },
+    { id: "account", label: "Account Status" },
+  ],
+  orthodontic: [
+    { id: "orthodonticAssessment", label: "Assessment" },
+    { id: "orthodonticAdjustments", label: "Monthly Adjustment" },
+    { id: "invoice", label: "Invoice" },
+    { id: "account", label: "Account Status" },
+  ],
+  fullDenture: [
+    { id: "fullDentureSheet", label: "Denture Sheet" },
+    { id: "invoice", label: "Invoice" },
+    { id: "account", label: "Account Status" },
+  ],
+};
+
+const defaultTabForSheet = (sheetType) => (SHEET_TABS[sheetType] || TABS)[0].id;
+const normalizeSheetType = (sheetType) =>
+  SHEETS.some((sheet) => sheet.id === sheetType) ? sheetType : "routine";
+
 export default function Patients({ activePage, setActivePage, handleLogout }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const shift = activeShift();
   const [data, setData] = useState(EMPTY_PATIENT);
+  const [sheetType, setSheetType] = useState("routine");
   const [tab, setTab] = useState("biography");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -68,12 +111,21 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
     if (stored) {
       try {
-        setData(applyUserToClient(applyShiftToPatient(JSON.parse(stored))));
+        const nextData = applyUserToClient(applyShiftToPatient(JSON.parse(stored)));
+        const nextSheetType = normalizeSheetType(nextData.entrySheetType || nextData.sheetType);
+
+        setSheetType(nextSheetType);
+        setTab(defaultTabForSheet(nextSheetType));
+        setData({ ...nextData, entrySheetType: nextSheetType });
       } catch (error) {
         console.error(error);
       }
     } else {
-      setData(applyUserToClient(applyShiftToPatient(EMPTY_PATIENT)));
+      const nextData = applyUserToClient(applyShiftToPatient(EMPTY_PATIENT));
+
+      setSheetType("routine");
+      setTab(defaultTabForSheet("routine"));
+      setData(nextData);
     }
   }, []);
 
@@ -86,9 +138,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       ...client,
       dentistId: user.dentistId || client.dentistId || "",
       dentistName: user.dentistName,
+      doctorName: user.dentistName,
       biography: {
         ...(client.biography || {}),
-        doctorName: (client.biography || {}).doctorName || user.dentistName,
+        doctorName: user.dentistName,
         dentistId: user.dentistId || (client.biography || {}).dentistId || "",
         dentistName: user.dentistName,
       },
@@ -105,7 +158,8 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   const totalInvoiceAmount = invoiceTotal(data);
   const invDiscount = discountAmount(data);
   const invoiceNet = netAmount(data);
-  const tabIndex = TABS.findIndex((item) => item.id === tab);
+  const activeTabs = SHEET_TABS[sheetType] || TABS;
+  const tabIndex = Math.max(activeTabs.findIndex((item) => item.id === tab), 0);
 
   const done = {
     biography: Boolean(data.biography?.patientName),
@@ -122,6 +176,20 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
         (invoice.items || []).some((item) => item.details || Number(item.cost || 0) > 0)
       ),
     account: (data.accountLedger || []).length > 0 || paymentsTotal(data) > 0 || balanceDue(data) > 0,
+    implantSheet: Boolean(data.biography?.patientName),
+    orthodonticAssessment:
+      Boolean(data.biography?.patientName) ||
+      Object.values(data.orthodonticAssessment || {}).some((value) =>
+        Array.isArray(value) ? value.some(Boolean) : Boolean(value)
+      ),
+    orthodonticAdjustments: (data.orthodonticAdjustments || []).some(
+      (visit) => visit.visit || visit.date || visit.procedure
+    ),
+    fullDentureSheet:
+      Boolean(data.biography?.patientName) ||
+      Object.values(data.fullDenture || {}).some((value) =>
+        Array.isArray(value) ? value.some((item) => Object.values(item || {}).some(Boolean)) : Boolean(value)
+      ),
   };
 
   const pendingPaymentEntry = () => {
@@ -143,11 +211,12 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     const entry = pendingPaymentEntry();
 
     if (!entry) {
-      return data;
+      return { ...data, entrySheetType: sheetType };
     }
 
     return {
       ...data,
+      entrySheetType: sheetType,
       accountLedger: [...(data.accountLedger || []), entry],
     };
   };
@@ -166,7 +235,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      const shiftedData = applyUserToClient(applyShiftToPatient(data));
+      const shiftedData = applyUserToClient(applyShiftToPatient({ ...data, entrySheetType: sheetType }));
       const paymentEntry = pendingPaymentEntry();
       const payload = paymentEntry
         ? {
@@ -213,7 +282,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setLoading(true);
 
     try {
-      const payload = applyUserToClient(applyShiftToPatient(data));
+      const payload = applyUserToClient(applyShiftToPatient({ ...data, entrySheetType: sheetType }));
       await api.put(`/patients/${data._id}`, payload);
       setData(payload);
       localStorage.removeItem("editPatient");
@@ -234,14 +303,51 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     }
 
     localStorage.removeItem("editPatient");
+    setSheetType("routine");
     setData(applyUserToClient(applyShiftToPatient(EMPTY_PATIENT)));
-    setTab("biography");
+    setTab(defaultTabForSheet("routine"));
     notify("Form cleared. Ready for new patient.");
   };
 
   const goToTab = (tabId) => {
     playSectionSound("section");
     setTab(tabId);
+  };
+
+  const goToSheet = (nextSheetType) => {
+    const normalized = normalizeSheetType(nextSheetType);
+
+    playSectionSound("section");
+    setSheetType(normalized);
+    setTab(defaultTabForSheet(normalized));
+    setData((current) => ({
+      ...current,
+      entrySheetType: normalized,
+    }));
+  };
+
+  const printModeForCurrentTab = () => {
+    if (tab === "invoice") {
+      return "invoice";
+    }
+
+    if (tab === "account") {
+      return "account";
+    }
+
+    if (sheetType === "implant") {
+      return "implant";
+    }
+
+    if (sheetType === "orthodontic") {
+      return tab === "orthodonticAdjustments" ? "orthodonticAdjustments" : "orthodontic";
+    }
+
+    if (sheetType === "fullDenture") {
+      return "fullDenture";
+    }
+
+    return tab === "plannedSequence" ? "checkup" : tab;
   };
 
   return (
@@ -285,8 +391,8 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           <button className="btn btn-ghost no-print" onClick={handleClear}>
             Clear
           </button>
-          <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, "checkup")}>
-            Checkup Sheet Print
+          <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, printModeForCurrentTab())}>
+            Print Section
           </button>
           <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, "invoice")}>
             Invoice Print
@@ -298,8 +404,21 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             <div className={`notice ${message.type === "danger" ? "danger" : ""}`}>{message.text}</div>
           )}
 
+          <div className="sheet-bar no-print" aria-label="Client entry sheet type">
+            {SHEETS.map((sheet) => (
+              <button
+                key={sheet.id}
+                type="button"
+                className={`sheet-bar-item${sheetType === sheet.id ? " active" : ""}`}
+                onClick={() => goToSheet(sheet.id)}
+              >
+                {sheet.label}
+              </button>
+            ))}
+          </div>
+
           <div className="tab-bar">
-            {TABS.map((item) => (
+            {activeTabs.map((item) => (
               <button
                 key={item.id}
                 className={`tab-item${tab === item.id ? " active" : ""}`}
@@ -315,6 +434,16 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             {tab === "biography" && <Biography patientData={data} setPatientData={setData} />}
             {tab === "checkup" && <Checkup patientData={data} setPatientData={setData} />}
             {tab === "plannedSequence" && <PlannedSequence patientData={data} setPatientData={setData} />}
+            {tab === "implantSheet" && (
+              <ImplantCommencementSheet patientData={data} setPatientData={setData} />
+            )}
+            {tab === "orthodonticAssessment" && (
+              <OrthodonticAssessmentSheet patientData={data} setPatientData={setData} />
+            )}
+            {tab === "orthodonticAdjustments" && (
+              <OrthodonticAdjustmentsSheet patientData={data} setPatientData={setData} />
+            )}
+            {tab === "fullDentureSheet" && <FullDentureSheet patientData={data} setPatientData={setData} />}
             {tab === "invoice" && (
               <Invoice
                 patientData={data}
@@ -330,14 +459,14 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             <button
               className="btn"
               disabled={tabIndex === 0}
-              onClick={() => goToTab(TABS[tabIndex - 1].id)}
+              onClick={() => goToTab(activeTabs[tabIndex - 1].id)}
             >
               Previous
             </button>
             <button
               className="btn btn-primary"
-              disabled={tabIndex === TABS.length - 1}
-              onClick={() => goToTab(TABS[tabIndex + 1].id)}
+              disabled={tabIndex === activeTabs.length - 1}
+              onClick={() => goToTab(activeTabs[tabIndex + 1].id)}
             >
               Next
             </button>
@@ -347,7 +476,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
         <div className="bottom-bar no-print">
           <div className="progress-tabs">
-            {TABS.map((item) => (
+            {activeTabs.map((item) => (
               <button
                 key={item.id}
                 className={`progress-pip${tab === item.id ? " active" : done[item.id] ? " done" : ""}`}
@@ -357,7 +486,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
               />
             ))}
             <span style={{ fontSize: "11px", color: "var(--muted)", whiteSpace: "nowrap", marginLeft: "4px" }}>
-              {tabIndex + 1} / {TABS.length}
+              {tabIndex + 1} / {activeTabs.length}
             </span>
           </div>
 

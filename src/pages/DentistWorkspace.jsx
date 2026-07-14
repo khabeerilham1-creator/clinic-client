@@ -5,6 +5,8 @@ import Layout from "../components/Layout";
 import {
   activeShiftId,
   balanceDue,
+  dentistProfileForUser,
+  filterPatientsForDentist,
   filterPatientsForActiveShift,
   formatCurrency,
   initials,
@@ -46,7 +48,8 @@ const PAGE_COPY = {
 
 function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "patients" }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
-  const dentistName = user.dentistName || user.name || "Dentist";
+  const dentistProfile = dentistProfileForUser(user);
+  const dentistName = dentistProfile.dentistName || user.name || "Dentist";
   const copy = PAGE_COPY[mode] || PAGE_COPY.patients;
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,9 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
           params: { limit: 500, sort: "createdAt", order: -1, shift: activeShiftId() },
         });
 
-        setPatients(filterPatientsForActiveShift(patientArray(response.data)));
+        const shiftPatients = filterPatientsForActiveShift(patientArray(response.data));
+
+        setPatients(filterPatientsForDentist(shiftPatients, user));
       } catch (requestError) {
         console.error(requestError);
         setPatients([]);

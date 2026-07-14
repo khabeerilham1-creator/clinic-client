@@ -6,13 +6,13 @@ export const SHIFT_OPTIONS = [
   {
     id: "morning",
     label: "Morning Shift",
-    doctorName: "",
+    doctorName: "Dr Tufyl",
     doctorAliases: ["Dr Tufyl"],
   },
   {
     id: "evening",
     label: "Evening Shift",
-    doctorName: "",
+    doctorName: "Dr Abdur Rehman",
     doctorAliases: ["Dr Abdur Rehman"],
   },
 ];
