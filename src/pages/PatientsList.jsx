@@ -265,6 +265,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                   <button className="btn" onClick={() => handleEdit(selectedPatient)}>Edit</button>
                   <button className="btn" onClick={() => handlePrint(selectedPatient, "checkup")}>Checkup Sheet Print</button>
                   <button className="btn" onClick={() => handlePrint(selectedPatient, "invoice")}>Invoice Print</button>
+                  <button className="btn" onClick={() => handlePrint(selectedPatient, "acknowledgement")}>Acknowledgement Print</button>
                   <button className="btn btn-dark" onClick={() => setSelectedPatient(null)}>Close</button>
                 </div>
               </div>

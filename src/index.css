@@ -1572,6 +1572,61 @@ textarea:focus {
     repeating-linear-gradient(0deg, transparent 0, transparent 31px, rgba(183, 212, 199, 0.8) 32px);
 }
 
+.ack-document {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 42px 56px 34px;
+  color: #050505;
+}
+
+.ack-brand {
+  text-align: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-style: italic;
+  font-weight: 800;
+  color: #5f5f5f;
+  text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.26);
+}
+
+.ack-rule {
+  height: 1px;
+  margin: 8px 0 48px;
+  background: #2f65c8;
+}
+
+.ack-document h2 {
+  margin: 0 0 22px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  text-decoration: underline;
+}
+
+.ack-document h3 {
+  margin: 34px 0 18px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 900;
+  text-decoration: underline;
+}
+
+.ack-document p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.ack-signature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
 .form-pager {
   display: flex;
   justify-content: space-between;
@@ -2292,6 +2347,7 @@ textarea:focus {
   .invoice-total-panel,
   .payment-panel,
   .account-ledger-form,
+  .ack-signature-grid,
   .lab-layout {
     grid-template-columns: 1fr 1fr;
   }
@@ -2417,12 +2473,17 @@ textarea:focus {
     .invoice-total-panel,
     .payment-panel,
     .account-ledger-form,
+    .ack-signature-grid,
     .shift-choice-grid,
     .lab-layout,
     .sheet-grid,
     .sheet-grid.compact,
     .sheet-option-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ack-document {
+    padding: 28px 20px;
   }
 
   .patient-select-panel {

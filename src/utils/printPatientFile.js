@@ -352,6 +352,41 @@ const accountStatusPage = (patient) => {
   `;
 };
 
+const acknowledgementPage = (patient) => {
+  const acknowledgement = patient?.acknowledgement || {};
+
+  return `
+    <section class="ack-page">
+      <div class="ack-print-brand">Dr. Zafar Iqbal &amp; Associates</div>
+      <div class="ack-print-rule"></div>
+      <h1>ACKNOWLEDGEMENT OF RECEIPT OF INFORMATION</h1>
+
+      <p><strong>Please read carefully and ask about anything that you do not understand.</strong></p>
+      <p><strong>We will be pleased to explain it further.</strong></p>
+      <p>It is the policy of this dental practice to inform patients of all procedures contemplated for them.</p>
+      <p>First visit is considered as a consultation session.</p>
+      <p>In this session the complete examination of hard and soft tissues of the mouth is carried out and any dental treatment needed is identified.</p>
+      <p>Any other treatment needed such as fillings, RCTs, extractions, caps (fixed teeth) etc. will be performed at a separate appointment after completion of the diagnosis.</p>
+      <p>Dr. Zafar Iqbal assisted by other dentists &amp; dental auxiliaries of his choice, will perform the proposed treatment or oral surgical procedures, including the use of any necessary or advisable local anesthesia, radiographs (<u>X-rays</u>) and other diagnostic aids.</p>
+
+      <h2>Mode of Payment</h2>
+      <p>The patient will be fully informed about charges of his/her dental treatment. If there is some doubt or confusion about charges then please do ask, we will be pleased to explain it.</p>
+      <p>If the treatment plan is modified or changed later on, the patient will be informed for the extra amount to be paid or refund.</p>
+      <p><strong>This is the policy of HDC that 100% of the calculated amount is due at the time treatment is rendered.</strong></p>
+      <p>The patient or the guardian will be responsible for all the payments of all the services rendered.</p>
+      <p>In case of the treatment failure, the dental team will not be responsible, as we try our level best to render the best treatment and there will be no refunds.</p>
+      <p>Though in prosthetic cases, if the prosthesis <u>i.e.</u> caps, full denture or partial denture (artificial teeth) is not satisfactory, then it is our responsibility to repeat it so we get the desired results.</p>
+      <p>In the interest of our clinical improvement, we reserve the right to make changes in materials &amp; consequently in charges.</p>
+
+      <div class="ack-print-signatures">
+        <div><span>${plainValue(acknowledgement.patientSignature)}</span><b>Patient / Guardian Signature</b></div>
+        <div><span>${plainValue(acknowledgement.staffSignature)}</span><b>Doctor / Staff Signature</b></div>
+        <div><span>${plainValue(acknowledgement.date || formatOptionalDate(new Date()))}</span><b>Date</b></div>
+      </div>
+    </section>
+  `;
+};
+
 const checkupPage = (patient, copyLabel, toothChartUrl) => {
   const patientBio = bio(patient);
   const clinicalRows = selectedClinicalRows(patient);
@@ -500,6 +535,7 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
     normalizedMode === "orthodonticAdjustments" ? orthodonticAdjustmentsPage(patient) : "",
     normalizedMode === "fullDenture" ? fullDenturePage(patient) : "",
     normalizedMode === "account" ? accountStatusPage(patient) : "",
+    normalizedMode === "acknowledgement" ? acknowledgementPage(patient) : "",
   ].join("");
   const pages = checkupPages || invoicePages || specialtyPages ? `${checkupPages}${invoicePages}${specialtyPages}` : checkupPage(patient, "Clinic Copy", toothChartUrl);
 
@@ -575,10 +611,23 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
           .signature-line{width:7cm;margin-left:0;border-top:1px solid #111827;padding-top:.12cm}
           .blank-implant{height:13.8cm;border:1px solid #b8c2cc;background:repeating-linear-gradient(0deg,#fff 0,#fff .78cm,#d1d5db .8cm)}
           .account-summary{margin-top:.3cm}
+          .ack-page{page:ackPage;width:${PRINT_PAGE_WIDTH_CM}cm;min-height:${PRINT_PAGE_HEIGHT_CM}cm;padding:1.6cm 2.5cm 1.4cm;background:#fff;color:#000;page-break-after:always}
+          .ack-print-brand{margin-top:.1cm;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:27px;font-style:italic;font-weight:800;color:#5f5f5f;text-shadow:1px 2px 2px rgba(0,0,0,.25)}
+          .ack-print-rule{height:1px;margin:.18cm 0 1.25cm;background:#2f65c8}
+          .ack-page h1{margin:0 0 .55cm;text-align:center;font-size:15px;text-decoration:underline}
+          .ack-page h2{margin:.85cm 0 .48cm;text-align:center;font-size:16px;text-decoration:underline}
+          .ack-page p{margin:0 0 .22cm;font-size:12.7px;line-height:1.42}
+          .ack-print-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:.55cm;margin-top:.9cm}
+          .ack-print-signatures div{min-height:1.1cm;border-top:1px solid #111827;padding-top:.12cm;text-align:center}
+          .ack-print-signatures span,.ack-print-signatures b{display:block}
+          .ack-print-signatures span{min-height:.34cm;font-size:11px}
+          .ack-print-signatures b{font-size:10px}
           .checkup-page:last-child,.invoice-page:last-child{page-break-after:auto}
           .specialty-page:last-child{page-break-after:auto}
+          .ack-page:last-child{page-break-after:auto}
           @page clinicLetterhead{size:A4;margin:0}
           @page invoiceLetterhead{size:${INVOICE_PAGE_WIDTH_CM}cm ${INVOICE_PAGE_HEIGHT_CM}cm;margin:0}
+          @page ackPage{size:A4;margin:0}
           @media print{
             body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
             .checkup-page{min-height:auto}

@@ -352,6 +352,57 @@ export function OrthodonticAdjustmentsSheet({ patientData, setPatientData }) {
   );
 }
 
+export function AcknowledgementSheet({ patientData, setPatientData }) {
+  const acknowledgement = patientData.acknowledgement || {};
+  const updateAcknowledgement = (field, value) =>
+    updateSheet(setPatientData, "acknowledgement", field, capitalizeFirstWord(value));
+
+  return (
+    <div className="acknowledgement-sheet specialty-sheet printable-report">
+      <div className="ack-document">
+        <div className="ack-brand">Dr. Zafar Iqbal &amp; Associates</div>
+        <div className="ack-rule" />
+        <h2>ACKNOWLEDGEMENT OF RECEIPT OF INFORMATION</h2>
+
+        <p><strong>Please read carefully and ask about anything that you do not understand.</strong></p>
+        <p><strong>We will be pleased to explain it further.</strong></p>
+        <p>It is the policy of this dental practice to inform patients of all procedures contemplated for them.</p>
+        <p>First visit is considered as a consultation session.</p>
+        <p>In this session the complete examination of hard and soft tissues of the mouth is carried out and any dental treatment needed is identified.</p>
+        <p>Any other treatment needed such as fillings, RCTs, extractions, caps (fixed teeth) etc. will be performed at a separate appointment after completion of the diagnosis.</p>
+        <p>Dr. Zafar Iqbal assisted by other dentists &amp; dental auxiliaries of his choice, will perform the proposed treatment or oral surgical procedures, including the use of any necessary or advisable local anesthesia, radiographs (<u>X-rays</u>) and other diagnostic aids.</p>
+
+        <h3>Mode of Payment</h3>
+        <p>The patient will be fully informed about charges of his/her dental treatment. If there is some doubt or confusion about charges then please do ask, we will be pleased to explain it.</p>
+        <p>If the treatment plan is modified or changed later on, the patient will be informed for the extra amount to be paid or refund.</p>
+        <p><strong>This is the policy of HDC that 100% of the calculated amount is due at the time treatment is rendered.</strong></p>
+        <p>The patient or the guardian will be responsible for all the payments of all the services rendered.</p>
+        <p>In case of the treatment failure, the dental team will not be responsible, as we try our level best to render the best treatment and there will be no refunds.</p>
+        <p>Though in prosthetic cases, if the prosthesis <u>i.e.</u> caps, full denture or partial denture (artificial teeth) is not satisfactory, then it is our responsibility to repeat it so we get the desired results.</p>
+        <p>In the interest of our clinical improvement, we reserve the right to make changes in materials &amp; consequently in charges.</p>
+
+        <div className="ack-signature-grid">
+          <Field
+            label="Patient / Guardian Signature"
+            value={acknowledgement.patientSignature}
+            onChange={(value) => updateAcknowledgement("patientSignature", value)}
+          />
+          <Field
+            label="Doctor / Staff Signature"
+            value={acknowledgement.staffSignature}
+            onChange={(value) => updateAcknowledgement("staffSignature", value)}
+          />
+          <Field
+            label="Date"
+            value={acknowledgement.date}
+            onChange={(value) => updateSheet(setPatientData, "acknowledgement", "date", value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FullDentureSheet({ patientData, setPatientData }) {
   const denture = patientData.fullDenture || {};
   const procedureRows = fixedProcedureRows.map((procedure, index) => ({

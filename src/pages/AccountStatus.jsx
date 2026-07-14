@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import PriceListPanel from "../components/patient/PriceListPanel";
+import toothChart from "../assets/tooth-chart.png";
 import {
   activeShift,
   activeShiftId,
@@ -24,6 +25,7 @@ import {
   regNo,
 } from "../utils/patientHelpers";
 import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
+import { printPatientFile } from "../utils/printPatientFile";
 import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
 
@@ -286,6 +288,10 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
     window.print();
   };
 
+  const handlePatientPrint = (patient, mode) => {
+    printPatientFile(patient, toothChart, mode);
+  };
+
   const ledgerEntryKey = (entry, index) => entry.id || String(index);
 
   const resetPaymentForm = () => {
@@ -544,6 +550,7 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
 
               <div className="row-actions no-print">
                 <button className="btn" onClick={() => handleEdit(selectedPatient)}>Edit file</button>
+                <button className="btn" onClick={() => handlePatientPrint(selectedPatient, "acknowledgement")}>Acknowledgement Print</button>
                 <button className="btn btn-danger" onClick={() => handleDeletePatient(selectedPatient)}>Delete</button>
                 <button className="btn btn-dark" onClick={() => setSelectedPatient(null)}>Close</button>
               </div>
