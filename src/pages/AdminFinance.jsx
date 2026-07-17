@@ -112,7 +112,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
 
   useEffect(() => {
     fetchData();
-  }, [periodMonth, periodYear, isPayable]);
+  }, [isPayable]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -168,7 +168,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
         balance: balanceDue(patient),
         group: receivableGroup(patient),
       }))
-      .filter((row) => row.totalAmount > 0)
+      .filter((row) => row.balance > 0)
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [patients]);
 
