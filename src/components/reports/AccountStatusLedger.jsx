@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import api from "../api";
-import MonthPeriodSelector from "../components/reports/MonthPeriodSelector";
-import ReportActionButtons from "../components/reports/ReportActionButtons";
-import { DOCTOR_NAME } from "../utils/clinicData";
+import api from "../../api";
+import MonthPeriodSelector from "./MonthPeriodSelector";
+import ReportActionButtons from "./ReportActionButtons";
+import { DOCTOR_NAME } from "../../utils/clinicData";
 import {
   balanceDue,
   formatCurrency,
@@ -12,9 +12,9 @@ import {
   netAmount,
   parseLocalDate,
   paymentsTotal,
-} from "../utils/patientHelpers";
-import { escapeHtml, openPrintWindow, printElement } from "../utils/printLedger";
-import { currentPeriod, monthBounds, periodLabel } from "../utils/reportPeriod";
+} from "../../utils/patientHelpers";
+import { escapeHtml, openPrintWindow, printElement } from "../../utils/printLedger";
+import { currentPeriod, monthBounds, periodLabel } from "../../utils/reportPeriod";
 
 const INCOME_LINES = [
   { key: "checkup", label: "Check-up", match: ["check", "consult"] },
