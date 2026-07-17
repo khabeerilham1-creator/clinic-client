@@ -343,7 +343,7 @@ function DailyExpense({ activePage, setActivePage, handleLogout }) {
         <section className="panel printable-report">
           <div id="daily-expense-sheet" className="ledger-sheet daily-expense-sheet">
             <div className="ledger-sheet-title">Daily Expenses</div>
-            <div className="ledger-sheet-subtitle">D/E Details</div>
+            <div className="ledger-sheet-subtitle">D/E Details - {periodLabel(periodMonth, periodYear)}</div>
 
             <div className="daily-expense-summary">
               {categoryTotals.map((category) => (
@@ -364,9 +364,11 @@ function DailyExpense({ activePage, setActivePage, handleLogout }) {
                 const total = categoryTotals.find((item) => item.key === category.key)?.total || 0;
 
                 return (
-                  <div key={category.key} className="category-mini-table">
-                    <div className="category-mini-table-title">{category.label}</div>
-                    <table className="ledger-table">
+                  <div key={category.key} className="category-section">
+                    <div className="category-header">
+                      <h3>{category.label}</h3>
+                    </div>
+                    <table className="ledger-table expense-table">
                       <thead>
                         <tr>
                           <th>Description</th>
@@ -393,7 +395,7 @@ function DailyExpense({ activePage, setActivePage, handleLogout }) {
                             <td>{entry.description}</td>
                             <td className="center">{entry.qty || "-"}</td>
                             <td className="amount">{formatCurrency(entry.amount)}</td>
-                            <td>
+                            <td className="no-print">
                               <ReportActionButtons
                                 onPrint={() => printEntry(entry)}
                                 onEdit={() => handleEdit(entry)}
@@ -403,7 +405,7 @@ function DailyExpense({ activePage, setActivePage, handleLogout }) {
                           </tr>
                         ))}
                         <tr className="total-row">
-                          <td colSpan="2">Total</td>
+                          <td colSpan="2">Subtotal</td>
                           <td className="amount">
                             <span className="total-box">{formatCurrency(total)}</span>
                           </td>
