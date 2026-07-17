@@ -192,10 +192,8 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
       department: row.department
     })));
 
-    // Show all patients with any amount for now to debug
-    return allRows
-      .filter((row) => row.totalAmount > 0 || row.paid > 0)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    // Show ALL patients to see if any data exists
+    return allRows.sort((a, b) => a.name.localeCompare(b.name));
   }, [patients]);
 
   const groupedReceivables = useMemo(() => {
