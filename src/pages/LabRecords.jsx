@@ -694,30 +694,86 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="metrics-grid printable-report">
-          <div className="metric-card">
-            <div className="metric-accent blue" />
-            <div className="metric-label">Lab Cases</div>
-            <div className="metric-value">{loading ? "..." : activeLabRows.length}</div>
-            <div className="metric-detail">{activeLab}</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-accent rose" />
-            <div className="metric-label">Total Bill</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(ledgerTotals.totalBill)}</div>
-            <div className="metric-detail">All cases in this lab</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-accent green" />
-            <div className="metric-label">Paid</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(ledgerTotals.paid)}</div>
-            <div className="metric-detail">Lab payments</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-accent gold" />
-            <div className="metric-label">Remaining</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(ledgerTotals.remaining)}</div>
-            <div className="metric-detail">Still payable</div>
+        <section className="panel printable-report lab-record-sheet">
+          <div className="ledger-sheet">
+            <div className="ledger-sheet-title">Dental Lab Record</div>
+            <div className="ledger-sheet-subtitle">{activeLab} - {periodLabel(periodMonth, periodYear)}</div>
+
+            <div className="lab-summary-section">
+              <div className="lab-summary-row">
+                <span>Old</span>
+                <strong>{formatCurrency(monthlyTotals.oldBalance)}</strong>
+              </div>
+              <div className="lab-summary-row">
+                <span>Fresh</span>
+                <strong>{formatCurrency(monthlyTotals.monthlyBill)}</strong>
+              </div>
+              <div className="lab-summary-row">
+                <span>Paid</span>
+                <strong>{formatCurrency(monthlyTotals.paidThisMonth)}</strong>
+              </div>
+              <div className="lab-summary-row total">
+                <span>Net Amount</span>
+                <strong>{formatCurrency(monthlyTotals.netAmount)}</strong>
+              </div>
+            </div>
+
+            <div className="data-table-wrap">
+              <table className="ledger-table full-width-table">
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Date</th>
+                    <th>Patient Name</th>
+                    <th>Job</th>
+                    <th>Units</th>
+                    <th>Shade</th>
+                    <th>Amount</th>
+                    <th className="no-print">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan="8">Loading lab records...</td>
+                    </tr>
+                  )}
+
+                  {!loading && monthlyLabRows.length === 0 && (
+                    <tr>
+                      <td colSpan="8">No lab records for this month.</td>
+                    </tr>
+                  )}
+
+                  {monthlyLabRows.map((record, index) => (
+                    <tr key={record.id || index}>
+                      <td className="center">{index + 1}</td>
+                      <td>{formatDateDisplay(recordDate(record)) || "-"}</td>
+                      <td>{record.patientName}</td>
+                      <td>{recordJob(record)}</td>
+                      <td className="center">{recordUnits(record) || "-"}</td>
+                      <td>{recordShade(record) || "-"}</td>
+                      <td className="amount">{formatCurrency(recordTotalAmount(record))}</td>
+                      <td className="no-print">
+                        <ReportActionButtons
+                          onPrint={() => printLedger()}
+                          onEdit={() => handleEdit(record)}
+                          onDelete={() => handleDelete(record)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+
+                  <tr className="total-row">
+                    <td colSpan="6">Monthly Bill</td>
+                    <td className="amount">
+                      <span className="total-box">{formatCurrency(monthlyTotals.monthlyBill)}</span>
+                    </td>
+                    <td className="no-print" />
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 

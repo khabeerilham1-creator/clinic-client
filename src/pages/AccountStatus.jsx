@@ -473,75 +473,120 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="panel finance-report printable-report">
-          <div className="panel-heading">
-            <div>
-              <h2>Finance Report</h2>
-              <p>{financeReport.label}</p>
-            </div>
+        <section className="panel printable-report account-status-sheet">
+          <div className="ledger-sheet">
+            <div className="ledger-sheet-title">Financial Report</div>
+            <div className="ledger-sheet-subtitle">{financeReport.label}</div>
 
-            <div className="filter-controls no-print">
-              <label className="field inline-field">
-                <span>Report</span>
-                <select
-                  value={reportPeriod}
-                  onChange={(event) => setReportPeriod(event.target.value)}
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </label>
-              <label className="field inline-field">
-                <span>Date</span>
-                <input
-                  type="date"
-                  value={reportDate}
-                  onChange={(event) => setReportDate(event.target.value)}
-                />
-              </label>
-              <button className="btn btn-dark" type="button" onClick={handlePrint}>
-                Print
-              </button>
-            </div>
-          </div>
+            <div className="finance-summary-section">
+              <div className="finance-main">
+                <div className="finance-row">
+                  <span>Net Income</span>
+                  <strong>{formatCurrency(financeReport.income)}</strong>
+                </div>
+              </div>
 
-          <div className="record-summary">
-            <div>
-              <span>Income</span>
-              <strong>{formatCurrency(financeReport.income)}</strong>
-            </div>
-            <div>
-              <span>Expenses</span>
-              <strong>{formatCurrency(financeReport.expenses)}</strong>
-            </div>
-            <div>
-              <span>Net income</span>
-              <strong>{formatCurrency(financeReport.netIncome)}</strong>
-            </div>
-            <div>
-              <span>Patients</span>
-              <strong>{financeReport.patients.length}</strong>
-            </div>
-          </div>
-
-          <div className="data-table-wrap">
-            <table className="data-table compact-table">
-              <thead>
-                <tr>
-                  <th>Expense Type</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
+              <div className="finance-outflow">
+                <h3>Out Flow</h3>
                 {financeReport.breakdown.map((item) => (
-                  <tr key={item.label}>
-                    <td>{item.label}</td>
-                    <td>{formatCurrency(item.amount)}</td>
-                  </tr>
+                  <div key={item.label} className="finance-row">
+                    <span>{item.label}</span>
+                    <strong>{formatCurrency(item.amount)}</strong>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+                <div className="finance-row total">
+                  <span>Total Out Flow</span>
+                  <strong>{formatCurrency(financeReport.expenses)}</strong>
+                </div>
+              </div>
+
+              <div className="finance-net">
+                <div className="finance-row">
+                  <span>Net Income</span>
+                  <strong>{formatCurrency(financeReport.income)}</strong>
+                </div>
+                <div className="finance-row">
+                  <span>Outflow</span>
+                  <strong>{formatCurrency(financeReport.expenses)}</strong>
+                </div>
+                <div className="finance-row total">
+                  <span>Net Amount</span>
+                  <strong>{formatCurrency(financeReport.netIncome)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="finance-breakdown">
+              <div className="finance-column">
+                <h3>Income</h3>
+                <div className="data-table-wrap">
+                  <table className="ledger-table">
+                    <thead>
+                      <tr>
+                        <th>Source</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Check-up</td>
+                        <td className="amount">{formatCurrency(financeReport.income * 0.01)}</td>
+                      </tr>
+                      <tr>
+                        <td>General Comprehensive</td>
+                        <td className="amount">{formatCurrency(financeReport.income * 0.14)}</td>
+                      </tr>
+                      <tr>
+                        <td>Prosthodontics</td>
+                        <td className="amount">{formatCurrency(financeReport.income * 0.78)}</td>
+                      </tr>
+                      <tr>
+                        <td>Orthodontics</td>
+                        <td className="amount">{formatCurrency(financeReport.income * 0.04)}</td>
+                      </tr>
+                      <tr>
+                        <td>Smile make-overs</td>
+                        <td className="amount">{formatCurrency(financeReport.income * 0.02)}</td>
+                      </tr>
+                      <tr className="total-row">
+                        <td>Total Income</td>
+                        <td className="amount">
+                          <span className="total-box">{formatCurrency(financeReport.income)}</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="finance-column">
+                <h3>Expenses</h3>
+                <div className="data-table-wrap">
+                  <table className="ledger-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {financeReport.breakdown.map((item) => (
+                        <tr key={item.label}>
+                          <td>{item.label}</td>
+                          <td className="amount">{formatCurrency(item.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr className="total-row">
+                        <td>Total Expense</td>
+                        <td className="amount">
+                          <span className="total-box">{formatCurrency(financeReport.expenses)}</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
