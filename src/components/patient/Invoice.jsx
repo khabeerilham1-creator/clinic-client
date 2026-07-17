@@ -243,6 +243,97 @@ function Invoice({ patientData, setPatientData, initialPayment, setInitialPaymen
         ))}
       </datalist>
 
+      {/* Treatment Summary Block */}
+      <section className="detail-card treatment-summary-card no-print" style={{ marginBottom: "24px" }}>
+        <div className="panel-heading" style={{ marginBottom: "12px" }}>
+          <div>
+            <h3>Clinical Exam Treatment Summary</h3>
+            <p className="text-sm text-slate-500">Suggested treatments and lab tasks from the patient's clinical examination.</p>
+          </div>
+        </div>
+        <div className="data-table-wrap">
+          <table className="data-table compact-table">
+            <thead>
+              <tr>
+                <th>Section</th>
+                <th>Tooth No</th>
+                <th>Condition / Task</th>
+                <th>Suggested Treatment / Task</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const softRecords = patientData.checkup?.softTissueRecords || [];
+                const hardRecords = patientData.checkup?.hardTissueRecords || [];
+                const labRecords = patientData.checkup?.labTaskRecords || [];
+
+                if (softRecords.length === 0 && hardRecords.length === 0 && labRecords.length === 0) {
+                  return (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: "center", color: "#64748b", padding: "12px" }}>
+                        No treatment suggestions selected in Clinical Exam yet.
+                      </td>
+                    </tr>
+                  );
+                }
+
+                const rows = [];
+                softRecords.forEach((item, index) => {
+                  rows.push(
+                    <tr key={`soft-${index}`}>
+                      <td style={{ fontWeight: "600", color: "#475569" }}>Soft Tissue</td>
+                      <td>-</td>
+                      <td>{item.condition || "-"}</td>
+                      <td style={{ fontWeight: "600" }}>{item.treatment || "-"}</td>
+                    </tr>
+                  );
+                });
+
+                hardRecords.forEach((item, index) => {
+                  const toothLabel = Array.isArray(item.toothNos) && item.toothNos.length
+                    ? item.toothNos.length === 32
+                      ? "All 32"
+                      : item.toothNos.map((toothNo) => `#${toothNo}`).join(", ")
+                    : item.toothNo
+                      ? `#${item.toothNo}`
+                      : "-";
+
+                  rows.push(
+                    <tr key={`hard-${index}`}>
+                      <td style={{ fontWeight: "600", color: "#1e3a8a" }}>Hard Tissue</td>
+                      <td>{toothLabel}</td>
+                      <td>{item.condition || "-"}</td>
+                      <td style={{ fontWeight: "600" }}>{item.treatment || "-"}</td>
+                    </tr>
+                  );
+                });
+
+                labRecords.forEach((item, index) => {
+                  const toothLabel = Array.isArray(item.toothNos) && item.toothNos.length
+                    ? item.toothNos.length === 32
+                      ? "All 32"
+                      : item.toothNos.map((toothNo) => `#${toothNo}`).join(", ")
+                    : item.toothNo
+                      ? `#${item.toothNo}`
+                      : "-";
+
+                  rows.push(
+                    <tr key={`lab-${index}`}>
+                      <td style={{ fontWeight: "600", color: "#0d9488" }}>Lab Task</td>
+                      <td>{toothLabel}</td>
+                      <td>{item.condition || "-"}</td>
+                      <td style={{ fontWeight: "600" }}>{item.treatment || "-"}</td>
+                    </tr>
+                  );
+                });
+
+                return rows;
+              })()}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {invoices.map((invoice, invoiceIndex) => {
         const subtotal = invoiceSubtotal(invoice);
         const invoiceDiscount = Number(invoice.discount || 0);

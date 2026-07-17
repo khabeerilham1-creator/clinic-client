@@ -77,10 +77,12 @@ function ToothSVG({ shape, selected }) {
   return shapes[shape] || shapes.molar;
 }
 
-export default function ToothChart({ patientData, setPatientData, onToothSelect }) {
+export default function ToothChart({ patientData, setPatientData, onToothSelect, selectedToothNos, hideNotes }) {
   const notes = patientData?.toothNotes || "";
   const selectedNumbers = normalizeSelection(
-    patientData?.checkup?.selectedToothNos || patientData?.checkup?.selectedToothNo
+    selectedToothNos !== undefined
+      ? selectedToothNos
+      : (patientData?.checkup?.selectedToothNos || patientData?.checkup?.selectedToothNo)
   );
   const selectedCount = selectedNumbers.length;
 
@@ -208,18 +210,20 @@ export default function ToothChart({ patientData, setPatientData, onToothSelect 
         </div>
       )}
 
-      <div>
-        <label style={{ display: "block", fontWeight: "600", fontSize: "13px", color: "#0f172a", marginBottom: "6px" }}>
-          Tooth chart notes
-        </label>
-        <textarea
-          value={notes}
-          onChange={(event) => saveNotes(event.target.value)}
-          placeholder="Add any observations, e.g. sensitivity, mobility, discolouration..."
-          rows={3}
-          style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "10px", fontSize: "13px", fontFamily: "inherit", outline: "none", resize: "vertical", color: "#0f172a", lineHeight: "1.6" }}
-        />
-      </div>
+      {!hideNotes && (
+        <div>
+          <label style={{ display: "block", fontWeight: "600", fontSize: "13px", color: "#0f172a", marginBottom: "6px" }}>
+            Tooth chart notes
+          </label>
+          <textarea
+            value={notes}
+            onChange={(event) => saveNotes(event.target.value)}
+            placeholder="Add any observations, e.g. sensitivity, mobility, discolouration..."
+            rows={3}
+            style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: "10px", fontSize: "13px", fontFamily: "inherit", outline: "none", resize: "vertical", color: "#0f172a", lineHeight: "1.6" }}
+          />
+        </div>
+      )}
     </div>
   );
 }

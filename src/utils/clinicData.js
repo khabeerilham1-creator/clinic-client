@@ -103,6 +103,21 @@ export const HARD_TISSUE_CONDITIONS = [
   .map(([condition, treatment]) => ({ condition, treatment }))
   .sort((a, b) => a.condition.localeCompare(b.condition));
 
+export const LAB_TASK_CONDITIONS = [
+  ["Bridge Preparation", "Zirconia Bridge"],
+  ["Bridge Preparation", "PFM Bridge"],
+  ["Complete Denture", "Acrylic Denture"],
+  ["Crown Preparation", "Zirconia Crown"],
+  ["Crown Preparation", "Ceramic Crown"],
+  ["Impression for Braces", "Orthodontic Appliance"],
+  ["Impression for Night Guard", "Hard/Soft Night Guard"],
+  ["Partial Denture", "Cobalt Chrome P/D"],
+  ["Post Space", "Fiber Post & Core"],
+  ["Veneer Preparation", "E-Max Veneer"],
+]
+  .map(([condition, treatment]) => ({ condition, treatment }))
+  .sort((a, b) => a.condition.localeCompare(b.condition));
+
 export const PRICE_LIST = [
   { description: "Bleaching", category1: 50000, category2: 40000, category3: 30000 },
   { description: "Braces", category1: 150000, category2: 125000, category3: 100000 },

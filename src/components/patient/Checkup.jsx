@@ -1,7 +1,7 @@
 import React from "react";
 
 import ToothChart from "../common/ToothChart";
-import { HARD_TISSUE_CONDITIONS, SOFT_TISSUE_CONDITIONS } from "../../utils/clinicData";
+import { HARD_TISSUE_CONDITIONS, SOFT_TISSUE_CONDITIONS, LAB_TASK_CONDITIONS } from "../../utils/clinicData";
 import { capitalizeFirstWord } from "../../utils/patientHelpers";
 import { playSectionSound } from "../../utils/sound";
 
@@ -118,6 +118,7 @@ function Checkup({ patientData, setPatientData }) {
   const checkupData = patientData.checkup || {};
   const softRows = checkupData.softTissueRecords || [];
   const hardRows = checkupData.hardTissueRecords || [];
+  const labRows = checkupData.labTaskRecords || [];
   const selectedToothNo = checkupData.selectedToothNo || "";
   const selectedToothNos = Array.isArray(checkupData.selectedToothNos)
     ? checkupData.selectedToothNos
@@ -134,6 +135,22 @@ function Checkup({ patientData, setPatientData }) {
         ? "All 32 teeth selected"
         : selectedToothNos.map((toothNo) => `#${toothNo}`).join(", ");
 
+  const labSelectedToothNo = checkupData.labSelectedToothNo || "";
+  const labSelectedToothNos = Array.isArray(checkupData.labSelectedToothNos)
+    ? checkupData.labSelectedToothNos
+    : labSelectedToothNo
+      ? String(labSelectedToothNo)
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+  const labSelectedToothLabel =
+    labSelectedToothNos.length === 0
+      ? "Click teeth above"
+      : labSelectedToothNos.length === 32
+        ? "All 32 teeth selected"
+        : labSelectedToothNos.map((toothNo) => `#${toothNo}`).join(", ");
+
   const setCheckup = (updates) => {
     setPatientData((prev) => ({
       ...prev,
@@ -145,9 +162,14 @@ function Checkup({ patientData, setPatientData }) {
   };
 
   const selectCondition = (section, value) => {
-    const options = section === "soft" ? SOFT_TISSUE_CONDITIONS : HARD_TISSUE_CONDITIONS;
+    const options =
+      section === "soft"
+        ? SOFT_TISSUE_CONDITIONS
+        : section === "hard"
+          ? HARD_TISSUE_CONDITIONS
+          : LAB_TASK_CONDITIONS;
     const found = options.find((item) => item.condition === value);
-    const prefix = section === "soft" ? "soft" : "hard";
+    const prefix = section === "soft" ? "soft" : section === "hard" ? "hard" : "lab";
 
     setCheckup({
       [`${prefix}SelectedCondition`]: value,
@@ -163,7 +185,7 @@ function Checkup({ patientData, setPatientData }) {
   };
 
   const manualChange = (section, field, value) => {
-    const prefix = section === "soft" ? "soft" : "hard";
+    const prefix = section === "soft" ? "soft" : section === "hard" ? "hard" : "lab";
     setCheckup({
       [`${prefix}Manual${field === "condition" ? "Condition" : "Treatment"}`]: value,
       ...(section === "soft" && field === "condition" ? { manualCondition: value } : {}),
@@ -172,9 +194,15 @@ function Checkup({ patientData, setPatientData }) {
   };
 
   const addFinding = (section, source) => {
-    const prefix = section === "soft" ? "soft" : "hard";
-    const rowsKey = section === "soft" ? "softTissueRecords" : "hardTissueRecords";
-    const currentRows = section === "soft" ? softRows : hardRows;
+    const prefix = section === "soft" ? "soft" : section === "hard" ? "hard" : "lab";
+    const rowsKey =
+      section === "soft"
+        ? "softTissueRecords"
+        : section === "hard"
+          ? "hardTissueRecords"
+          : "labTaskRecords";
+    const currentRows =
+      section === "soft" ? softRows : section === "hard" ? hardRows : labRows;
     const condition =
       source === "manual"
         ? checkupData[`${prefix}ManualCondition`]
@@ -201,6 +229,12 @@ function Checkup({ patientData, setPatientData }) {
                 toothNos: selectedToothNos,
               }
             : {}),
+          ...(section === "lab"
+            ? {
+                toothNo: labSelectedToothNos.join(", ") || labSelectedToothNo,
+                toothNos: labSelectedToothNos,
+              }
+            : {}),
         },
       ],
       ...(source === "manual"
@@ -214,8 +248,14 @@ function Checkup({ patientData, setPatientData }) {
   };
 
   const deleteFinding = (section, index) => {
-    const rowsKey = section === "soft" ? "softTissueRecords" : "hardTissueRecords";
-    const currentRows = section === "soft" ? softRows : hardRows;
+    const rowsKey =
+      section === "soft"
+        ? "softTissueRecords"
+        : section === "hard"
+          ? "hardTissueRecords"
+          : "labTaskRecords";
+    const currentRows =
+      section === "soft" ? softRows : section === "hard" ? hardRows : labRows;
     setCheckup({
       [rowsKey]: currentRows.filter((_, rowIndex) => rowIndex !== index),
     });
@@ -233,6 +273,21 @@ function Checkup({ patientData, setPatientData }) {
       selectedToothNos: nextToothNos,
       selectedToothNo: nextToothNos.join(", "),
       selectedToothClickId: Date.now(),
+    });
+    playSectionSound("section");
+  };
+
+  const handleLabToothSelect = (toothNos) => {
+    const nextToothNos = Array.isArray(toothNos)
+      ? toothNos.map((toothNo) => String(toothNo))
+      : toothNos
+        ? [String(toothNos)]
+        : [];
+
+    setCheckup({
+      labSelectedToothNos: nextToothNos,
+      labSelectedToothNo: nextToothNos.join(", "),
+      labSelectedToothClickId: Date.now(),
     });
     playSectionSound("section");
   };
@@ -300,6 +355,54 @@ function Checkup({ patientData, setPatientData }) {
           rows={hardRows}
           onDelete={(index) => deleteFinding("hard", index)}
           emptyText="No hard tissue findings selected yet."
+          firstColumnLabel="Tooth No"
+          firstValue={(row) => {
+            if (Array.isArray(row.toothNos) && row.toothNos.length) {
+              return row.toothNos.length === 32
+                ? "All 32"
+                : row.toothNos.map((toothNo) => `#${toothNo}`).join(", ");
+            }
+
+            return row.toothNo ? `#${row.toothNo}` : "-";
+          }}
+        />
+      </section>
+
+      <section className="clinical-chart-card">
+        <div className="tooth-chart-wrap">
+          <ToothChart
+            patientData={patientData}
+            setPatientData={setPatientData}
+            onToothSelect={handleLabToothSelect}
+            selectedToothNos={labSelectedToothNos}
+            hideNotes={true}
+          />
+        </div>
+      </section>
+
+      <section className="clinical-chart-card">
+        <div className="selected-tooth-strip">
+          <span>Selected Teeth for Lab Task</span>
+          <strong>{labSelectedToothLabel}</strong>
+        </div>
+
+        <ClinicalSelector
+          title="Lab Task Chart"
+          options={LAB_TASK_CONDITIONS}
+          selectedCondition={checkupData.labSelectedCondition}
+          suggestedTreatment={checkupData.labSuggestedTreatment}
+          manualCondition={checkupData.labManualCondition}
+          manualTreatment={checkupData.labManualTreatment}
+          onSelect={(value) => selectCondition("lab", value)}
+          onManualChange={(field, value) => manualChange("lab", field, value)}
+          onAddAuto={() => addFinding("lab", "auto")}
+          onAddManual={() => addFinding("lab", "manual")}
+        />
+
+        <FindingTable
+          rows={labRows}
+          onDelete={(index) => deleteFinding("lab", index)}
+          emptyText="No lab tasks selected yet."
           firstColumnLabel="Tooth No"
           firstValue={(row) => {
             if (Array.isArray(row.toothNos) && row.toothNos.length) {

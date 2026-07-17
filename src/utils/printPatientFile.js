@@ -36,7 +36,8 @@ const escapeHtml = (value) =>
     .replace(/'/g, "&#039;");
 
 const formatDate = (value) => {
-  const formatted = formatDateDisplay(value || new Date());
+  if (!value) return "";
+  const formatted = formatDateDisplay(value);
 
   return formatted || value || "";
 };
@@ -82,6 +83,26 @@ const selectedClinicalRows = (patient) => {
       <tr>
         <td>${escapeHtml(toothLabel)}</td>
         <td>Hard Tissue</td>
+        <td>${escapeHtml(item.condition)}</td>
+        <td>${escapeHtml(item.treatment)}</td>
+      </tr>
+    `);
+  });
+
+  safeList(checkup.labTaskRecords).forEach((item) => {
+    const toothLabel =
+      Array.isArray(item.toothNos) && item.toothNos.length
+        ? item.toothNos.length === 32
+          ? "All 32"
+          : item.toothNos.map((toothNo) => `#${toothNo}`).join(", ")
+        : item.toothNo
+          ? `#${item.toothNo}`
+          : rows.length + 1;
+
+    rows.push(`
+      <tr>
+        <td>${escapeHtml(toothLabel)}</td>
+        <td>Lab Task</td>
         <td>${escapeHtml(item.condition)}</td>
         <td>${escapeHtml(item.treatment)}</td>
       </tr>
