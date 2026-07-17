@@ -17,7 +17,7 @@ import PatientStatusPage from "./pages/PatientStatusPage";
 import DentistWorkspace from "./pages/DentistWorkspace";
 import AdminLogs from "./pages/AdminLogs";
 import AdminFinance from "./pages/AdminFinance";
-import Notifications from "./pages/Notifications";
+import DailyExpense from "./pages/DailyExpense";
 
 const ROLE_PAGES = {
   admin: [
@@ -204,13 +204,23 @@ function App() {
 
   }
 
-  if (PLACEHOLDER_PAGES[currentPage]) {
+  if (PLACEHOLDER_PAGES[currentPage] && currentPage !== "daily-expense") {
     return (
       <PlaceholderPage
         activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
         {...PLACEHOLDER_PAGES[currentPage]}
+      />
+    );
+  }
+
+  if (currentPage === "daily-expense") {
+    return (
+      <DailyExpense
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
       />
     );
   }

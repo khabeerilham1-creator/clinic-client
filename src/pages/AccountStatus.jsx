@@ -28,6 +28,7 @@ import { CLINIC_NAME, DOCTOR_NAME } from "../utils/clinicData";
 import { printPatientFile } from "../utils/printPatientFile";
 import { addActivityLog } from "../utils/activityLog";
 import { playSectionSound } from "../utils/sound";
+import AccountStatusLedger from "../components/reports/AccountStatusLedger";
 
 const todayInputValue = () => new Date().toISOString().split("T")[0];
 
@@ -426,6 +427,13 @@ function AccountStatus({ activePage, setActivePage, handleLogout }) {
         </section>
 
         {error && <div className="notice danger">{error}</div>}
+
+        <AccountStatusLedger
+          patients={patients}
+          expenses={expenses}
+          onEditPatient={handleEdit}
+          onDeletePatient={handleDeletePatient}
+        />
 
         <section className="metrics-grid">
           <div className="metric-card">

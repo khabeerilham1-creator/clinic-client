@@ -16,6 +16,15 @@ import {
 } from "../utils/patientHelpers";
 import { CLINIC_NAME, DEFAULT_LABS, DOCTOR_NAME } from "../utils/clinicData";
 import { playSectionSound } from "../utils/sound";
+import MonthPeriodSelector from "../components/reports/MonthPeriodSelector";
+import ReportActionButtons from "../components/reports/ReportActionButtons";
+import {
+  currentPeriod,
+  dateInPeriod,
+  monthBounds,
+  periodLabel,
+} from "../utils/reportPeriod";
+import { openPrintWindow, printElement } from "../utils/printLedger";
 
 const LAB_STORAGE_KEY = "clinicLabs";
 
@@ -134,6 +143,9 @@ const escapeHtml = (value) =>
 
 function LabRecords({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
+  const active = currentPeriod();
+  const [periodMonth, setPeriodMonth] = useState(active.month);
+  const [periodYear, setPeriodYear] = useState(active.year);
   const [labs, setLabs] = useState(loadLabs);
   const [activeLab, setActiveLab] = useState(() => loadLabs()[0] || DEFAULT_LABS[0]);
   const [newLabName, setNewLabName] = useState("");
@@ -153,6 +165,19 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const next = currentPeriod();
+
+      if (next.month !== periodMonth || next.year !== periodYear) {
+        setPeriodMonth(next.month);
+        setPeriodYear(next.year);
+      }
+    }, 60000);
+
+    return () => window.clearInterval(timer);
+  }, [periodMonth, periodYear]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -216,6 +241,12 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
     [patients, activeLab]
   );
 
+  const monthlyLabRows = useMemo(
+    () =>
+      activeLabRows.filter((record) => dateInPeriod(recordDate(record), periodMonth, periodYear)),
+    [activeLabRows, periodMonth, periodYear]
+  );
+
   const activeLabPayments = useMemo(
     () =>
       labPayments
@@ -223,6 +254,45 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
         .sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))),
     [labPayments, activeLab]
   );
+
+  const monthlyTotals = useMemo(() => {
+    const totalUnits = monthlyLabRows.reduce((sum, record) => sum + recordUnits(record), 0);
+    const monthlyBill = monthlyLabRows.reduce((sum, record) => sum + recordTotalAmount(record), 0);
+    const bounds = monthBounds(periodMonth, periodYear);
+    const priorRows = activeLabRows.filter((record) => {
+      const date = new Date(recordDate(record));
+
+      if (Number.isNaN(date.getTime())) {
+        return false;
+      }
+
+      return date < bounds.start;
+    });
+    const priorBill = priorRows.reduce((sum, record) => sum + recordTotalAmount(record), 0);
+    const priorPaid = activeLabPayments
+      .filter((payment) => {
+        const date = new Date(payment.date);
+
+        if (Number.isNaN(date.getTime())) {
+          return false;
+        }
+
+        return date < bounds.start;
+      })
+      .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const oldBalance = Math.max(priorBill - priorPaid, 0);
+    const paidThisMonth = activeLabPayments
+      .filter((payment) => dateInPeriod(payment.date, periodMonth, periodYear))
+      .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+    return {
+      totalUnits,
+      monthlyBill,
+      oldBalance,
+      paidThisMonth,
+      netAmount: oldBalance + monthlyBill - paidThisMonth,
+    };
+  }, [monthlyLabRows, activeLabRows, activeLabPayments, periodMonth, periodYear]);
 
   const ledgerTotals = useMemo(() => {
     const totalBill = activeLabRows.reduce((sum, record) => sum + recordTotalAmount(record), 0);
