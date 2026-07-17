@@ -109,15 +109,58 @@ const selectedClinicalRows = (patient) => {
     `);
   });
 
-  if (!rows.length && (checkup.selectedCondition || checkup.manualCondition)) {
-    rows.push(`
-      <tr>
-        <td>1</td>
-        <td>Soft Tissue</td>
-        <td>${escapeHtml(checkup.selectedCondition || checkup.manualCondition)}</td>
-        <td>${escapeHtml(checkup.suggestedTreatment || checkup.manualTreatment)}</td>
-      </tr>
-    `);
+  // Live/unsaved selections fallback (if they are selected/mentioned in the inputs, make sure they print)
+  const unsavedList = [];
+
+  if (checkup.selectedCondition || checkup.manualCondition) {
+    const condition = checkup.selectedCondition || checkup.manualCondition;
+    const exists = rows.some((r) => r.includes(escapeHtml(condition)));
+    if (!exists) {
+      unsavedList.push(`
+        <tr>
+          <td>${rows.length + unsavedList.length + 1}</td>
+          <td>Soft Tissue</td>
+          <td>${escapeHtml(condition)}</td>
+          <td>${escapeHtml(checkup.suggestedTreatment || checkup.manualTreatment)}</td>
+        </tr>
+      `);
+    }
+  }
+
+  if (checkup.hardSelectedCondition || checkup.hardManualCondition) {
+    const condition = checkup.hardSelectedCondition || checkup.hardManualCondition;
+    const exists = rows.some((r) => r.includes(escapeHtml(condition)));
+    if (!exists) {
+      const toothLabel = checkup.selectedToothNo ? `#${checkup.selectedToothNo}` : (rows.length + unsavedList.length + 1);
+      unsavedList.push(`
+        <tr>
+          <td>${escapeHtml(toothLabel)}</td>
+          <td>Hard Tissue</td>
+          <td>${escapeHtml(condition)}</td>
+          <td>${escapeHtml(checkup.hardSuggestedTreatment || checkup.hardManualTreatment)}</td>
+        </tr>
+      `);
+    }
+  }
+
+  if (checkup.labSelectedCondition || checkup.labManualCondition) {
+    const condition = checkup.labSelectedCondition || checkup.labManualCondition;
+    const exists = rows.some((r) => r.includes(escapeHtml(condition)));
+    if (!exists) {
+      const toothLabel = checkup.labSelectedToothNo ? `#${checkup.labSelectedToothNo}` : (rows.length + unsavedList.length + 1);
+      unsavedList.push(`
+        <tr>
+          <td>${escapeHtml(toothLabel)}</td>
+          <td>Lab Task</td>
+          <td>${escapeHtml(condition)}</td>
+          <td>${escapeHtml(checkup.labSuggestedTreatment || checkup.labManualTreatment)}</td>
+        </tr>
+      `);
+    }
+  }
+
+  if (unsavedList.length > 0) {
+    rows.push(...unsavedList);
   }
 
   return rows;

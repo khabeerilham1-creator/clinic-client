@@ -7,6 +7,111 @@ import {
   todayDisplayValue,
 } from "../../utils/patientHelpers";
 
+const generateSequenceFromExam = (patient) => {
+  const checkup = patient?.checkup || {};
+  const soft = checkup.softTissueRecords || [];
+  const hard = checkup.hardTissueRecords || [];
+  const lab = checkup.labTaskRecords || [];
+
+  const items = [];
+
+  soft.forEach((r) => {
+    if (r.treatment || r.condition) {
+      items.push({
+        type: "soft",
+        procedure: r.treatment || r.condition,
+      });
+    }
+  });
+
+  hard.forEach((r) => {
+    if (r.treatment || r.condition) {
+      items.push({
+        type: "hard",
+        procedure: r.treatment || r.condition,
+        toothNo: r.toothNo,
+      });
+    }
+  });
+
+  lab.forEach((r) => {
+    if (r.treatment || r.condition) {
+      items.push({
+        type: "lab",
+        procedure: r.treatment || r.condition,
+        toothNo: r.toothNo,
+      });
+    }
+  });
+
+  const getWeight = (item) => {
+    const proc = String(item.procedure).toLowerCase();
+    
+    // 1. scaling polishing
+    if (proc.includes("scaling") || proc.includes("polishing") || proc.includes("planing")) {
+      return 1;
+    }
+    
+    // 2. rcts
+    if (proc.includes("rct") || proc.includes("root canal") || proc.includes("pulpotomy")) {
+      return 2;
+    }
+    
+    // 3. fillings
+    if (proc.includes("filling") || proc.includes("sealant") || proc.includes("composite")) {
+      return 3;
+    }
+    
+    // 4. lab task
+    if (
+      item.type === "lab" ||
+      proc.includes("crown") ||
+      proc.includes("bridge") ||
+      proc.includes("denture") ||
+      proc.includes("veneer") ||
+      proc.includes("post") ||
+      proc.includes("prosthetic")
+    ) {
+      return 4;
+    }
+    
+    // 6. surgical ext (check first to avoid matching simple ext)
+    if (proc.includes("surgical extraction") || proc.includes("surgical ext")) {
+      return 6;
+    }
+    
+    // 5. simple ext
+    if (proc.includes("extraction") || proc.includes("ext")) {
+      return 5;
+    }
+    
+    return 7;
+  };
+
+  items.sort((a, b) => getWeight(a) - getWeight(b));
+
+  if (items.length === 0) {
+    return [
+      {
+        visitNo: 1,
+        date: "",
+        time: "",
+        procedure: "",
+      },
+    ];
+  }
+
+  return items.map((item, index) => {
+    const suffix = item.toothNo ? ` (Tooth ${item.toothNo})` : "";
+    return {
+      visitNo: index + 1,
+      date: "",
+      time: "",
+      procedure: `${item.procedure}${suffix}`,
+    };
+  });
+};
+
 function PlannedSequence({
   patientData,
   setPatientData,
@@ -15,23 +120,25 @@ function PlannedSequence({
   const rows =
     patientData.plannedSequence || [];
 
+  const autoGenerateSequence = () => {
+    const generated = generateSequenceFromExam(patientData);
+    setPatientData((prev) => ({
+      ...prev,
+      plannedSequence: generated,
+    }));
+  };
+
   useEffect(() => {
+    const isSequenceEmpty =
+      rows.length === 0 ||
+      (rows.length === 1 && !rows[0].procedure && !rows[0].date && !rows[0].time);
 
-    if (rows.length === 0) {
-
+    if (isSequenceEmpty) {
+      const generated = generateSequenceFromExam(patientData);
       setPatientData((prev) => ({
         ...prev,
-
-        plannedSequence: [
-          {
-            visitNo: 1,
-            date: "",
-            time: "",
-            procedure: "",
-          },
-        ],
+        plannedSequence: generated,
       }));
-
     }
 
   }, []);
@@ -98,12 +205,20 @@ function PlannedSequence({
           Planned Sequence Treatment
         </h2>
 
-        <button
-          onClick={addRow}
-          className="bg-black text-white px-4 py-2 rounded-lg"
-        >
-          + Add Visit
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={autoGenerateSequence}
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg mr-2"
+          >
+            Auto-Generate from Exam
+          </button>
+          <button
+            onClick={addRow}
+            className="bg-black text-white px-4 py-2 rounded-lg"
+          >
+            + Add Visit
+          </button>
+        </div>
 
       </div>
 
