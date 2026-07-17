@@ -140,9 +140,16 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
         setPayables(payableArray(response.data));
       } else {
         const response = await api.get("/patients", {
-          params: { limit: 500, sort: "createdAt", order: -1 },
+          params: { limit: 1000, sort: "createdAt", order: -1 },
         });
-        setPatients(patientArray(response.data));
+        const allPatients = patientArray(response.data);
+        console.log("Fetched patients:", allPatients.length);
+        if (allPatients.length > 0) {
+          console.log("Sample patient:", allPatients[0]);
+          console.log("Sample patient invoice:", allPatients[0].invoice);
+          console.log("Sample patient ledger:", allPatients[0].accountLedger);
+        }
+        setPatients(allPatients);
       }
     } catch (requestError) {
       console.error(requestError);
@@ -157,18 +164,37 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
   };
 
   const receivableRows = useMemo(() => {
-    return patients
-      .map((patient) => ({
-        patient,
-        fileNo: regNo(patient),
-        name: patientName(patient),
-        department: patientDepartment(patient),
-        totalAmount: netAmount(patient),
-        paid: paymentsTotal(patient),
-        balance: balanceDue(patient),
-        group: receivableGroup(patient),
-      }))
-      .filter((row) => row.balance > 0)
+    const allRows = patients
+      .map((patient) => {
+        const total = netAmount(patient);
+        const paid = paymentsTotal(patient);
+        const balance = balanceDue(patient);
+        return {
+          patient,
+          fileNo: regNo(patient),
+          name: patientName(patient),
+          department: patientDepartment(patient),
+          totalAmount: total,
+          paid: paid,
+          balance: balance,
+          group: receivableGroup(patient),
+        };
+      });
+
+    console.log("Total patients processed:", allRows.length);
+    console.log("Patients with totalAmount > 0:", allRows.filter(row => row.totalAmount > 0).length);
+    console.log("Patients with balance > 0:", allRows.filter(row => row.balance > 0).length);
+    console.log("Sample balances:", allRows.slice(0, 5).map(row => ({
+      name: row.name,
+      total: row.totalAmount,
+      paid: row.paid,
+      balance: row.balance,
+      department: row.department
+    })));
+
+    // Show all patients with any amount for now to debug
+    return allRows
+      .filter((row) => row.totalAmount > 0 || row.paid > 0)
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [patients]);
 
