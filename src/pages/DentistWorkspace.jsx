@@ -3,6 +3,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import {
+  appointmentArray,
+  appointmentRequestParams,
+  filterManualAppointmentsForUser,
+  patientAppointmentSummary,
+} from "../utils/appointmentHelpers";
+import {
   activeShiftId,
   balanceDue,
   dentistProfileForUser,
@@ -15,7 +21,6 @@ import {
   patientArray,
   patientName,
   regNo,
-  upcomingVisits,
 } from "../utils/patientHelpers";
 
 const PAGE_COPY = {
@@ -52,6 +57,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
   const dentistName = dentistProfile.dentistName || user.name || "Dentist";
   const copy = PAGE_COPY[mode] || PAGE_COPY.patients;
   const [patients, setPatients] = useState([]);
+  const [manualAppointments, setManualAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -61,16 +67,23 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
       setError("");
 
       try {
-        const response = await api.get("/patients", {
-          params: { limit: 500, sort: "createdAt", order: -1, shift: activeShiftId() },
-        });
+        const [patientsResponse, appointmentsResponse] = await Promise.all([
+          api.get("/patients", {
+            params: { limit: 500, sort: "createdAt", order: -1, shift: activeShiftId() },
+          }),
+          api.get("/appointments", {
+            params: appointmentRequestParams(),
+          }),
+        ]);
 
-        const shiftPatients = filterPatientsForActiveShift(patientArray(response.data));
+        const shiftPatients = filterPatientsForActiveShift(patientArray(patientsResponse.data));
 
         setPatients(filterPatientsForDentist(shiftPatients, user));
+        setManualAppointments(filterManualAppointmentsForUser(appointmentArray(appointmentsResponse.data), user));
       } catch (requestError) {
         console.error(requestError);
         setPatients([]);
+        setManualAppointments([]);
         setError("");
       } finally {
         setLoading(false);
@@ -80,14 +93,20 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
     fetchPatients();
   }, []);
 
+  const patientSummaries = useMemo(
+    () => patients.map((patient) => ({ patient, summary: patientAppointmentSummary(patient, manualAppointments) })),
+    [patients, manualAppointments]
+  );
+
   const totals = useMemo(
     () => ({
       patients: patients.length,
-      ongoing: patients.filter((patient) => upcomingVisits(patient).length > 0).length,
-      completed: patients.filter((patient) => upcomingVisits(patient).length === 0).length,
+      ongoing: patientSummaries.filter(({ summary }) => summary.category === "ongoing").length,
+      completed: patientSummaries.filter(({ summary }) => summary.category === "completed").length,
+      toBeAppointed: patientSummaries.filter(({ summary }) => summary.category === "to-be-appointed").length,
       value: patients.reduce((sum, patient) => sum + netAmount(patient), 0),
     }),
-    [patients]
+    [patients, patientSummaries]
   );
 
   return (
@@ -124,7 +143,12 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
           <div className="metric-card gold-bordered">
             <div className="metric-label">Completed</div>
             <div className="metric-value">{loading ? "..." : totals.completed}</div>
-            <div className="metric-detail">No appointment pending</div>
+            <div className="metric-detail">Visits completed</div>
+          </div>
+          <div className="metric-card gold-bordered">
+            <div className="metric-label">To appoint</div>
+            <div className="metric-value">{loading ? "..." : totals.toBeAppointed}</div>
+            <div className="metric-detail">Plans missing date/time</div>
           </div>
           <div className="metric-card gold-bordered">
             <div className="metric-label">Treatment value</div>
@@ -157,7 +181,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
                     <td colSpan="6">No clients found.</td>
                   </tr>
                 )}
-                {patients.map((patient) => (
+                {patientSummaries.map(({ patient, summary }) => (
                   <tr key={patient._id || regNo(patient)}>
                     <td>
                       <div className="patient-cell">
@@ -170,8 +194,12 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
                     </td>
                     <td>{mobileNumber(patient)}</td>
                     <td>
-                      <span className={upcomingVisits(patient).length > 0 ? "pill warning" : "pill success"}>
-                        {upcomingVisits(patient).length > 0 ? "On going" : "Completed"}
+                      <span className={summary.category === "ongoing" ? "pill warning" : summary.category === "completed" ? "pill success" : "pill"}>
+                        {summary.category === "ongoing"
+                          ? "On going"
+                          : summary.category === "to-be-appointed"
+                            ? "To be appointed"
+                            : "Completed"}
                       </span>
                     </td>
                     <td>{formatCurrency(netAmount(patient))}</td>

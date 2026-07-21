@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
+import AppointmentDashboardModules from "../components/appointments/AppointmentDashboardModules";
 import Layout from "../components/Layout";
+import {
+  appointmentArray,
+  appointmentRequestParams,
+  appointmentTimeline,
+  filterManualAppointmentsForUser,
+} from "../utils/appointmentHelpers";
 import {
   balanceDue,
   activeShift,
@@ -17,7 +24,6 @@ import {
   patientName,
   parseLocalDate,
   regNo,
-  upcomingVisits,
 } from "../utils/patientHelpers";
 
 function StatCard({ label, value, detail, accent }) {
@@ -31,23 +37,10 @@ function StatCard({ label, value, detail, accent }) {
   );
 }
 
-const toDateKey = (value) => {
-  const date = parseLocalDate(value);
-
-  if (!date) {
-    return "";
-  }
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
 function Dashboard({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
   const [patients, setPatients] = useState([]);
+  const [manualAppointments, setManualAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const now = new Date();
@@ -62,25 +55,39 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     year: "numeric",
   });
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const response = await api.get("/patients", {
+  const fetchDashboard = async () => {
+    setLoading(true);
+
+    try {
+      const [patientsResponse, appointmentsResponse] = await Promise.all([
+        api.get("/patients", {
           params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
-        });
+        }),
+        api.get("/appointments", {
+          params: appointmentRequestParams(),
+        }),
+      ]);
 
-        setPatients(filterPatientsForActiveShift(patientArray(response.data)));
-      } catch (requestError) {
-        console.error(requestError);
-        setPatients([]);
-        setError("");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setPatients(filterPatientsForActiveShift(patientArray(patientsResponse.data)));
+      setManualAppointments(filterManualAppointmentsForUser(appointmentArray(appointmentsResponse.data)));
+    } catch (requestError) {
+      console.error(requestError);
+      setPatients([]);
+      setManualAppointments([]);
+      setError("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDashboard();
   }, []);
+
+  const allAppointments = useMemo(
+    () => appointmentTimeline(patients, manualAppointments),
+    [patients, manualAppointments]
+  );
 
   const metrics = useMemo(() => {
     const todayPatients = patients.filter((patient) => {
@@ -90,10 +97,9 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
 
     const totalRevenue = patients.reduce((sum, patient) => sum + invoiceTotal(patient), 0);
     const pendingBalance = patients.reduce((sum, patient) => sum + balanceDue(patient), 0);
-    const plannedVisits = patients.reduce(
-      (sum, patient) => sum + upcomingVisits(patient).length,
-      0
-    );
+    const plannedVisits = allAppointments.filter(
+      (appointment) => !["Done", "Cancelled", "Missed"].includes(appointment.status)
+    ).length;
 
     return {
       totalPatients: patients.length,
@@ -102,7 +108,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
       pendingBalance,
       plannedVisits,
     };
-  }, [patients, today]);
+  }, [patients, today, allAppointments]);
 
   const revenueYears = useMemo(() => {
     const years = patients
@@ -147,17 +153,13 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
   }, [patients, periodPatients, selectedMonth, selectedYear]);
 
   const todayAppointments = useMemo(() => {
-    return patients
-      .flatMap((patient) =>
-        upcomingVisits(patient)
-          .filter((visit) => toDateKey(visit.date) === today)
-          .map((visit) => ({
-            patient,
-            visit,
-          }))
+    return allAppointments
+      .filter(
+        (appointment) =>
+          appointment.dateKey === today && !["Done", "Cancelled", "Missed"].includes(appointment.status)
       )
       .slice(0, 6);
-  }, [patients, today]);
+  }, [allAppointments, today]);
 
   const dueAccounts = patients
     .filter((patient) => balanceDue(patient) > 0)
@@ -192,6 +194,14 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
         </section>
 
         {error && <div className="notice danger">{error}</div>}
+
+        <AppointmentDashboardModules
+          patients={patients}
+          manualAppointments={manualAppointments}
+          loading={loading}
+          onAppointmentCreated={fetchDashboard}
+          onOpenAppointments={() => setActivePage("appointments")}
+        />
 
         <section className="toolbar-panel revenue-filter">
           <div>
@@ -303,20 +313,20 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
 
               {!loading && todayAppointments.length === 0 && (
                 <div className="empty-state">
-                  No appointments today. Use planned sequence dates to fill this schedule.
+                  No appointments today. Add manual appointments or planned sequence dates to fill this schedule.
                 </div>
               )}
 
-              {todayAppointments.map(({ patient, visit }, index) => (
-                <div className="appointment-item" key={`${regNo(patient)}-${index}`}>
-                  <div className="appointment-time">{visit.time || "Today"}</div>
+              {todayAppointments.map((appointment, index) => (
+                <div className="appointment-item" key={`${appointment.source}-${appointment.id}-${index}`}>
+                  <div className="appointment-time">{appointment.time || "Today"}</div>
                   <div className="appointment-main">
-                    <strong>{patientName(patient)}</strong>
-                    <span>{visit.procedure || visit.treatment || "Treatment visit"}</span>
+                    <strong>{appointment.clientName || appointment.patientName}</strong>
+                    <span>{appointment.purpose || appointment.procedure || "Treatment visit"}</span>
                   </div>
                   <div className="appointment-meta">
-                    <span>{mobileNumber(patient)}</span>
-                    <span>Visit {visit.visitNo || index + 1}</span>
+                    <span>{appointment.mobileNumber}</span>
+                    <span>{appointment.source === "manual" ? "Manual" : `Visit ${appointment.visitNo || index + 1}`}</span>
                   </div>
                 </div>
               ))}

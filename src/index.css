@@ -1065,6 +1065,89 @@ textarea:focus {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.appointment-modules {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(320px, 0.9fr);
+  gap: 18px;
+  margin: 18px 0;
+  align-items: start;
+}
+
+.appointment-module {
+  min-height: 100%;
+}
+
+.appointment-mini-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appointment-mini {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.appointment-mini.manual {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: var(--blue-soft);
+}
+
+.appointment-mini-main {
+  min-width: 0;
+}
+
+.appointment-mini-main strong,
+.appointment-mini-main small,
+.table-subtext {
+  display: block;
+}
+
+.appointment-mini-main small,
+.table-subtext {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.manual-appointment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appointment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manual-appointment-form.compact .appointment-form-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.compact-notice {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.table-select {
+  min-height: 36px;
+  min-width: 130px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 800;
+}
+
 .empty-state {
   padding: 30px;
   border: 1px dashed var(--line-strong);
@@ -2339,6 +2422,7 @@ textarea:focus {
   .metrics-grid.three,
   .record-summary,
   .role-action-grid,
+  .appointment-modules,
   .account-status-summary,
   .sheet-bar,
   .dashboard-grid,
@@ -2461,6 +2545,7 @@ textarea:focus {
   .metrics-grid.three,
   .record-summary,
   .role-action-grid,
+  .appointment-modules,
   .account-status-summary,
   .sheet-bar,
   .dashboard-grid,
@@ -2491,7 +2576,10 @@ textarea:focus {
   }
 
   .appointment-item,
-  .schedule-card {
+  .schedule-card,
+  .appointment-mini,
+  .appointment-form-grid,
+  .manual-appointment-form.compact .appointment-form-grid {
     grid-template-columns: 1fr;
   }
 

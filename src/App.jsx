@@ -18,6 +18,7 @@ import DentistWorkspace from "./pages/DentistWorkspace";
 import AdminLogs from "./pages/AdminLogs";
 import AdminFinance from "./pages/AdminFinance";
 import DailyExpense from "./pages/DailyExpense";
+import Notifications from "./pages/Notifications";
 
 const ROLE_PAGES = {
   admin: [
@@ -32,6 +33,9 @@ const ROLE_PAGES = {
     "account-receivable",
     "inventory",
     "expenses",
+    "ongoing-patients",
+    "completed-patients",
+    "to-be-appointed",
     "logs",
     "notifications",
   ],
@@ -43,6 +47,10 @@ const ROLE_PAGES = {
     "dentist-salary",
     "dentist-percentage",
     "dentist-referral",
+    "appointments",
+    "ongoing-patients",
+    "completed-patients",
+    "to-be-appointed",
   ],
   doctor: [
     "dashboard",
@@ -52,6 +60,10 @@ const ROLE_PAGES = {
     "dentist-salary",
     "dentist-percentage",
     "dentist-referral",
+    "appointments",
+    "ongoing-patients",
+    "completed-patients",
+    "to-be-appointed",
   ],
   receptionist: [
     "dashboard",
@@ -66,6 +78,7 @@ const ROLE_PAGES = {
     "daily-expense",
     "ongoing-patients",
     "completed-patients",
+    "to-be-appointed",
     "official-contact",
   ],
 };
@@ -225,13 +238,23 @@ function App() {
     );
   }
 
-  if (currentPage === "ongoing-patients" || currentPage === "completed-patients") {
+  if (
+    currentPage === "ongoing-patients" ||
+    currentPage === "completed-patients" ||
+    currentPage === "to-be-appointed"
+  ) {
     return (
       <PatientStatusPage
         activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
-        mode={currentPage === "ongoing-patients" ? "ongoing" : "completed"}
+        mode={
+          currentPage === "ongoing-patients"
+            ? "ongoing"
+            : currentPage === "completed-patients"
+              ? "completed"
+              : "to-be-appointed"
+        }
       />
     );
   }

@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
+import AppointmentDashboardModules from "../components/appointments/AppointmentDashboardModules";
 import Layout from "../components/Layout";
+import {
+  appointmentArray,
+  appointmentRequestParams,
+  filterManualAppointmentsForUser,
+  patientAppointmentSummary,
+} from "../utils/appointmentHelpers";
 import {
   activeShift,
   activeShiftId,
@@ -17,7 +24,6 @@ import {
   patientArray,
   patientName,
   regNo,
-  upcomingVisits,
 } from "../utils/patientHelpers";
 
 function RoleAction({ short, title, detail, onClick, tone = "blue" }) {
@@ -30,8 +36,18 @@ function RoleAction({ short, title, detail, onClick, tone = "blue" }) {
   );
 }
 
-function patientStatus(patient) {
-  return upcomingVisits(patient).length > 0 ? "On going" : "Completed";
+function patientStatus(patient, manualAppointments) {
+  const category = patientAppointmentSummary(patient, manualAppointments).category;
+
+  if (category === "ongoing") {
+    return "On going";
+  }
+
+  if (category === "to-be-appointed") {
+    return "To be appointed";
+  }
+
+  return "Completed";
 }
 
 function RoleDashboard({ activePage, setActivePage, handleLogout }) {
@@ -39,6 +55,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const role = sessionStorage.getItem("role") || user.role || "receptionist";
   const [patients, setPatients] = useState([]);
+  const [manualAppointments, setManualAppointments] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,22 +74,27 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
       setError("");
 
       try {
-        const requests = [
+        const expensesRequest = ["dentist", "doctor"].includes(role)
+          ? api.get("/expenses", { params: { category: "team", limit: 300 } })
+          : Promise.resolve({ data: [] });
+
+        const [patientsResponse, appointmentsResponse, expensesResponse] = await Promise.all([
           api.get("/patients", {
             params: { limit: 300, sort: "createdAt", order: -1, shift: activeShiftId() },
           }),
-        ];
+          api.get("/appointments", {
+            params: appointmentRequestParams(),
+          }),
+          expensesRequest,
+        ]);
 
-        if (["dentist", "doctor"].includes(role)) {
-          requests.push(api.get("/expenses", { params: { category: "team", limit: 300 } }));
-        }
-
-        const [patientsResponse, expensesResponse] = await Promise.all(requests);
         setPatients(filterPatientsForActiveShift(patientArray(patientsResponse.data)));
+        setManualAppointments(filterManualAppointmentsForUser(appointmentArray(appointmentsResponse.data)));
         setExpenses(expenseArray(expensesResponse?.data));
       } catch (requestError) {
         console.error(requestError);
         setPatients([]);
+        setManualAppointments([]);
         setExpenses([]);
         setError("");
       } finally {
@@ -83,20 +105,23 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
     fetchData();
   }, [role]);
 
-  const ongoingPatients = useMemo(
-    () => patients.filter((patient) => upcomingVisits(patient).length > 0),
-    [patients]
+  const patientSummaries = useMemo(
+    () => patients.map((patient) => ({ patient, summary: patientAppointmentSummary(patient, manualAppointments) })),
+    [patients, manualAppointments]
   );
-  const completedPatients = useMemo(
-    () => patients.filter((patient) => upcomingVisits(patient).length === 0),
-    [patients]
-  );
+  const ongoingPatients = patientSummaries.filter(({ summary }) => summary.category === "ongoing");
+  const completedPatients = patientSummaries.filter(({ summary }) => summary.category === "completed");
+  const toBeAppointedPatients = patientSummaries.filter(({ summary }) => summary.category === "to-be-appointed");
 
   const dentistProfile = dentistProfileForUser({ ...user, role });
   const dentistName = dentistProfile.dentistName || user.name || "Dentist";
   const dentistPatients = useMemo(
     () => filterPatientsForDentist(patients, { ...user, role }),
     [patients, user.dentistId, user.dentistName, user.doctorName, user.name, role]
+  );
+  const dentistPatientSummaries = useMemo(
+    () => dentistPatients.map((patient) => ({ patient, summary: patientAppointmentSummary(patient, manualAppointments) })),
+    [dentistPatients, manualAppointments]
   );
 
   const dentistSalary = useMemo(() => {
@@ -105,6 +130,18 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
 
     return Number(match?.netSalary || match?.basicSalary || 0);
   }, [expenses, dentistName]);
+
+  const refreshManualAppointments = async () => {
+    try {
+      const response = await api.get("/appointments", {
+        params: appointmentRequestParams(),
+      });
+      setManualAppointments(filterManualAppointmentsForUser(appointmentArray(response.data)));
+    } catch (requestError) {
+      console.error(requestError);
+      setError("Appointments could not be refreshed.");
+    }
+  };
 
   if (["dentist", "doctor"].includes(role)) {
     return (
@@ -131,6 +168,14 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
 
           {error && <div className="notice danger">{error}</div>}
 
+          <AppointmentDashboardModules
+            patients={dentistPatients}
+            manualAppointments={manualAppointments}
+            loading={loading}
+            onAppointmentCreated={refreshManualAppointments}
+            onOpenAppointments={() => setActivePage("appointments")}
+          />
+
           <section className="metrics-grid">
             <div className="metric-card gold-bordered">
               <div className="metric-accent blue" />
@@ -142,17 +187,25 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
               <div className="metric-accent green" />
               <div className="metric-label">On going</div>
               <div className="metric-value">
-                {loading ? "..." : dentistPatients.filter((patient) => upcomingVisits(patient).length > 0).length}
+                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.category === "ongoing").length}
               </div>
               <div className="metric-detail">Clients with appointments</div>
+            </div>
+            <div className="metric-card gold-bordered">
+              <div className="metric-accent gold" />
+              <div className="metric-label">To appoint</div>
+              <div className="metric-value">
+                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.category === "to-be-appointed").length}
+              </div>
+              <div className="metric-detail">Plans missing date/time</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent rose" />
               <div className="metric-label">Completed</div>
               <div className="metric-value">
-                {loading ? "..." : dentistPatients.filter((patient) => upcomingVisits(patient).length === 0).length}
+                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.category === "completed").length}
               </div>
-              <div className="metric-detail">No appointment pending</div>
+              <div className="metric-detail">Visits completed</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent gold" />
@@ -206,8 +259,8 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
                         </td>
                         <td>{mobileNumber(patient)}</td>
                         <td>
-                          <span className={patientStatus(patient) === "On going" ? "pill warning" : "pill success"}>
-                            {patientStatus(patient)}
+                          <span className={patientStatus(patient, manualAppointments) === "On going" ? "pill warning" : "pill success"}>
+                            {patientStatus(patient, manualAppointments)}
                           </span>
                         </td>
                         <td>{formatCurrency(balanceDue(patient))}</td>
@@ -258,6 +311,14 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
 
         {error && <div className="notice danger">{error}</div>}
 
+        <AppointmentDashboardModules
+          patients={patients}
+          manualAppointments={manualAppointments}
+          loading={loading}
+          onAppointmentCreated={refreshManualAppointments}
+          onOpenAppointments={() => setActivePage("appointments")}
+        />
+
         <section className="role-action-grid">
           <RoleAction
             short="+"
@@ -292,14 +353,23 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           <RoleAction
             short="O"
             title="On Going Cases"
+            detail={`${ongoingPatients.length} with appointments`}
             tone="blue"
             onClick={() => setActivePage("ongoing-patients")}
           />
           <RoleAction
             short="C"
             title="Completed Cases"
+            detail={`${completedPatients.length} completed`}
             tone="gold"
             onClick={() => setActivePage("completed-patients")}
+          />
+          <RoleAction
+            short="TA"
+            title="To Be Appointed"
+            detail={`${toBeAppointedPatients.length} waiting for date/time`}
+            tone="cyan"
+            onClick={() => setActivePage("to-be-appointed")}
           />
           <RoleAction
             short="AR"
