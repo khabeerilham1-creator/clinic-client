@@ -1196,6 +1196,150 @@ textarea:focus {
   display: none;
 }
 
+.paper-report-panel {
+  background: #fff;
+}
+
+.paper-ledger-sheet,
+.ledger-sheet {
+  max-width: 980px;
+  margin: 0 auto;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.paper-title-box,
+.ledger-sheet-title {
+  width: min(760px, 100%);
+  margin: 0 auto 24px;
+  padding: 18px 20px;
+  border: 2px solid #222;
+  color: #111;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.paper-title-box span,
+.ledger-sheet-subtitle {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.paper-ledger-table,
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #111;
+  table-layout: fixed;
+}
+
+.paper-ledger-table th,
+.paper-ledger-table td,
+.ledger-table th,
+.ledger-table td {
+  height: 34px;
+  padding: 5px 8px;
+  border: 2px solid #222;
+  background: #fff;
+  color: #111;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.paper-ledger-table th,
+.ledger-table th {
+  font-weight: 700;
+}
+
+.paper-ledger-table td:nth-child(3),
+.ledger-table td:nth-child(3) {
+  text-align: center;
+}
+
+.paper-ledger-table .amount,
+.ledger-table .amount,
+.paper-ledger-table .center,
+.ledger-table .center {
+  text-align: center;
+}
+
+.group-header-row td {
+  height: 30px;
+  background: #f3f3f3;
+  font-weight: 700;
+  text-align: center;
+}
+
+.total-row td {
+  font-weight: 700;
+}
+
+.total-box,
+.paper-floating-total,
+.paper-total-row {
+  border: 2px solid #222;
+  background: #fff;
+  color: #111;
+}
+
+.total-box {
+  display: inline-block;
+  min-width: 150px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.paper-floating-total {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  width: min(760px, 100%);
+  margin: 0 0 22px auto;
+  min-height: 48px;
+}
+
+.paper-floating-total span,
+.paper-floating-total strong {
+  display: grid;
+  place-items: center;
+  padding: 8px 12px;
+  font-size: 16px;
+}
+
+.paper-floating-total strong {
+  border-left: 2px solid #222;
+}
+
+.paper-total-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  width: min(760px, 100%);
+  min-height: 42px;
+  margin: 18px 0 0;
+}
+
+.paper-total-row span,
+.paper-total-row strong {
+  display: grid;
+  place-items: center;
+  padding: 8px 12px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.paper-total-row strong {
+  border-left: 2px solid #222;
+}
+
+.ledger-expense-form {
+  grid-template-columns: 170px minmax(260px, 1fr) 150px 150px auto auto;
+}
+
 .payment-panel.inventory-form,
 .payment-panel.expense-form {
   grid-template-columns: repeat(5, minmax(150px, 1fr)) auto auto;

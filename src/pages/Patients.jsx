@@ -231,6 +231,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   };
 
   const handleSave = async () => {
+    if (loading) {
+      return;
+    }
+
     if (!data.biography?.patientName?.trim()) {
       notify("Client name is required before saving.", "danger");
       return;
@@ -283,6 +287,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   };
 
   const handleUpdate = async () => {
+    if (loading) {
+      return;
+    }
+
     if (!data._id) {
       notify("No patient ID for update.", "danger");
       return;
@@ -372,7 +380,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     >
       <div className="patient-entry-shell">
         <div className="topbar">
-          <button className="btn btn-ghost btn-icon no-print" onClick={() => setActivePage("dashboard")}>
+          <button type="button" className="btn btn-ghost btn-icon no-print" onClick={() => setActivePage("dashboard")}>
             Back
           </button>
 
@@ -401,13 +409,13 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
           <div style={{ flex: 1 }} />
 
-          <button className="btn btn-ghost no-print" onClick={handleClear}>
+          <button type="button" className="btn btn-ghost no-print" onClick={handleClear}>
             Clear
           </button>
-          <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, printModeForCurrentTab())}>
+          <button type="button" className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, printModeForCurrentTab())}>
             Print Section
           </button>
-          <button className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, "invoice")}>
+          <button type="button" className="btn no-print" onClick={() => printPatientFile(dataWithLivePayment(), toothChartImg, "invoice")}>
             Invoice Print
           </button>
         </div>
@@ -434,6 +442,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             {activeTabs.map((item) => (
               <button
                 key={item.id}
+                type="button"
                 className={`tab-item${tab === item.id ? " active" : ""}`}
                 onClick={() => goToTab(item.id)}
               >
@@ -471,6 +480,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
           <div className="form-pager no-print">
             <button
+              type="button"
               className="btn"
               disabled={tabIndex === 0}
               onClick={() => goToTab(activeTabs[tabIndex - 1].id)}
@@ -478,6 +488,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
               Previous
             </button>
             <button
+              type="button"
               className="btn btn-primary"
               disabled={tabIndex === activeTabs.length - 1}
               onClick={() => goToTab(activeTabs[tabIndex + 1].id)}
@@ -505,11 +516,11 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           </div>
 
           {data.isEditing ? (
-            <button className="btn btn-success btn-lg" onClick={handleUpdate} disabled={loading}>
+            <button type="button" className="btn btn-success btn-lg" onClick={handleUpdate} disabled={loading}>
               {loading ? <><div className="spinner" /> Updating...</> : "Update Client"}
             </button>
           ) : (
-            <button className="btn btn-navy btn-lg" onClick={handleSave} disabled={loading}>
+            <button type="button" className="btn btn-navy btn-lg" onClick={handleSave} disabled={loading}>
               {loading ? <><div className="spinner" /> Saving...</> : "Save Client"}
             </button>
           )}

@@ -77,24 +77,28 @@ const patientDepartment = (patient) => {
   return "General";
 };
 
-const receivableGroup = (patient) => {
+const receivableGroup = (patient, month, year) => {
   const department = patientDepartment(patient);
-
-  if (department === "Ortho") {
-    return "Ortho-Dontic Patient";
-  }
-
+  const recordDate = patient?.biography?.date || patient?.createdAt || patient?.updatedAt;
   const visits = patient?.plannedSequence || [];
   const hasFutureVisits = visits.some((visit) => {
     const status = String(visit?.status || "").toLowerCase();
     return status !== "done" && status !== "completed";
   });
 
+  if (department === "Ortho") {
+    return "Ortho-Dontic Patient";
+  }
+
   if (hasFutureVisits) {
     return "Patient With Continue Treatment";
   }
 
-  return "General Receivables";
+  if (recordInPeriod({ date: recordDate }, month, year)) {
+    return "Fresh Receivables";
+  }
+
+  return "Old Receivables";
 };
 
 function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receivable" }) {
@@ -142,14 +146,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
         const response = await api.get("/patients", {
           params: { limit: 1000, sort: "createdAt", order: -1 },
         });
-        const allPatients = patientArray(response.data);
-        console.log("Fetched patients:", allPatients.length);
-        if (allPatients.length > 0) {
-          console.log("Sample patient:", allPatients[0]);
-          console.log("Sample patient invoice:", allPatients[0].invoice);
-          console.log("Sample patient ledger:", allPatients[0].accountLedger);
-        }
-        setPatients(allPatients);
+        setPatients(patientArray(response.data));
       }
     } catch (requestError) {
       console.error(requestError);
@@ -164,7 +161,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
   };
 
   const receivableRows = useMemo(() => {
-    const allRows = patients
+    return patients
       .map((patient) => {
         const total = netAmount(patient);
         const paid = paymentsTotal(patient);
@@ -177,24 +174,12 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
           totalAmount: total,
           paid: paid,
           balance: balance,
-          group: receivableGroup(patient),
+          group: receivableGroup(patient, periodMonth, periodYear),
         };
-      });
-
-    console.log("Total patients processed:", allRows.length);
-    console.log("Patients with totalAmount > 0:", allRows.filter(row => row.totalAmount > 0).length);
-    console.log("Patients with balance > 0:", allRows.filter(row => row.balance > 0).length);
-    console.log("Sample balances:", allRows.slice(0, 5).map(row => ({
-      name: row.name,
-      total: row.totalAmount,
-      paid: row.paid,
-      balance: row.balance,
-      department: row.department
-    })));
-
-    // Show ALL patients to see if any data exists
-    return allRows.sort((a, b) => a.name.localeCompare(b.name));
-  }, [patients]);
+      })
+      .filter((row) => row.balance > 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [patients, periodMonth, periodYear]);
 
   const groupedReceivables = useMemo(() => {
     const groups = new Map();
@@ -216,6 +201,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
   );
 
   const totalReceivable = receivableRows.reduce((sum, row) => sum + row.balance, 0);
+  const totalPayable = payableRows.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
 
   const showMessage = (text, type = "success") => {
     setMessage({ text, type });
@@ -480,8 +466,12 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
               <div className="ledger-sheet-title">
                 Account Payable ({periodLabel(periodMonth, periodYear)})
               </div>
+              <div className="paper-floating-total">
+                <span>Total A/P Of {MONTH_SHORT(periodMonth)}</span>
+                <strong>{totalPayable}</strong>
+              </div>
               <div className="data-table-wrap">
-                <table className="ledger-table full-width-table">
+                <table className="paper-ledger-table full-width-table">
                   <thead>
                     <tr>
                       <th>S.No</th>
@@ -509,7 +499,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
                       <tr key={entry._id}>
                         <td className="center">{index + 1}</td>
                         <td>{entry.to}</td>
-                        <td className="amount">{formatCurrency(entry.amount)}</td>
+                        <td className="amount">{Number(entry.amount || 0)}</td>
                         <td>{entry.description || "-"}</td>
                         <td>{entry.status || "Un paid"}</td>
                         <td>
@@ -531,7 +521,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
                 Account Receivables ({periodLabel(periodMonth, periodYear)})
               </div>
               <div className="data-table-wrap">
-                <table className="ledger-table full-width-table">
+                <table className="paper-ledger-table full-width-table">
                   <thead>
                     <tr>
                       <th>S.No</th>
@@ -559,11 +549,9 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
 
                     {groupedReceivables.map(([groupName, rows]) => (
                       <React.Fragment key={groupName}>
-                        {groupName !== "General Receivables" && (
-                          <tr className="group-header-row">
-                            <td colSpan="8">{groupName}</td>
-                          </tr>
-                        )}
+                        <tr className="group-header-row">
+                          <td colSpan="8">{groupName}</td>
+                        </tr>
                         {rows.map((row) => {
                           serial += 1;
                           const currentSerial = serial;
@@ -574,9 +562,9 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
                               <td>{row.fileNo || "-"}</td>
                               <td>{row.name}</td>
                               <td>{row.department}</td>
-                              <td className="amount">{formatCurrency(row.totalAmount)}</td>
-                              <td className="amount">{formatCurrency(row.paid)}</td>
-                              <td className="amount">{formatCurrency(row.balance)}</td>
+                              <td className="amount">{Number(row.totalAmount || 0)}</td>
+                              <td className="amount">{Number(row.paid || 0)}</td>
+                              <td className="amount">{Number(row.balance || 0)}</td>
                               <td>
                                 <ReportActionButtons
                                   onPrint={() => printReceivableEntry(row, currentSerial - 1)}
@@ -595,7 +583,7 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
                         <span className="total-box">Total A/R Of {MONTH_SHORT(periodMonth)}</span>
                       </td>
                       <td className="amount">
-                        <span className="total-box">{formatCurrency(totalReceivable)}</span>
+                        <span className="total-box">{totalReceivable}</span>
                       </td>
                       <td className="no-print" />
                     </tr>

@@ -19,6 +19,7 @@ import AdminLogs from "./pages/AdminLogs";
 import AdminFinance from "./pages/AdminFinance";
 import DailyExpense from "./pages/DailyExpense";
 import Notifications from "./pages/Notifications";
+import LedgerExpensePage from "./pages/LedgerExpensePage";
 
 const ROLE_PAGES = {
   admin: [
@@ -215,6 +216,18 @@ function App() {
       />
     );
 
+  }
+
+  if (currentPage === "maintenance" || currentPage === "refurbishing") {
+    return (
+      <LedgerExpensePage
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+        category={currentPage}
+        title={currentPage === "maintenance" ? "Maintainance Expense" : "Refurbishing Expense"}
+      />
+    );
   }
 
   if (PLACEHOLDER_PAGES[currentPage] && currentPage !== "daily-expense") {
