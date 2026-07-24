@@ -69,7 +69,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
       try {
         const [patientsResponse, appointmentsResponse] = await Promise.all([
           api.get("/patients", {
-            params: { limit: 500, sort: "createdAt", order: -1, shift: activeShiftId() },
+            params: { limit: 1000, sort: "createdAt", order: -1, shift: activeShiftId() },
           }),
           api.get("/appointments", {
             params: appointmentRequestParams(),

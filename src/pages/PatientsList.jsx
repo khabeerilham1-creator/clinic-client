@@ -11,6 +11,7 @@ import {
   activeShiftId,
   balanceDue,
   bio,
+  dateKey,
   discountAmount,
   filterPatientsForActiveShift,
   formatDateDisplay,
@@ -20,6 +21,7 @@ import {
   mobileNumber,
   patientArray,
   patientName,
+  patientRecordDate,
   plannedVisitStatus,
   regNo,
 } from "../utils/patientHelpers";
@@ -43,7 +45,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
     try {
       const response = await api.get("/patients", {
-        params: { limit: 100, sort: "createdAt", order: -1, shift: activeShiftId() },
+        params: { limit: 1000, sort: "createdAt", order: -1, shift: activeShiftId() },
       });
 
       setPatients(filterPatientsForActiveShift(patientArray(response.data)));
@@ -59,20 +61,30 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
   const filteredPatients = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return patients.filter((patient) => {
-      const patientBio = bio(patient);
-      const matchesQuery =
-        !query ||
-        patientName(patient).toLowerCase().includes(query) ||
-        regNo(patient).toLowerCase().includes(query) ||
-        mobileNumber(patient).toLowerCase().includes(query);
+    return patients
+      .filter((patient) => {
+        const patientBio = bio(patient);
+        const matchesQuery =
+          !query ||
+          patientName(patient).toLowerCase().includes(query) ||
+          regNo(patient).toLowerCase().includes(query) ||
+          mobileNumber(patient).toLowerCase().includes(query);
 
-      const matchesCategory =
-        category === "all" ||
-        normalizeCategoryKey(patientBio.category) === category;
+        const matchesCategory =
+          category === "all" ||
+          normalizeCategoryKey(patientBio.category) === category;
 
-      return matchesQuery && matchesCategory;
-    });
+        return matchesQuery && matchesCategory;
+      })
+      .sort((a, b) => {
+        const dateCompare = String(dateKey(patientRecordDate(b))).localeCompare(String(dateKey(patientRecordDate(a))));
+
+        if (dateCompare) {
+          return dateCompare;
+        }
+
+        return String(regNo(b)).localeCompare(String(regNo(a)), undefined, { numeric: true });
+      });
   }, [patients, search, category]);
 
   const totals = useMemo(() => {

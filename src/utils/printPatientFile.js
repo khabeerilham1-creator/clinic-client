@@ -374,7 +374,7 @@ const fullDenturePage = (patient) => {
 
 const implantCommencementPage = (patient) => `
   <section class="specialty-page">
-    <h1>Implant Commencement Sheet</h1>
+    <h1>Implant Assessment File</h1>
     ${specialtyBioGrid(patient)}
     <div class="blank-implant"></div>
   </section>

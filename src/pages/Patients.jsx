@@ -65,7 +65,7 @@ const TABS = [
 
 const SHEETS = [
   { id: "routine", label: "Routine Entry" },
-  { id: "implant", label: "Implant Commencement Sheet" },
+  { id: "implant", label: "Implant Assessment File" },
   { id: "orthodontic", label: "Orthodontic Assessment Sheet" },
   { id: "fullDenture", label: "Full Denture Sheet" },
 ];

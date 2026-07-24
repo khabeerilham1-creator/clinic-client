@@ -7,7 +7,8 @@ const NAV_ITEMS = [
   { page: "patients", label: "New Client Entry", short: "+", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
   { page: "patients-list", label: "Registered Client", short: "R", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "appointments", label: "Appointments", short: "A", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "lab-follow-up", label: "Lab Cases Follow Up", short: "L", section: "Receptionist", roles: ["receptionist"] },
+  { page: "messenger", label: "Messenger", short: "MS", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
+  { page: "lab-follow-up", label: "Lab Cases Follow Up", short: "L", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "inventory-status", label: "Inventory Status", short: "I", section: "Receptionist", roles: ["receptionist"] },
   { page: "maintenance", label: "Maintenance", short: "M", section: "Receptionist", roles: ["receptionist"] },
   { page: "refurbishing", label: "Refurbishing", short: "RF", section: "Receptionist", roles: ["receptionist"] },
@@ -29,7 +30,7 @@ const NAV_ITEMS = [
   { page: "expenses", label: "Expenses", short: "E", section: "Finance", roles: ["admin"] },
   { page: "inventory", label: "Inventory", short: "I", section: "Operations", roles: ["admin"] },
   { page: "logs", label: "Logs", short: "LG", section: "Admin", roles: ["admin"] },
-  { page: "notifications", label: "Notifications Alerts", short: "N", section: "Admin", roles: ["admin"] },
+  { page: "notifications", label: "Notifications Alerts", short: "N", section: "Admin", roles: ["admin", "receptionist", "dentist", "doctor"] },
 ];
 
 function Layout({ children, activePage, setActivePage, user, handleLogout }) {

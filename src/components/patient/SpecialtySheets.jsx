@@ -141,11 +141,11 @@ export function ImplantCommencementSheet({ patientData, setPatientData }) {
     <div className="specialty-sheet printable-report">
       <div className="panel-heading">
         <div>
-          <h2>Implant Commencement Sheet</h2>
+          <h2>Implant Assessment File</h2>
         </div>
       </div>
       <BioDataGrid patientData={patientData} setPatientData={setPatientData} />
-      <section className="sheet-section implant-blank-section" aria-label="Implant commencement sheet" />
+      <section className="sheet-section implant-blank-section" aria-label="Implant assessment file" />
     </div>
   );
 }

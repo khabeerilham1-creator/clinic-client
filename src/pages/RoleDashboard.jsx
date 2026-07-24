@@ -75,12 +75,12 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
 
       try {
         const expensesRequest = ["dentist", "doctor"].includes(role)
-          ? api.get("/expenses", { params: { category: "team", limit: 300 } })
+          ? api.get("/expenses", { params: { category: "team", limit: 1000 } })
           : Promise.resolve({ data: [] });
 
         const [patientsResponse, appointmentsResponse, expensesResponse] = await Promise.all([
           api.get("/patients", {
-            params: { limit: 300, sort: "createdAt", order: -1, shift: activeShiftId() },
+            params: { limit: 1000, sort: "createdAt", order: -1, shift: activeShiftId() },
           }),
           api.get("/appointments", {
             params: appointmentRequestParams(),

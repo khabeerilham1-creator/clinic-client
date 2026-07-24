@@ -19,6 +19,8 @@ import AdminLogs from "./pages/AdminLogs";
 import AdminFinance from "./pages/AdminFinance";
 import DailyExpense from "./pages/DailyExpense";
 import Notifications from "./pages/Notifications";
+import Messenger from "./pages/Messenger";
+import LabFollowUp from "./pages/LabFollowUp";
 import LedgerExpensePage from "./pages/LedgerExpensePage";
 
 const ROLE_PAGES = {
@@ -39,6 +41,10 @@ const ROLE_PAGES = {
     "to-be-appointed",
     "logs",
     "notifications",
+    "messenger",
+    "lab-follow-up",
+
+
   ],
   dentist: [
     "dashboard",
@@ -52,6 +58,10 @@ const ROLE_PAGES = {
     "ongoing-patients",
     "completed-patients",
     "to-be-appointed",
+    "notifications",
+    "messenger",
+
+
   ],
   doctor: [
     "dashboard",
@@ -65,6 +75,10 @@ const ROLE_PAGES = {
     "ongoing-patients",
     "completed-patients",
     "to-be-appointed",
+    "notifications",
+    "messenger",
+
+
   ],
   receptionist: [
     "dashboard",
@@ -81,6 +95,10 @@ const ROLE_PAGES = {
     "completed-patients",
     "to-be-appointed",
     "official-contact",
+    "notifications",
+    "messenger",
+
+
   ],
 };
 
@@ -216,6 +234,27 @@ function App() {
       />
     );
 
+  }
+
+
+  if (currentPage === "lab-follow-up") {
+    return (
+      <LabFollowUp
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "messenger") {
+    return (
+      <Messenger
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
   }
 
   if (currentPage === "maintenance" || currentPage === "refurbishing") {

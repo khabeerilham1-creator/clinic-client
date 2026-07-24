@@ -305,25 +305,21 @@ export const patientAppointmentSummary = (patient, manualAppointments = []) => {
     .filter((appointment) => manualAppointmentMatchesPatient(appointment, patient));
   const activeManual = matchingManual.filter(isActiveAppointment);
   const completedManual = matchingManual.filter((appointment) => appointment.status === "Done");
-  const needsAppointment =
-    plannedMissingSchedule.length > 0 ||
-    (plannedRows.length === 0 && activeManual.length === 0 && completedManual.length === 0);
+  const needsAppointment = plannedMissingSchedule.length > 0;
 
-  let category = "";
+  let category = "completed";
 
   if (plannedWithDateTime.length > 0 || activeManual.length > 0) {
     category = "ongoing";
   } else if (needsAppointment) {
     category = "to-be-appointed";
-  } else if (plannedCompleted.length > 0 || completedManual.length > 0) {
-    category = "completed";
   }
 
   return {
     category,
     scheduledCount: plannedWithDateTime.length + activeManual.length,
     completedCount: plannedCompleted.length + completedManual.length,
-    missingCount: plannedMissingSchedule.length || (plannedRows.length === 0 ? 1 : 0),
+    missingCount: plannedMissingSchedule.length,
     manualCount: matchingManual.length,
     nextAppointment: [...plannedWithDateTime, ...activeManual].sort((a, b) =>
       `${a.dateKey} ${a.time}`.localeCompare(`${b.dateKey} ${b.time}`)

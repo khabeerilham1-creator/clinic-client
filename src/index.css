@@ -3313,3 +3313,100 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Messenger and paper follow-up sheets */
+.messenger-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.messenger-compose textarea {
+  min-height: 150px;
+}
+
+.message-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.message-row {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-align: left;
+  display: grid;
+  gap: 8px;
+}
+
+.message-row span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.message-row small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.message-row p {
+  margin: 0;
+  color: var(--ink);
+}
+
+.message-row.unread {
+  border-color: var(--gold);
+  background: #fff8e6;
+}
+
+.message-row b {
+  width: max-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  font-size: 11px;
+}
+
+.paper-sheet-panel {
+  background: #fff;
+  border: 2px solid #111827;
+}
+
+.paper-table-title {
+  text-align: center;
+  font-weight: 800;
+  font-size: 22px;
+  padding: 12px 8px 18px;
+}
+
+.paper-follow-table th,
+.paper-follow-table td {
+  border: 1.5px solid #111827;
+  height: 34px;
+  text-align: center;
+}
+
+.paper-follow-table th {
+  background: #d9d9d9;
+  color: #111827;
+  font-size: 13px;
+  text-transform: none;
+}
+
+.paper-follow-table td:nth-child(3),
+.paper-follow-table td:nth-child(4) {
+  text-align: left;
+}
+
+@media (max-width: 860px) {
+  .messenger-layout {
+    grid-template-columns: 1fr;
+  }
+}
