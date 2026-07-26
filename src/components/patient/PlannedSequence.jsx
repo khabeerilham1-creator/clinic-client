@@ -3,9 +3,19 @@ import {
   capitalizeFirstWord,
   dateKey,
   formatDateDisplay,
+  formatTimeDisplay,
   plannedVisitStatus,
   todayDisplayValue,
 } from "../../utils/patientHelpers";
+
+const PHASE_OPTIONS = [
+  "Phase 1",
+  "Phase 2",
+  "Phase 3",
+  "Phase 4",
+  "Follow up",
+  "Maintenance",
+];
 
 const generateSequenceFromExam = (patient) => {
   const checkup = patient?.checkup || {};
@@ -94,6 +104,7 @@ const generateSequenceFromExam = (patient) => {
     return [
       {
         visitNo: 1,
+        phase: "Phase 1",
         date: "",
         time: "",
         procedure: "",
@@ -105,6 +116,7 @@ const generateSequenceFromExam = (patient) => {
     const suffix = item.toothNo ? ` (Tooth ${item.toothNo})` : "";
     return {
       visitNo: index + 1,
+      phase: "Phase 1",
       date: "",
       time: "",
       procedure: `${item.procedure}${suffix}`,
@@ -166,6 +178,7 @@ function PlannedSequence({
       ...rows,
       {
         visitNo: rows.length + 1,
+        phase: "Phase 1",
         date: "",
         time: "",
         procedure: "",
@@ -232,6 +245,10 @@ function PlannedSequence({
             <tr>
 
               <th className="border p-3">
+                Phase
+              </th>
+
+              <th className="border p-3">
                 Visit No
               </th>
 
@@ -264,6 +281,27 @@ function PlannedSequence({
             {rows.map((row, index) => (
 
               <tr key={index} className={plannedVisitStatus(row) === "Done" ? "planned-row-done" : ""}>
+
+                {/* PHASE */}
+                <td className="border p-2">
+                  <select
+                    value={row.phase || "Phase 1"}
+                    onChange={(e) =>
+                      handleChange(
+                        index,
+                        "phase",
+                        e.target.value
+                      )
+                    }
+                    className="w-full p-2 border rounded"
+                  >
+                    {PHASE_OPTIONS.map((phase) => (
+                      <option key={phase} value={phase}>
+                        {phase}
+                      </option>
+                    ))}
+                  </select>
+                </td>
 
                 {/* VISIT NO */}
                 <td className="border p-2 text-center">
@@ -304,6 +342,11 @@ function PlannedSequence({
                     }
                     className="w-full p-2 border rounded"
                   />
+                  {row.time && (
+                    <small className="planned-done-date">
+                      {formatTimeDisplay(row.time)}
+                    </small>
+                  )}
 
                 </td>
 
@@ -329,7 +372,23 @@ function PlannedSequence({
                 </td>
 
                 {/* STATUS */}
-                <td className="border p-2 text-center">
+                <td className="border p-2 text-center planned-status-cell">
+                  <select
+                    value={row.status || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        index,
+                        "status",
+                        e.target.value
+                      )
+                    }
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Auto</option>
+                    <option value="planned">Planned</option>
+                    <option value="done">Done</option>
+                    <option value="completed">Completed</option>
+                  </select>
                   <span className={`pill ${
                     plannedVisitStatus(row) === "Done"
                       ? "success"

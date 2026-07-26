@@ -487,6 +487,32 @@ export const formatDateDisplay = (value) => {
   return `${day}/${month}/${year}`;
 };
 
+export const formatTimeDisplay = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const text = String(value).trim();
+  const timeMatch = text.match(/^(\d{1,2}):(\d{2})/);
+
+  if (!timeMatch) {
+    return text;
+  }
+
+  const hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2]);
+
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    return text;
+  }
+
+  const period = hour >= 12 ? "pm" : "am";
+  const displayHour = hour % 12 || 12;
+  const displayMinute = minute ? `:${String(minute).padStart(2, "0")}` : "";
+
+  return `${displayHour}${displayMinute} ${period}`;
+};
+
 export const todayDisplayValue = () => formatDateDisplay(new Date());
 
 export const capitalizeFirstWord = (value) => {

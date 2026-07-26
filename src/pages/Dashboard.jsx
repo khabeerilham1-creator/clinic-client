@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../api";
-import AppointmentDashboardModules from "../components/appointments/AppointmentDashboardModules";
 import Layout from "../components/Layout";
 import {
   appointmentArray,
   appointmentRequestParams,
   appointmentTimeline,
   filterManualAppointmentsForUser,
+  patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
+import { openPatientFile } from "../utils/clientNavigation";
 import {
   balanceDue,
   activeShift,
@@ -132,6 +133,14 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     return [...periodPatients].sort((a, b) => patientName(a).localeCompare(patientName(b)));
   }, [periodPatients]);
 
+  const selectedPeriodLabel =
+    selectedMonth === "all"
+      ? selectedYear
+      : new Date(Number(selectedYear), Number(selectedMonth) - 1, 1).toLocaleDateString("en-PK", {
+          month: "long",
+          year: "numeric",
+        });
+
   const periodMetrics = useMemo(() => {
     const periodRevenue = periodPatients.reduce((sum, patient) => sum + netAmount(patient), 0);
     const periodPaid = patients.reduce(
@@ -152,14 +161,16 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     };
   }, [patients, periodPatients, selectedMonth, selectedYear]);
 
-  const todayAppointments = useMemo(() => {
-    return allAppointments
-      .filter(
-        (appointment) =>
-          appointment.dateKey === today && !["Done", "Cancelled", "Missed"].includes(appointment.status)
-      )
-      .slice(0, 6);
-  }, [allAppointments, today]);
+  const dashboardSummary = useMemo(() => {
+    const summaries = patients.map((patient) => patientAppointmentSummary(patient, manualAppointments));
+
+    return {
+      totalEntries: patients.length,
+      expected: summaries.filter((summary) => summary.isExpected).length,
+      completedCases: summaries.filter((summary) => summary.isCompletedCase).length,
+      followUp: summaries.filter((summary) => summary.isFollowUp).length,
+    };
+  }, [patients, manualAppointments]);
 
   const dueAccounts = patients
     .filter((patient) => balanceDue(patient) > 0)
@@ -185,7 +196,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
           <div className="hero-actions no-print">
             <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
               <span className="btn-icon">+</span>
-              New client
+              New checkup
             </button>
             <button className="btn" onClick={() => setActivePage("appointments")}>
               Appointments
@@ -195,25 +206,60 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
 
         {error && <div className="notice danger">{error}</div>}
 
-        <AppointmentDashboardModules
-          patients={patients}
-          manualAppointments={manualAppointments}
-          loading={loading}
-          onAppointmentCreated={fetchDashboard}
-          onOpenAppointments={() => setActivePage("appointments")}
-        />
+        <section className="role-action-grid dashboard-action-grid">
+          <button className="role-action-card blue" type="button" onClick={() => setActivePage("entry-sheet")}>
+            <span>ES</span>
+            <strong>Entry Sheet</strong>
+            <small>Name, time, purpose, contact, entry and exit time.</small>
+          </button>
+          <button className="role-action-card gold" type="button" onClick={() => setActivePage("appointments")}>
+            <span>A</span>
+            <strong>Appointments</strong>
+            <small>Search and update appointments.</small>
+          </button>
+          <button className="role-action-card green" type="button" onClick={() => setActivePage("patients")}>
+            <span>+</span>
+            <strong>New Checkup</strong>
+            <small>Open a fresh comprehensive checkup file.</small>
+          </button>
+          <button className="role-action-card cyan" type="button" onClick={() => setActivePage("patients-list")}>
+            <span>R</span>
+            <strong>Registered Clients</strong>
+            <small>{selectedPeriodLabel}</small>
+          </button>
+        </section>
+
+        <section className="metrics-grid">
+          <StatCard
+            label="Total Entries"
+            value={loading ? "..." : dashboardSummary.totalEntries}
+            detail="All registered client files"
+            accent="blue"
+          />
+          <StatCard
+            label="Expected"
+            value={loading ? "..." : dashboardSummary.expected}
+            detail="Checkup clients waiting for planned dates"
+            accent="gold"
+          />
+          <StatCard
+            label="Completed Cases"
+            value={loading ? "..." : dashboardSummary.completedCases}
+            detail="Last planned appointment is done"
+            accent="green"
+          />
+          <StatCard
+            label="Follow Up"
+            value={loading ? "..." : dashboardSummary.followUp}
+            detail="Completed cases with phase labels"
+            accent="rose"
+          />
+        </section>
 
         <section className="toolbar-panel revenue-filter">
           <div>
             <span className="toolbar-label">Revenue view</span>
-            <strong>
-              {selectedMonth === "all"
-                ? selectedYear
-                : new Date(Number(selectedYear), Number(selectedMonth) - 1, 1).toLocaleDateString("en-PK", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-            </strong>
+            <strong>{selectedPeriodLabel}</strong>
           </div>
 
           <div className="filter-controls">
@@ -277,7 +323,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             accent="blue"
           />
           <StatCard
-            label="Today"
+            label="Today's Entries"
             value={loading ? "..." : metrics.todayPatients}
             detail="New records opened today"
             accent="green"
@@ -297,78 +343,6 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
         </section>
 
         <section className="dashboard-grid">
-          <div className="panel xl">
-            <div className="panel-heading">
-              <div>
-                <h2>Today's Appointments</h2>
-                <p>{todayAppointments.length} planned visits found for today.</p>
-              </div>
-              <button className="btn btn-sm" onClick={() => setActivePage("appointments")}>
-                View all
-              </button>
-            </div>
-
-            <div className="appointment-list">
-              {loading && <div className="empty-state">Loading appointments...</div>}
-
-              {!loading && todayAppointments.length === 0 && (
-                <div className="empty-state">
-                  No appointments today. Add manual appointments or planned sequence dates to fill this schedule.
-                </div>
-              )}
-
-              {todayAppointments.map((appointment, index) => (
-                <div className="appointment-item" key={`${appointment.source}-${appointment.id}-${index}`}>
-                  <div className="appointment-time">{appointment.time || "Today"}</div>
-                  <div className="appointment-main">
-                    <strong>{appointment.clientName || appointment.patientName}</strong>
-                    <span>{appointment.purpose || appointment.procedure || "Treatment visit"}</span>
-                  </div>
-                  <div className="appointment-meta">
-                    <span>{appointment.mobileNumber}</span>
-                    <span>{appointment.source === "manual" ? "Manual" : `Visit ${appointment.visitNo || index + 1}`}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Quick Actions</h2>
-                <p>Fast paths for reception and chairside work.</p>
-              </div>
-            </div>
-
-            <div className="quick-grid">
-              <button onClick={() => setActivePage("patients")} className="quick-action">
-                <span>+</span>
-                New record
-              </button>
-              <button onClick={() => setActivePage("patients-list")} className="quick-action">
-                <span>R</span>
-                Records
-              </button>
-              <button onClick={() => setActivePage("account-status")} className="quick-action">
-                <span>$</span>
-                Accounts
-              </button>
-              <button onClick={() => setActivePage("lab-records")} className="quick-action">
-                <span>L</span>
-                Lab records
-              </button>
-              <button onClick={() => setActivePage("expenses")} className="quick-action">
-                <span>E</span>
-                Expenses
-              </button>
-              <button onClick={() => setActivePage("inventory")} className="quick-action">
-                <span>I</span>
-                Inventory
-              </button>
-            </div>
-          </div>
-
           <div className="panel xl">
             <div className="panel-heading">
               <div>
@@ -407,7 +381,9 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                   {selectedPeriodPatients.map((patient) => (
                     <tr key={patient._id || regNo(patient)}>
                       <td>
-                        <strong>{patientName(patient)}</strong>
+                        <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
+                          {patientName(patient)}
+                        </button>
                       </td>
                       <td>
                         <span className="pill">{regNo(patient) || "-"}</span>
@@ -445,7 +421,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                 <button
                   key={patient._id || regNo(patient)}
                   className="alert-row"
-                  onClick={() => setActivePage("account-status")}
+                  onClick={() => openPatientFile(patient, setActivePage)}
                 >
                   <span>
                     <strong>{patientName(patient)}</strong>

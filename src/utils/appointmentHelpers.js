@@ -4,6 +4,7 @@ import {
   dateKey,
   dentistProfileForUser,
   formatDateDisplay,
+  formatTimeDisplay,
   initials,
   mobileNumber,
   normalizeText,
@@ -14,6 +15,7 @@ import {
 
 export const APPOINTMENT_PURPOSE_OPTIONS = [
   "Consultation",
+  "Active client",
   "Follow up",
   "Scaling and polishing",
   "Root canal treatment",
@@ -202,8 +204,9 @@ export const manualAppointmentCard = (appointment) => {
     dateKey: cleanDateKey,
     dateLabel: formatDateDisplay(appointment?.date),
     time: appointment?.time || "",
-    procedure: appointment?.purpose || "Manual appointment",
-    purpose: appointment?.purpose || "Manual appointment",
+    timeLabel: formatTimeDisplay(appointment?.time),
+    procedure: appointment?.purpose || "Appointment",
+    purpose: appointment?.purpose || "Appointment",
     notes: appointment?.notes || "",
     status: appointmentStatusFromDate(appointment),
   };
@@ -231,6 +234,8 @@ export const plannedAppointmentsFromPatients = (patients, { includeUnscheduled =
           dateKey: cleanDateKey,
           dateLabel: formatDateDisplay(visit.date),
           time: visit.time || "",
+          timeLabel: formatTimeDisplay(visit.time),
+          phase: visit.phase || "Phase 1",
           procedure,
           purpose: procedure || "Treatment visit",
           status: plannedVisitStatus(visit),
@@ -268,8 +273,73 @@ export const currentWeekRange = (reference = new Date()) => {
   };
 };
 
-const rowHasTreatment = (row) =>
+export const rowHasTreatment = (row) =>
   Boolean(row?.date || row?.time || row?.procedure || row?.treatment || row?.details);
+
+export const patientHasCompletedCheckupFile = (patient) => {
+  const checkup = patient?.checkup || {};
+  const hasClinicalRecord = Boolean(
+    (checkup.softTissueRecords || []).length ||
+      (checkup.hardTissueRecords || []).length ||
+      (checkup.labTaskRecords || []).length ||
+      Object.keys(patient?.toothStates || {}).length
+  );
+  const hasFileContent = Boolean(
+    hasClinicalRecord ||
+      (patient?.invoice || []).length ||
+      (patient?.invoices || []).length ||
+      (patient?.accountLedger || []).length ||
+      (patient?.plannedSequence || []).some(rowHasTreatment)
+  );
+
+  return Boolean(patientName(patient) && hasFileContent);
+};
+
+export const patientPlannedRows = (patient) => (patient?.plannedSequence || []).filter(rowHasTreatment);
+
+export const plannedRowsWithDate = (patient) =>
+  patientPlannedRows(patient).filter((visit) => Boolean(dateKey(visit.date)));
+
+export const patientExpectedForAppointment = (patient) =>
+  patientHasCompletedCheckupFile(patient) && plannedRowsWithDate(patient).length === 0;
+
+export const patientOngoingForAppointment = (patient) =>
+  plannedRowsWithDate(patient).some((visit) => plannedVisitStatus(visit) !== "Done");
+
+export const lastPlannedVisit = (patient) => {
+  const datedRows = plannedRowsWithDate(patient);
+
+  if (datedRows.length === 0) {
+    return null;
+  }
+
+  const sortedRows = [...datedRows].sort((a, b) => {
+    const dateCompare = String(dateKey(a.date)).localeCompare(String(dateKey(b.date)));
+
+    if (dateCompare) {
+      return dateCompare;
+    }
+
+    return Number(a.visitNo || 0) - Number(b.visitNo || 0);
+  });
+
+  return sortedRows[sortedRows.length - 1] || null;
+};
+
+export const completedPhaseLabel = (patient) => {
+  const visit = lastPlannedVisit(patient);
+  const phase = visit?.phase || (visit?.visitNo ? `Phase ${visit.visitNo}` : "Phase 1");
+
+  return `${phase} completed`;
+};
+
+export const patientCompletedCase = (patient) => {
+  const visit = lastPlannedVisit(patient);
+
+  return Boolean(visit && plannedVisitStatus(visit) === "Done");
+};
+
+export const patientFollowUpCase = (patient) => patientCompletedCase(patient);
 
 export const manualAppointmentMatchesPatient = (appointment, patient) => {
   const patientId = String(patient?._id || "");
@@ -293,7 +363,7 @@ export const manualAppointmentMatchesPatient = (appointment, patient) => {
 };
 
 export const patientAppointmentSummary = (patient, manualAppointments = []) => {
-  const plannedRows = (patient?.plannedSequence || []).filter(rowHasTreatment);
+  const plannedRows = patientPlannedRows(patient);
   const plannedCards = plannedAppointmentsFromPatients([patient]);
   const plannedWithDateTime = plannedCards.filter(isActiveAppointment);
   const plannedCompleted = plannedRows.filter((visit) => plannedVisitStatus(visit) === "Done");
@@ -305,18 +375,30 @@ export const patientAppointmentSummary = (patient, manualAppointments = []) => {
     .filter((appointment) => manualAppointmentMatchesPatient(appointment, patient));
   const activeManual = matchingManual.filter(isActiveAppointment);
   const completedManual = matchingManual.filter((appointment) => appointment.status === "Done");
-  const needsAppointment = plannedMissingSchedule.length > 0;
+  const isExpected = patientExpectedForAppointment(patient);
+  const isOngoing = patientOngoingForAppointment(patient) || activeManual.length > 0;
+  const isCompletedCase = patientCompletedCase(patient);
+  const isFollowUp = patientFollowUpCase(patient);
 
-  let category = "completed";
+  let category = "expected";
 
-  if (plannedWithDateTime.length > 0 || activeManual.length > 0) {
+  if (isOngoing) {
     category = "ongoing";
-  } else if (needsAppointment) {
-    category = "to-be-appointed";
+  } else if (isCompletedCase) {
+    category = "completed-cases";
+  } else if (isExpected) {
+    category = "expected";
+  } else if (completedManual.length > 0) {
+    category = "completed-cases";
   }
 
   return {
     category,
+    isExpected,
+    isOngoing,
+    isCompletedCase,
+    isFollowUp,
+    phaseLabel: isCompletedCase ? completedPhaseLabel(patient) : "",
     scheduledCount: plannedWithDateTime.length + activeManual.length,
     completedCount: plannedCompleted.length + completedManual.length,
     missingCount: plannedMissingSchedule.length,

@@ -4,6 +4,7 @@ import api from "../api";
 import Layout from "../components/Layout";
 import toothChart from "../assets/tooth-chart.png";
 import { CATEGORY_OPTIONS, normalizeCategoryKey } from "../utils/clinicData";
+import { openPatientFile } from "../utils/clientNavigation";
 import { printPatientFile } from "../utils/printPatientFile";
 import { addActivityLog } from "../utils/activityLog";
 import {
@@ -18,6 +19,7 @@ import {
   formatCurrency,
   initials,
   invoiceTotal,
+  matchesPeriod,
   mobileNumber,
   patientArray,
   patientName,
