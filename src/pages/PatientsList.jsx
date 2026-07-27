@@ -34,6 +34,9 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(String(now.getMonth() + 1));
+  const [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -75,8 +78,9 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
         const matchesCategory =
           category === "all" ||
           normalizeCategoryKey(patientBio.category) === category;
+        const matchesSelectedPeriod = matchesPeriod(patientRecordDate(patient), selectedMonth, selectedYear);
 
-        return matchesQuery && matchesCategory;
+        return matchesQuery && matchesCategory && matchesSelectedPeriod;
       })
       .sort((a, b) => {
         const dateCompare = String(dateKey(patientRecordDate(b))).localeCompare(String(dateKey(patientRecordDate(a))));
@@ -87,7 +91,20 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
         return String(regNo(b)).localeCompare(String(regNo(a)), undefined, { numeric: true });
       });
-  }, [patients, search, category]);
+  }, [patients, search, category, selectedMonth, selectedYear]);
+
+  const recordYears = useMemo(() => {
+    const years = patients
+      .map((patient) => dateKey(patientRecordDate(patient)).slice(0, 4))
+      .filter(Boolean);
+
+    return Array.from(new Set([String(now.getFullYear()), ...years])).sort((a, b) => Number(b) - Number(a));
+  }, [patients, now]);
+
+  const selectedPeriodLabel = new Date(Number(selectedYear), Number(selectedMonth) - 1, 1).toLocaleDateString(
+    "en-PK",
+    { month: "long", year: "numeric" }
+  );
 
   const totals = useMemo(() => {
     return {
@@ -138,14 +155,14 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Client command file</div>
             <h1>{shift?.label ? `${shift.label} Client Records` : "Client Records"}</h1>
             <p>
-              Search, audit, edit, print and manage every dental record from one premium view.
+              Search, audit, edit, print and manage {selectedPeriodLabel} records.
             </p>
           </div>
 
           <div className="hero-actions no-print">
             <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
               <span className="btn-icon">+</span>
-              New client
+              New Checkup
             </button>
             <button className="btn" onClick={fetchPatients}>Refresh</button>
           </div>
@@ -177,6 +194,27 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                   : CATEGORY_OPTIONS.find((option) => option.key === item)?.label.replace("Category ", "Cat ")}
               </button>
             ))}
+          </div>
+
+          <div className="filter-controls">
+            <label className="field inline-field">
+              <span>Month</span>
+              <select value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)}>
+                {Array.from({ length: 12 }, (_, index) => (
+                  <option key={index + 1} value={String(index + 1)}>
+                    {new Date(2026, index, 1).toLocaleDateString("en-PK", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field inline-field">
+              <span>Year</span>
+              <select value={selectedYear} onChange={(event) => setSelectedYear(event.target.value)}>
+                {recordYears.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </label>
           </div>
         </section>
 
@@ -231,7 +269,13 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                         <div className="patient-cell">
                           <span className="patient-avatar">{initials(patientName(patient))}</span>
                           <div>
-                            <strong>{patientName(patient)}</strong>
+                            <button
+                              className="patient-link"
+                              type="button"
+                              onClick={() => openPatientFile(patient, setActivePage)}
+                            >
+                              {patientName(patient)}
+                            </button>
                             <small>{patientBio.patientType || "Client"}</small>
                           </div>
                         </div>

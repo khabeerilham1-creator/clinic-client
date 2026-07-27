@@ -64,16 +64,26 @@ const TABS = [
 ];
 
 const SHEETS = [
-  { id: "routine", label: "Routine Entry" },
-  { id: "implant", label: "Implant Assessment File" },
-  { id: "orthodontic", label: "Orthodontic Assessment Sheet" },
+  { id: "routine", label: "Comprehensive Checkup" },
+  { id: "singleTooth", label: "Single Tooth Client" },
+  { id: "implant", label: "Dental Implant" },
+  { id: "orthodontic", label: "Orthodontic" },
+  { id: "geriatric", label: "Geriatrics" },
+  { id: "peads", label: "Peads" },
   { id: "fullDenture", label: "Full Denture Sheet" },
+  { id: "smileMakeovers", label: "Smile Make Overs" },
+  { id: "cosmatics", label: "Cosmatics" },
+  { id: "surgical", label: "Surgical" },
 ];
 
 const SHEET_TABS = {
   routine: TABS,
+  singleTooth: TABS,
+  geriatric: TABS,
+  peads: TABS,
   implant: [
     { id: "implantSheet", label: "Commencement" },
+    { id: "plannedSequence", label: "Planned" },
     { id: "invoice", label: "Invoice" },
     { id: "acknowledgement", label: "Acknowledgement" },
     { id: "account", label: "Account Status" },
@@ -81,6 +91,7 @@ const SHEET_TABS = {
   orthodontic: [
     { id: "orthodonticAssessment", label: "Assessment" },
     { id: "orthodonticAdjustments", label: "Monthly Adjustment" },
+    { id: "plannedSequence", label: "Planned" },
     { id: "invoice", label: "Invoice" },
     { id: "acknowledgement", label: "Acknowledgement" },
     { id: "account", label: "Account Status" },
@@ -91,6 +102,9 @@ const SHEET_TABS = {
     { id: "acknowledgement", label: "Acknowledgement" },
     { id: "account", label: "Account Status" },
   ],
+  smileMakeovers: [{ id: "formatPending", label: "Format Pending" }],
+  cosmatics: [{ id: "formatPending", label: "Format Pending" }],
+  surgical: [{ id: "formatPending", label: "Format Pending" }],
 };
 
 const defaultTabForSheet = (sheetType) => (SHEET_TABS[sheetType] || TABS)[0].id;
@@ -385,7 +399,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           </button>
 
           <div>
-            <div className="topbar-title">{data.isEditing ? "Edit Client" : "Client Entry"}</div>
+            <div className="topbar-title">{data.isEditing ? "Edit Client" : "New Checkup"}</div>
             {data.biography?.regNo && (
               <span style={{ fontSize: "12px", color: "var(--muted)" }}>Reg #{data.biography.regNo}</span>
             )}
@@ -466,6 +480,9 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
               <OrthodonticAdjustmentsSheet patientData={data} setPatientData={setData} />
             )}
             {tab === "fullDentureSheet" && <FullDentureSheet patientData={data} setPatientData={setData} />}
+            {tab === "formatPending" && (
+              <div className="empty-state">Format pending.</div>
+            )}
             {tab === "acknowledgement" && <AcknowledgementSheet patientData={data} setPatientData={setData} />}
             {tab === "invoice" && (
               <Invoice
@@ -521,7 +538,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             </button>
           ) : (
             <button type="button" className="btn btn-navy btn-lg" onClick={handleSave} disabled={loading}>
-              {loading ? <><div className="spinner" /> Saving...</> : "Save Client"}
+              {loading ? <><div className="spinner" /> Saving...</> : "Save Checkup"}
             </button>
           )}
         </div>

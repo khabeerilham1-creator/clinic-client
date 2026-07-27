@@ -3,19 +3,24 @@ import { addActivityLog } from "../utils/activityLog";
 import { isSoundEnabled, playSectionSound, setSoundEnabled } from "../utils/sound";
 
 const NAV_ITEMS = [
-  { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "patients", label: "New Client Entry", short: "+", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "patients-list", label: "Registered Client", short: "R", section: "Receptionist", roles: ["admin", "receptionist"] },
-  { page: "appointments", label: "Appointments", short: "A", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
+  { page: "dashboard", label: "Dashboard", short: "D", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
+  { page: "entry-sheet", label: "Entry Sheet", short: "ES", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
+  { page: "patients", label: "New Checkup", short: "+", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
+  { page: "patients-list", label: "Registered Client", short: "R", section: "Receptionist", roles: ["admin", "receptionist"], hidden: true },
+  { page: "appointments", label: "Appointments", short: "A", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
+  { page: "acknowledgement-sheet", label: "Acknowledgement Sheet", short: "AK", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
+  { page: "price-sheet", label: "Price Sheet", short: "PS", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
+  { page: "medications", label: "Medications", short: "RX", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
+  { page: "installment-mode", label: "Installment Mode", short: "IM", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
   { page: "messenger", label: "Messenger", short: "MS", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
   { page: "lab-follow-up", label: "Lab Cases Follow Up", short: "L", section: "Receptionist", roles: ["admin", "receptionist"] },
   { page: "inventory-status", label: "Inventory Status", short: "I", section: "Receptionist", roles: ["receptionist"] },
   { page: "maintenance", label: "Maintenance", short: "M", section: "Receptionist", roles: ["receptionist"] },
   { page: "refurbishing", label: "Refurbishing", short: "RF", section: "Receptionist", roles: ["receptionist"] },
   { page: "daily-expense", label: "Daily Expense", short: "DE", section: "Receptionist", roles: ["receptionist"] },
-  { page: "ongoing-patients", label: "On Going Client", short: "O", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "completed-patients", label: "Completed Client", short: "C", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
-  { page: "to-be-appointed", label: "To Be Appointed", short: "TA", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"] },
+  { page: "ongoing-patients", label: "On Going Client", short: "O", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
+  { page: "completed-patients", label: "Completed Cases", short: "C", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
+  { page: "to-be-appointed", label: "Expected Clients", short: "EX", section: "Clinic", roles: ["admin", "receptionist", "dentist", "doctor"], hidden: true },
   { page: "official-contact", label: "Official Contact", short: "OC", section: "Receptionist", roles: ["receptionist"] },
   { page: "dentist-patients", label: "Client List", short: "CL", section: "Dentist", roles: ["dentist", "doctor"] },
   { page: "dentist-summary", label: "Summary of Clients", short: "S", section: "Dentist", roles: ["dentist", "doctor"] },
@@ -68,8 +73,9 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
     };
   }, [user]);
 
-  const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(profile.role));
-  const pageTitle = visibleNavItems.find((item) => item.page === activePage)?.label || "Clinic";
+  const showSidebar = activePage === "dashboard";
+  const visibleNavItems = NAV_ITEMS.filter((item) => item.roles.includes(profile.role) && !item.hidden);
+  const pageTitle = NAV_ITEMS.find((item) => item.page === activePage)?.label || "Clinic";
 
   const logout = () => {
     addActivityLog("Logout", profile.roleLabel, { shift: profile.shiftLabel });
@@ -92,6 +98,12 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
     setMobileOpen(false);
   };
 
+  const goBackToDashboard = () => {
+    playSectionSound("section");
+    setActivePage("dashboard");
+    setMobileOpen(false);
+  };
+
   const toggleSound = () => {
     const next = !soundOn;
     setSoundEnabled(next);
@@ -105,18 +117,20 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
 
   return (
     <div className="app-shell">
-      <button
-        className="mobile-menu-button no-print"
-        type="button"
-        onClick={() => setMobileOpen((open) => !open)}
-        aria-label="Open navigation"
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      {showSidebar && (
+        <button
+          className="mobile-menu-button no-print"
+          type="button"
+          onClick={() => setMobileOpen((open) => !open)}
+          aria-label="Open navigation"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      )}
 
-      {mobileOpen && (
+      {showSidebar && mobileOpen && (
         <button
           className="sidebar-scrim no-print"
           type="button"
@@ -125,6 +139,7 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
         />
       )}
 
+      {showSidebar && (
       <aside className={`sidebar no-print${mobileOpen ? " open" : ""}`}>
         <div className="brand-block">
           <div>
@@ -179,9 +194,18 @@ function Layout({ children, activePage, setActivePage, user, handleLogout }) {
           </div>
         </div>
       </aside>
+      )}
 
-      <main className="main-wrapper">
-        <div className="mobile-title no-print">{pageTitle}</div>
+      <main className={`main-wrapper${showSidebar ? "" : " full-width"}`}>
+        {showSidebar && <div className="mobile-title no-print">{pageTitle}</div>}
+        {!showSidebar && (
+          <div className="module-backbar no-print">
+            <button className="btn btn-ghost" type="button" onClick={goBackToDashboard}>
+              Back to Dashboard
+            </button>
+            <strong>{pageTitle}</strong>
+          </div>
+        )}
         {children}
       </main>
     </div>

@@ -113,7 +113,7 @@ function Notifications({ activePage, setActivePage, handleLogout }) {
       .map(manualAppointmentCard)
       .filter((appointment) => appointment.dateKey === today && appointment.status !== "Done")
       .map((appointment) => ({
-        type: "Manual Appointment",
+        type: "Appointment",
         title: appointment.clientName,
         detail: `${appointment.time || ""} ${appointment.purpose || ""}`.trim(),
         tone: "blue",

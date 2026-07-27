@@ -7,8 +7,8 @@ import {
   appointmentRequestParams,
   filterManualAppointmentsForUser,
   patientAppointmentSummary,
-  standaloneManualAppointments,
 } from "../utils/appointmentHelpers";
+import { openPatientFile } from "../utils/clientNavigation";
 import {
   activeShiftId,
   balanceDue,
@@ -35,15 +35,15 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
       description: "Clients with appointment date and time.",
       empty: "No ongoing clients found.",
     },
-    completed: {
-      title: "Completed Client",
-      description: "Clients whose visits are completed.",
-      empty: "No completed client visits found.",
+    "completed-cases": {
+      title: "Completed Cases",
+      description: "Clients whose last planned appointment is done.",
+      empty: "No completed cases found.",
     },
-    "to-be-appointed": {
-      title: "To Be Appointed",
-      description: "Clients whose planned sequence needs date or time.",
-      empty: "No clients are waiting for appointment date/time.",
+    expected: {
+      title: "Expected Clients",
+      description: "Checkup clients with completed files and no planned sequence dates.",
+      empty: "No expected clients found.",
     },
   };
   const currentMode = modeDetails[mode] || modeDetails.ongoing;
@@ -92,11 +92,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
         .filter(({ summary }) => summary.category === mode),
     [patients, manualAppointments, mode]
   );
-  const manualRows = useMemo(
-    () => standaloneManualAppointments(patients, manualAppointments, mode),
-    [patients, manualAppointments, mode]
-  );
-  const totalRows = visiblePatients.length + manualRows.length;
+  const totalRows = visiblePatients.length;
 
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
@@ -139,7 +135,9 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
                     <td>
                       <div className="patient-cell">
                         <span className="patient-avatar">{initials(patientName(patient))}</span>
-                        <strong>{patientName(patient)}</strong>
+                        <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
+                          {patientName(patient)}
+                        </button>
                       </div>
                     </td>
                     <td>
@@ -147,32 +145,13 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
                     </td>
                     <td>{mobileNumber(patient)}</td>
                     <td>
-                      {mode === "to-be-appointed"
-                        ? `${summary.missingCount} missing`
-                        : mode === "completed"
-                          ? `${summary.completedCount} done`
+                      {mode === "expected"
+                        ? "Checkup completed, date expected"
+                        : mode === "completed-cases"
+                          ? summary.phaseLabel || "The case has been completed."
                           : `${summary.scheduledCount} scheduled`}
                     </td>
                     <td>{formatCurrency(balanceDue(patient))}</td>
-                  </tr>
-                ))}
-                {manualRows.map((appointment) => (
-                  <tr key={`manual-status-${appointment.id}`}>
-                    <td>
-                      <div className="patient-cell">
-                        <span className="patient-avatar">{initials(appointment.clientName)}</span>
-                        <div>
-                          <strong>{appointment.clientName}</strong>
-                          <small>{appointment.purpose}</small>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="pill">Manual</span>
-                    </td>
-                    <td>{appointment.mobileNumber}</td>
-                    <td>{mode === "completed" ? "1 done" : "1 scheduled"}</td>
-                    <td>-</td>
                   </tr>
                 ))}
               </tbody>

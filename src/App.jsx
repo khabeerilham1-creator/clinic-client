@@ -22,13 +22,25 @@ import Notifications from "./pages/Notifications";
 import Messenger from "./pages/Messenger";
 import LabFollowUp from "./pages/LabFollowUp";
 import LedgerExpensePage from "./pages/LedgerExpensePage";
+import {
+  AcknowledgementTool,
+  EntrySheet,
+  InstallmentMode,
+  Medications,
+  PriceSheet,
+} from "./pages/ClinicTools";
 
 const ROLE_PAGES = {
   admin: [
     "dashboard",
+    "entry-sheet",
     "patients",
     "patients-list",
     "appointments",
+    "acknowledgement-sheet",
+    "price-sheet",
+    "medications",
+    "installment-mode",
     "lab-records",
     "account-status",
     "dentist-revenue",
@@ -48,6 +60,7 @@ const ROLE_PAGES = {
   ],
   dentist: [
     "dashboard",
+    "entry-sheet",
     "patients",
     "dentist-patients",
     "dentist-summary",
@@ -55,6 +68,10 @@ const ROLE_PAGES = {
     "dentist-percentage",
     "dentist-referral",
     "appointments",
+    "acknowledgement-sheet",
+    "price-sheet",
+    "medications",
+    "installment-mode",
     "ongoing-patients",
     "completed-patients",
     "to-be-appointed",
@@ -65,6 +82,7 @@ const ROLE_PAGES = {
   ],
   doctor: [
     "dashboard",
+    "entry-sheet",
     "patients",
     "dentist-patients",
     "dentist-summary",
@@ -72,6 +90,10 @@ const ROLE_PAGES = {
     "dentist-percentage",
     "dentist-referral",
     "appointments",
+    "acknowledgement-sheet",
+    "price-sheet",
+    "medications",
+    "installment-mode",
     "ongoing-patients",
     "completed-patients",
     "to-be-appointed",
@@ -82,9 +104,14 @@ const ROLE_PAGES = {
   ],
   receptionist: [
     "dashboard",
+    "entry-sheet",
     "patients",
     "patients-list",
     "appointments",
+    "acknowledgement-sheet",
+    "price-sheet",
+    "medications",
+    "installment-mode",
     "account-receivable",
     "lab-follow-up",
     "inventory-status",
@@ -236,6 +263,56 @@ function App() {
 
   }
 
+  if (currentPage === "entry-sheet") {
+    return (
+      <EntrySheet
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "acknowledgement-sheet") {
+    return (
+      <AcknowledgementTool
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "price-sheet") {
+    return (
+      <PriceSheet
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "medications") {
+    return (
+      <Medications
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "installment-mode") {
+    return (
+      <InstallmentMode
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
 
   if (currentPage === "lab-follow-up") {
     return (
@@ -304,8 +381,8 @@ function App() {
           currentPage === "ongoing-patients"
             ? "ongoing"
             : currentPage === "completed-patients"
-              ? "completed"
-              : "to-be-appointed"
+              ? "completed-cases"
+              : "expected"
         }
       />
     );

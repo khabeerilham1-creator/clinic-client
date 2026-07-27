@@ -98,6 +98,24 @@ button:disabled {
     #dff3ea;
 }
 
+.main-wrapper.full-width {
+  width: 100%;
+}
+
+.module-backbar {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 16px 28px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.module-backbar strong {
+  font-size: 14px;
+  color: var(--muted);
+}
+
 .brand-block,
 .login-brand {
   display: flex;
@@ -480,6 +498,17 @@ button:disabled {
   min-height: 142px;
   padding: 20px;
   overflow: hidden;
+}
+
+.metric-button {
+  width: 100%;
+  border-color: var(--line);
+  text-align: left;
+}
+
+.metric-button.active {
+  border-color: var(--green);
+  background: var(--green-soft);
 }
 
 .metric-accent {
@@ -1107,6 +1136,42 @@ textarea:focus {
 .appointment-mini-main small,
 .table-subtext {
   display: block;
+}
+
+.patient-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--blue);
+  font-weight: 900;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.holiday-state {
+  padding: 20px;
+  border: 1px solid rgba(201, 150, 46, 0.52);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff7d6 0%, #dff7ed 100%);
+  color: var(--ink);
+  text-align: center;
+}
+
+.holiday-state strong,
+.holiday-state span {
+  display: block;
+}
+
+.holiday-state strong {
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.holiday-state span {
+  margin-top: 6px;
+  color: var(--muted);
+  font-weight: 800;
 }
 
 .appointment-mini-main small,
@@ -2487,7 +2552,48 @@ textarea:focus {
 }
 
 .planned-sequence-table {
-  min-width: 880px;
+  min-width: 1040px;
+}
+
+.planned-status-cell {
+  min-width: 150px;
+}
+
+.entry-sheet-form .btn-full {
+  align-self: end;
+}
+
+.acknowledgement-print-panel {
+  display: grid;
+  gap: 24px;
+  min-height: 360px;
+}
+
+.acknowledgement-print-panel h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.ack-signature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.ack-signature-grid div {
+  min-height: 70px;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.ack-signature-grid span {
+  display: block;
+  border-bottom: 1px solid var(--ink);
 }
 
 .planned-row-done {

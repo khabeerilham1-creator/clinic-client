@@ -9,6 +9,7 @@ import {
   filterManualAppointmentsForUser,
   patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
+import { openPatientFile } from "../utils/clientNavigation";
 import {
   activeShift,
   activeShiftId,
@@ -43,11 +44,11 @@ function patientStatus(patient, manualAppointments) {
     return "On going";
   }
 
-  if (category === "to-be-appointed") {
-    return "To be appointed";
+  if (category === "expected") {
+    return "Expected";
   }
 
-  return "Completed";
+  return "Completed Cases";
 }
 
 function RoleDashboard({ activePage, setActivePage, handleLogout }) {
@@ -110,8 +111,9 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
     [patients, manualAppointments]
   );
   const ongoingPatients = patientSummaries.filter(({ summary }) => summary.category === "ongoing");
-  const completedPatients = patientSummaries.filter(({ summary }) => summary.category === "completed");
-  const toBeAppointedPatients = patientSummaries.filter(({ summary }) => summary.category === "to-be-appointed");
+  const expectedPatients = patientSummaries.filter(({ summary }) => summary.isExpected);
+  const completedPatients = patientSummaries.filter(({ summary }) => summary.isCompletedCase);
+  const followUpPatients = patientSummaries.filter(({ summary }) => summary.isFollowUp);
 
   const dentistProfile = dentistProfileForUser({ ...user, role });
   const dentistName = dentistProfile.dentistName || user.name || "Dentist";
@@ -193,19 +195,19 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent gold" />
-              <div className="metric-label">To appoint</div>
+              <div className="metric-label">Expected</div>
               <div className="metric-value">
-                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.category === "to-be-appointed").length}
+                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.isExpected).length}
               </div>
-              <div className="metric-detail">Plans missing date/time</div>
+              <div className="metric-detail">Checkup files waiting for planned dates</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent rose" />
-              <div className="metric-label">Completed</div>
+              <div className="metric-label">Completed Cases</div>
               <div className="metric-value">
-                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.category === "completed").length}
+                {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.isCompletedCase).length}
               </div>
-              <div className="metric-detail">Visits completed</div>
+              <div className="metric-detail">The case has been completed</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent gold" />
@@ -251,7 +253,9 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
                         <td>
                           <div className="patient-cell">
                             <span className="patient-avatar">{initials(patientName(patient))}</span>
-                            <strong>{patientName(patient)}</strong>
+                            <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
+                              {patientName(patient)}
+                            </button>
                           </div>
                         </td>
                         <td>
@@ -311,28 +315,13 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
 
         {error && <div className="notice danger">{error}</div>}
 
-        <AppointmentDashboardModules
-          patients={patients}
-          manualAppointments={manualAppointments}
-          loading={loading}
-          onAppointmentCreated={refreshManualAppointments}
-          onOpenAppointments={() => setActivePage("appointments")}
-        />
-
         <section className="role-action-grid">
           <RoleAction
-            short="+"
-            title="New Entry"
-            detail="Open a fresh client file"
+            short="ES"
+            title="Entry Sheet"
+            detail="Name, time, purpose, contact, entry and exit time"
             tone="blue"
-            onClick={() => setActivePage("patients")}
-          />
-          <RoleAction
-            short="R"
-            title="Registered Clients"
-            detail="Search and open client records"
-            tone="green"
-            onClick={() => setActivePage("patients-list")}
+            onClick={() => setActivePage("entry-sheet")}
           />
           <RoleAction
             short="A"
@@ -341,53 +330,50 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             tone="gold"
             onClick={() => setActivePage("appointments")}
           />
+          <RoleAction
+            short="+"
+            title="New Checkup"
+            detail="Open a fresh comprehensive checkup file"
+            tone="green"
+            onClick={() => setActivePage("patients")}
+          />
+          <RoleAction
+            short="R"
+            title="Registered Clients"
+            detail="Search and open client records"
+            tone="cyan"
+            onClick={() => setActivePage("patients-list")}
+          />
         </section>
 
         <section className="role-action-grid receptionist-status-grid">
           <RoleAction
-            short="OC"
-            title="Official Contacts"
-            tone="cyan"
-            onClick={() => setActivePage("official-contact")}
+            short="TE"
+            title="Total Entries"
+            detail={`${patients.length} registered`}
+            tone="blue"
+            onClick={() => setActivePage("patients-list")}
           />
           <RoleAction
-            short="O"
-            title="On Going Cases"
-            detail={`${ongoingPatients.length} with appointments`}
-            tone="blue"
-            onClick={() => setActivePage("ongoing-patients")}
+            short="EX"
+            title="Expected"
+            detail={`${expectedPatients.length} checkup clients`}
+            tone="gold"
+            onClick={() => setActivePage("appointments")}
           />
           <RoleAction
             short="C"
             title="Completed Cases"
             detail={`${completedPatients.length} completed`}
-            tone="gold"
+            tone="green"
             onClick={() => setActivePage("completed-patients")}
           />
           <RoleAction
-            short="TA"
-            title="To Be Appointed"
-            detail={`${toBeAppointedPatients.length} waiting for date/time`}
-            tone="cyan"
-            onClick={() => setActivePage("to-be-appointed")}
-          />
-          <RoleAction
-            short="AR"
-            title="Receivables"
-            tone="green"
-            onClick={() => setActivePage("account-receivable")}
-          />
-          <RoleAction
-            short="L"
-            title="Lab Cases Follow Up"
-            tone="violet"
-            onClick={() => setActivePage("lab-follow-up")}
-          />
-          <RoleAction
-            short="DE"
-            title="Daily Expense"
+            short="FU"
+            title="Follow Up"
+            detail={`${followUpPatients.length} phase completed`}
             tone="rose"
-            onClick={() => setActivePage("daily-expense")}
+            onClick={() => setActivePage("appointments")}
           />
         </section>
       </div>
