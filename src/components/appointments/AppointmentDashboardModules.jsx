@@ -69,7 +69,6 @@ function AppointmentDashboardModules({
           {loading && <div className="empty-state compact">Loading appointments...</div>}
           {!loading && isSunday && (
             <div className="holiday-state">
-              <strong>Clinic Off Today</strong>
               <span>It is Sunday, a weekly holiday. Enjoy the off day.</span>
             </div>
           )}
