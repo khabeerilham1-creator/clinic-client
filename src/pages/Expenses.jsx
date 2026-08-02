@@ -126,10 +126,27 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
-function Expenses({ activePage, setActivePage, handleLogout }) {
+function Expenses({
+  activePage,
+  setActivePage,
+  handleLogout,
+  initialCategory = "administration",
+  allowedCategories,
+}) {
+  const categoryOptions = useMemo(() => {
+    if (!Array.isArray(allowedCategories) || allowedCategories.length === 0) {
+      return CATEGORIES;
+    }
+
+    const allowed = new Set(allowedCategories);
+    return CATEGORIES.filter((category) => allowed.has(category.key));
+  }, [allowedCategories]);
+  const defaultCategory = categoryOptions.some((category) => category.key === initialCategory)
+    ? initialCategory
+    : categoryOptions[0]?.key || "administration";
   const [expenses, setExpenses] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("administration");
-  const [form, setForm] = useState(() => emptyForm("administration"));
+  const [activeCategory, setActiveCategory] = useState(defaultCategory);
+  const [form, setForm] = useState(() => emptyForm(defaultCategory));
   const [editingId, setEditingId] = useState(null);
   const [ledgerRecordId, setLedgerRecordId] = useState(null);
   const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
@@ -218,6 +235,10 @@ function Expenses({ activePage, setActivePage, handleLogout }) {
   };
 
   const switchCategory = (category) => {
+    if (!categoryOptions.some((item) => item.key === category)) {
+      return;
+    }
+
     setActiveCategory(category);
     setLedgerRecordId(null);
     setPaymentForm(emptyPaymentForm());
@@ -783,7 +804,7 @@ function Expenses({ activePage, setActivePage, handleLogout }) {
           <div>
             <div className="eyebrow">Expense control</div>
             <h1>{categoryLabel(activeCategory)}</h1>
-            <p>Administration, team, material and implant expenses with printable ledgers.</p>
+            <p>{categoryOptions.length === 1 ? "Dental material entries with printable payment ledgers." : "Administration, team, material and implant expenses with printable ledgers."}</p>
           </div>
 
           <div className="hero-actions no-print">
@@ -801,7 +822,7 @@ function Expenses({ activePage, setActivePage, handleLogout }) {
 
         <section className="toolbar-panel no-print">
           <div className="segmented-control" aria-label="Expense category">
-            {CATEGORIES.map((category) => (
+            {categoryOptions.map((category) => (
               <button
                 key={category.key}
                 type="button"

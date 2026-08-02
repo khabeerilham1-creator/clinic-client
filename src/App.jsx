@@ -113,6 +113,8 @@ const ROLE_PAGES = {
     "medications",
     "installment-mode",
     "account-receivable",
+    "lab-records",
+    "dental-material",
     "lab-follow-up",
     "inventory-status",
     "maintenance",
@@ -320,6 +322,18 @@ function App() {
         activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "dental-material") {
+    return (
+      <Expenses
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+        initialCategory="dental-material"
+        allowedCategories={["dental-material"]}
       />
     );
   }

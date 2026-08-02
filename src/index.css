@@ -3507,7 +3507,8 @@ textarea:focus {
 }
 
 .paper-follow-table td:nth-child(3),
-.paper-follow-table td:nth-child(4) {
+.paper-follow-table td:nth-child(4),
+.paper-follow-table td:nth-child(5) {
   text-align: left;
 }
 

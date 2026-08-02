@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 
 import Layout from "../components/Layout";
 import PriceListPanel from "../components/patient/PriceListPanel";
-import { APPOINTMENT_PURPOSE_OPTIONS } from "../utils/appointmentHelpers";
+import { AcknowledgementSheet } from "../components/patient/SpecialtySheets";
 import { dateKey, formatTimeDisplay } from "../utils/patientHelpers";
 
 const entryStorageKey = "clinicEntrySheetRows";
@@ -12,7 +12,7 @@ const emptyEntry = () => ({
   date: dateKey(new Date()),
   name: "",
   time: "",
-  purpose: APPOINTMENT_PURPOSE_OPTIONS[0],
+  purpose: "",
   contact: "",
   entryTime: "",
   exitTime: "",
@@ -29,6 +29,7 @@ const readEntries = () => {
 export function EntrySheet({ activePage, setActivePage, handleLogout }) {
   const [form, setForm] = useState(emptyEntry);
   const [entries, setEntries] = useState(readEntries);
+  const [editingId, setEditingId] = useState(null);
 
   const saveEntry = (event) => {
     event.preventDefault();
@@ -37,14 +38,29 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
       return;
     }
 
-    const nextEntries = [{ ...form, id: `${Date.now()}` }, ...entries];
+    const savedEntry = { ...form, id: editingId || form.id || `${Date.now()}` };
+    const nextEntries = editingId
+      ? entries.map((entry) => (entry.id === editingId ? savedEntry : entry))
+      : [savedEntry, ...entries];
+
     setEntries(nextEntries);
     localStorage.setItem(entryStorageKey, JSON.stringify(nextEntries));
+    setEditingId(null);
     setForm(emptyEntry());
   };
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const editEntry = (entry) => {
+    setEditingId(entry.id);
+    setForm({ ...emptyEntry(), ...entry });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyEntry());
   };
 
   return (
@@ -70,11 +86,11 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
             </label>
             <label className="field">
               <span>Purpose</span>
-              <select value={form.purpose} onChange={(event) => updateField("purpose", event.target.value)}>
-                {APPOINTMENT_PURPOSE_OPTIONS.map((purpose) => (
-                  <option key={purpose} value={purpose}>{purpose}</option>
-                ))}
-              </select>
+              <textarea
+                value={form.purpose}
+                onChange={(event) => updateField("purpose", event.target.value)}
+                placeholder="Enter purpose manually"
+              />
             </label>
             <label className="field">
               <span>Contact</span>
@@ -88,7 +104,14 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
               <span>Exit Time</span>
               <input type="time" value={form.exitTime} onChange={(event) => updateField("exitTime", event.target.value)} />
             </label>
-            <button className="btn btn-primary btn-full" type="submit">Save Entry</button>
+            <button className="btn btn-primary btn-full" type="submit">
+              {editingId ? "Update Entry" : "Save Entry"}
+            </button>
+            {editingId && (
+              <button className="btn btn-full" type="button" onClick={cancelEdit}>
+                Cancel
+              </button>
+            )}
           </form>
         </section>
 
@@ -103,12 +126,13 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
                   <th>Contact</th>
                   <th>Entry</th>
                   <th>Exit</th>
+                  <th className="no-print">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {entries.length === 0 && (
                   <tr>
-                    <td colSpan="6">No entry sheet records yet.</td>
+                    <td colSpan="7">No entry sheet records yet.</td>
                   </tr>
                 )}
                 {entries.map((entry) => (
@@ -119,6 +143,11 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
                     <td>{entry.contact || "-"}</td>
                     <td>{formatTimeDisplay(entry.entryTime) || "-"}</td>
                     <td>{formatTimeDisplay(entry.exitTime) || "-"}</td>
+                    <td className="row-actions no-print">
+                      <button className="btn btn-sm" type="button" onClick={() => editEntry(entry)}>
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -148,6 +177,12 @@ export function PriceSheet({ activePage, setActivePage, handleLogout }) {
 }
 
 export function AcknowledgementTool({ activePage, setActivePage, handleLogout }) {
+  const [patientData, setPatientData] = useState({
+    acknowledgement: {
+      date: dateKey(new Date()),
+    },
+  });
+
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
       <div className="page printable-report">
@@ -155,22 +190,14 @@ export function AcknowledgementTool({ activePage, setActivePage, handleLogout })
           <div>
             <div className="eyebrow">Printable</div>
             <h1>Acknowledgement Sheet</h1>
-            <p>Printable acknowledgement format for reception.</p>
+            <p>Same acknowledgement format used in New Checkup.</p>
           </div>
           <button className="btn btn-primary no-print" type="button" onClick={() => window.print()}>
             Print
           </button>
         </section>
 
-        <section className="panel acknowledgement-print-panel">
-          <h2>Patient Acknowledgement</h2>
-          <p>I acknowledge that the treatment plan, charges, appointment sequence and follow-up instructions have been explained to me.</p>
-          <div className="ack-signature-grid">
-            <div><span />Patient / Guardian Signature</div>
-            <div><span />Doctor / Staff Signature</div>
-            <div><span />Date</div>
-          </div>
-        </section>
+        <AcknowledgementSheet patientData={patientData} setPatientData={setPatientData} />
       </div>
     </Layout>
   );

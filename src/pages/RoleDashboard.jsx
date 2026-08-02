@@ -19,11 +19,13 @@ import {
   filterPatientsForDentist,
   filterPatientsForActiveShift,
   formatCurrency,
+  formatDateDisplay,
   initials,
   mobileNumber,
   normalizeText,
   patientArray,
   patientName,
+  parseLocalDate,
   regNo,
 } from "../utils/patientHelpers";
 
@@ -50,6 +52,17 @@ function patientStatus(patient, manualAppointments) {
 
   return "Completed Cases";
 }
+
+const ledgerEntryValue = (entry) => {
+  const type = String(entry?.type || "payment").toLowerCase();
+  const amount = Number(entry?.amount || 0);
+
+  return type === "debit" || type === "charge" ? -amount : amount;
+};
+
+const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const endOfDay = (date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
 
 function RoleDashboard({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
@@ -114,6 +127,44 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
   const expectedPatients = patientSummaries.filter(({ summary }) => summary.isExpected);
   const completedPatients = patientSummaries.filter(({ summary }) => summary.isCompletedCase);
   const followUpPatients = patientSummaries.filter(({ summary }) => summary.isFollowUp);
+  const incomeDetails = useMemo(() => {
+    const reference = new Date();
+    const todayStart = startOfDay(reference);
+    const todayEnd = endOfDay(reference);
+    const monthStart = new Date(reference.getFullYear(), reference.getMonth(), 1);
+    const monthEnd = new Date(reference.getFullYear(), reference.getMonth() + 1, 0, 23, 59, 59, 999);
+    const quarterStartMonth = Math.floor(reference.getMonth() / 3) * 3;
+    const quarterStart = new Date(reference.getFullYear(), quarterStartMonth, 1);
+    const quarterEnd = new Date(reference.getFullYear(), quarterStartMonth + 3, 0, 23, 59, 59, 999);
+    const rows = patients
+      .flatMap((patient) =>
+        (patient.accountLedger || []).map((entry) => {
+          const date = parseLocalDate(entry.date || entry.timestamp || entry.createdAt);
+
+          return {
+            patient,
+            entry,
+            date,
+            amount: ledgerEntryValue(entry),
+          };
+        })
+      )
+      .filter((row) => row.date && row.amount !== 0);
+    const inBounds = (row, start, end) => row.date >= start && row.date <= end;
+    const sumRows = (items) => items.reduce((sum, row) => sum + row.amount, 0);
+    const todayRows = rows
+      .filter((row) => inBounds(row, todayStart, todayEnd))
+      .sort((a, b) => b.date - a.date);
+    const monthlyRows = rows.filter((row) => inBounds(row, monthStart, monthEnd));
+    const quarterlyRows = rows.filter((row) => inBounds(row, quarterStart, quarterEnd));
+
+    return {
+      todayRows,
+      todayTotal: sumRows(todayRows),
+      monthlyTotal: sumRows(monthlyRows),
+      quarterlyTotal: sumRows(quarterlyRows),
+    };
+  }, [patients]);
 
   const dentistProfile = dentistProfileForUser({ ...user, role });
   const dentistName = dentistProfile.dentistName || user.name || "Dentist";
@@ -344,6 +395,27 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             tone="cyan"
             onClick={() => setActivePage("patients-list")}
           />
+          <RoleAction
+            short="LR"
+            title="Lab Records"
+            detail="Lab cases and payment ledgers"
+            tone="blue"
+            onClick={() => setActivePage("lab-records")}
+          />
+          <RoleAction
+            short="DM"
+            title="Dental Material"
+            detail="Material entries and ledgers"
+            tone="gold"
+            onClick={() => setActivePage("dental-material")}
+          />
+          <RoleAction
+            short="LF"
+            title="Lab Follow Up Sheet"
+            detail="Pending and completed lab cases"
+            tone="green"
+            onClick={() => setActivePage("lab-follow-up")}
+          />
         </section>
 
         <section className="role-action-grid receptionist-status-grid">
@@ -375,6 +447,70 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             tone="rose"
             onClick={() => setActivePage("appointments")}
           />
+        </section>
+
+        <section className="metrics-grid">
+          <div className="metric-card gold-bordered">
+            <div className="metric-accent green" />
+            <div className="metric-label">Today&apos;s Income</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(incomeDetails.todayTotal)}</div>
+            <div className="metric-detail">{incomeDetails.todayRows.length} payments today</div>
+          </div>
+          <div className="metric-card gold-bordered">
+            <div className="metric-accent blue" />
+            <div className="metric-label">Monthly Income</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(incomeDetails.monthlyTotal)}</div>
+            <div className="metric-detail">Current month received</div>
+          </div>
+          <div className="metric-card gold-bordered">
+            <div className="metric-accent gold" />
+            <div className="metric-label">Quarterly Income</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(incomeDetails.quarterlyTotal)}</div>
+            <div className="metric-detail">Current quarter received</div>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-heading">
+            <div>
+              <h2>Today&apos;s Income Details</h2>
+              <p>Payments recorded on {formatDateDisplay(new Date())}.</p>
+            </div>
+            <span className="pill success">{incomeDetails.todayRows.length}</span>
+          </div>
+
+          <div className="data-table-wrap">
+            <table className="data-table compact-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Reg No</th>
+                  <th>Details</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan="4">Loading income details...</td>
+                  </tr>
+                )}
+                {!loading && incomeDetails.todayRows.length === 0 && (
+                  <tr>
+                    <td colSpan="4">No income recorded today.</td>
+                  </tr>
+                )}
+                {!loading && incomeDetails.todayRows.map((row, index) => (
+                  <tr key={`${row.patient._id || regNo(row.patient)}-${row.entry.id || index}`}>
+                    <td>{patientName(row.patient)}</td>
+                    <td>{regNo(row.patient) || "-"}</td>
+                    <td>{row.entry.description || "Payment received"}</td>
+                    <td>{formatCurrency(row.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </Layout>

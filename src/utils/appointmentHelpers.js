@@ -15,17 +15,12 @@ import {
 
 export const APPOINTMENT_PURPOSE_OPTIONS = [
   "Consultation",
-  "Active client",
+  "On Going Treatment",
   "Follow up",
-  "Scaling and polishing",
-  "Root canal treatment",
-  "Filling",
-  "Extraction",
-  "Crown or bridge",
+  "Cementation",
   "Braces adjustment",
   "Implant visit",
   "Lab trial",
-  "Emergency",
   "Other",
 ];
 
