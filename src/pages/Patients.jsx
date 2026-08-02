@@ -15,6 +15,7 @@ import {
   OrthodonticAssessmentSheet,
 } from "../components/patient/SpecialtySheets";
 import toothChartImg from "../assets/tooth-chart.png";
+import { DEPARTMENT_OPTIONS } from "../utils/clinicData";
 import {
   activeShift,
   applyShiftToPatient,
@@ -63,23 +64,11 @@ const TABS = [
   { id: "account", label: "Account Status" },
 ];
 
-const SHEETS = [
-  { id: "routine", label: "Comprehensive Checkup" },
-  { id: "singleTooth", label: "Single Tooth Client" },
-  { id: "implant", label: "Dental Implant" },
-  { id: "orthodontic", label: "Orthodontic" },
-  { id: "geriatric", label: "Geriatrics" },
-  { id: "peads", label: "Peads" },
-  { id: "fullDenture", label: "Full Denture Sheet" },
-  { id: "smileMakeovers", label: "Smile Make Overs" },
-  { id: "cosmatics", label: "Cosmatics" },
-  { id: "surgical", label: "Surgical" },
-];
+const SHEETS = DEPARTMENT_OPTIONS;
 
 const SHEET_TABS = {
   routine: TABS,
   singleTooth: TABS,
-  geriatric: TABS,
   peads: TABS,
   implant: [
     { id: "implantSheet", label: "Commencement" },
@@ -250,7 +239,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     }
 
     if (!data.biography?.patientName?.trim()) {
-      notify("Client name is required before saving.", "danger");
+      notify("Case name is required before saving.", "danger");
       return;
     }
 
@@ -283,10 +272,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
         amount: "",
         description: "",
       });
-      await addActivityLog("Created client", payload.biography?.patientName || "Client", {
+      await addActivityLog("Created case", payload.biography?.patientName || "Case", {
         regNo: response.data.reg_no,
       });
-      notify(`Client saved. Reg No: ${response.data.reg_no}`);
+      notify(`Case saved. Reg No: ${response.data.reg_no}`);
     } catch (error) {
       const detail = error?.response?.data?.detail;
       notify(
@@ -317,10 +306,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       await api.put(`/patients/${data._id}`, payload);
       setData(payload);
       localStorage.removeItem("editPatient");
-      await addActivityLog("Updated client", payload.biography?.patientName || "Client", {
+      await addActivityLog("Updated case", payload.biography?.patientName || "Case", {
         regNo: payload.biography?.regNo,
       });
-      notify("Client updated successfully.");
+      notify("Case updated successfully.");
     } catch (error) {
       notify(error?.response?.data?.detail || "Update failed.", "danger");
     } finally {
@@ -329,7 +318,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
   };
 
   const handleClear = () => {
-    if (!window.confirm("Clear all fields and start a new client?")) {
+    if (!window.confirm("Clear all fields and start a new case?")) {
       return;
     }
 
@@ -337,7 +326,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
     setSheetType("routine");
     setData(applyUserToClient(applyShiftToPatient(EMPTY_PATIENT)));
     setTab(defaultTabForSheet("routine"));
-    notify("Form cleared. Ready for new patient.");
+    notify("Form cleared. Ready for new case.");
   };
 
   const goToTab = (tabId) => {
@@ -399,7 +388,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
           </button>
 
           <div>
-            <div className="topbar-title">{data.isEditing ? "Edit Client" : "New Checkup"}</div>
+            <div className="topbar-title">{data.isEditing ? "Edit Case" : "New Case"}</div>
             {data.biography?.regNo && (
               <span style={{ fontSize: "12px", color: "var(--muted)" }}>Reg #{data.biography.regNo}</span>
             )}
@@ -439,7 +428,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             <div className={`notice ${message.type === "danger" ? "danger" : ""}`}>{message.text}</div>
           )}
 
-          <div className="sheet-bar no-print" aria-label="Client entry sheet type">
+          <div className="sheet-bar no-print" aria-label="Case entry department">
             {SHEETS.map((sheet) => (
               <button
                 key={sheet.id}
@@ -534,11 +523,11 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
           {data.isEditing ? (
             <button type="button" className="btn btn-success btn-lg" onClick={handleUpdate} disabled={loading}>
-              {loading ? <><div className="spinner" /> Updating...</> : "Update Client"}
+              {loading ? <><div className="spinner" /> Updating...</> : "Update Case"}
             </button>
           ) : (
             <button type="button" className="btn btn-navy btn-lg" onClick={handleSave} disabled={loading}>
-              {loading ? <><div className="spinner" /> Saving...</> : "Save Checkup"}
+              {loading ? <><div className="spinner" /> Saving...</> : "Save Case"}
             </button>
           )}
         </div>

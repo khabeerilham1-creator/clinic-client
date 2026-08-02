@@ -1,5 +1,10 @@
 import React, { useEffect } from "react";
-import { CATEGORY_OPTIONS, patientTypeForCategory } from "../../utils/clinicData";
+import {
+  CATEGORY_OPTIONS,
+  patientTypeForCategory,
+  REFERRAL_ROLE_OPTIONS,
+  referralCodeForRole,
+} from "../../utils/clinicData";
 import { activeShift, capitalizeFirstWord, parseLocalDate, todayDisplayValue } from "../../utils/patientHelpers";
 
 function Biography({
@@ -116,6 +121,7 @@ function Biography({
       "mobileNumber",
       "emergencyNumber",
       "doctorName",
+      "referredByName",
       "address",
     ]);
     const nextValue =
@@ -146,6 +152,16 @@ function Biography({
 
       updatedData.patientType =
         patientTypeForCategory(nextValue);
+
+    }
+
+    if (
+      name === "referredByRole"
+    ) {
+
+      const roleOption = REFERRAL_ROLE_OPTIONS.find((option) => option.value === nextValue);
+
+      updatedData.referredByRoleLabel = roleOption?.label || "";
 
     }
 
@@ -508,71 +524,7 @@ function Biography({
 
         </div>
 
-        {/* CATEGORY */}
-        <div>
-
-          <label className="
-            block
-            mb-1
-            font-medium
-          ">
-            Category
-          </label>
-
-          <select
-            name="category"
-            value={
-              formData.category || ""
-            }
-            onChange={handleChange}
-            className="
-              w-full
-              border
-              rounded-lg
-              p-3
-            "
-          >
-
-            {CATEGORY_OPTIONS.map((option) => (
-              <option key={option.key} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-
-          </select>
-
-        </div>
-
-        {/* PATIENT TYPE */}
-        <div>
-
-          <label className="
-            block
-            mb-1
-            font-medium
-          ">
-            Patient Type
-          </label>
-
-          <input
-            type="text"
-            name="patientType"
-            value={
-              formData.patientType || patientTypeForCategory(formData.category)
-            }
-            readOnly
-            className="
-              w-full
-              border
-              rounded-lg
-              p-3
-              bg-gray-100
-            "
-          />
-
-        </div>
-
-        {/* DOCTOR */}
+        {/* DENTIST */}
         <div>
 
           <label className="
@@ -607,7 +559,7 @@ function Biography({
             mb-1
             font-medium
           ">
-            Doctor / Case Done By
+            Dentist 
           </label>
 
           <input
@@ -617,7 +569,7 @@ function Biography({
               formData.doctorName || ""
             }
             onChange={handleChange}
-            placeholder="Enter doctor name or case done by"
+            placeholder="Enter dentist name"
             autoCapitalize="words"
             spellCheck="true"
             className="
@@ -625,6 +577,127 @@ function Biography({
               border
               rounded-lg
               p-3
+            "
+          />
+
+        </div>
+
+        <div>
+
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
+            Referred Date
+          </label>
+
+          <input
+            type="text"
+            name="referralDate"
+            value={
+              formData.referralDate || ""
+            }
+            onChange={handleChange}
+            placeholder="dd/mm/yyyy"
+            inputMode="numeric"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
+          />
+
+        </div>
+
+        <div>
+
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
+            Referred By
+          </label>
+
+          <input
+            type="text"
+            name="referredByName"
+            value={
+              formData.referredByName || ""
+            }
+            onChange={handleChange}
+            placeholder="Name, e.g. Ali (R)"
+            autoCapitalize="words"
+            spellCheck="true"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
+          />
+
+        </div>
+
+        <div>
+
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
+            Referred By Role
+          </label>
+
+          <select
+            name="referredByRole"
+            value={
+              formData.referredByRole || ""
+            }
+            onChange={handleChange}
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+            "
+          >
+            {REFERRAL_ROLE_OPTIONS.map((option) => (
+              <option key={option.value || "none"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+        </div>
+
+        <div>
+
+          <label className="
+            block
+            mb-1
+            font-medium
+          ">
+            Referral Code
+          </label>
+
+          <input
+            type="text"
+            value={
+              referralCodeForRole(formData.referredByRole)
+                ? `(${referralCodeForRole(formData.referredByRole)})`
+                : ""
+            }
+            readOnly
+            placeholder="Auto"
+            className="
+              w-full
+              border
+              rounded-lg
+              p-3
+              bg-gray-100
             "
           />
 

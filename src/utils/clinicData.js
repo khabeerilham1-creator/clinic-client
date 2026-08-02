@@ -6,29 +6,66 @@ export const SHIFT_OPTIONS = [
   {
     id: "morning",
     label: "Morning Shift",
+    serviceLabel: "Dental",
     doctorName: "Dr Tufyl",
     doctorAliases: ["Dr Tufyl"],
   },
   {
     id: "evening",
     label: "Evening Shift",
+    serviceLabel: "Aesthetics",
     doctorName: "Dr Abdur Rehman",
     doctorAliases: ["Dr Abdur Rehman"],
   },
 ];
 
 export const DEFAULT_LABS = [
-  "Khyber Lab",
   "Hayat Lab",
-  "Chamkani Lab",
+  "Khyber Lab",
+  "Other",
 ];
 
 export const CATEGORY_OPTIONS = [
-  { key: "category1", value: "Elite (Category 1)", label: "Elite (Category 1)", patientType: "Elite" },
-  { key: "category2", value: "Routine (Category 2)", label: "Routine (Category 2)", patientType: "Routine" },
-  { key: "category3", value: "Non Affording (Category 3)", label: "Non Affording (Category 3)", patientType: "Non Affording" },
-  { key: "category4", value: "Compassionate - Free", label: "Compassionate - Free", patientType: "Compassionate" },
+  { key: "category1", value: "Standard", label: "Standard", patientType: "Case" },
 ];
+
+export const DEPARTMENT_OPTIONS = [
+  { id: "routine", label: "Comprehensive" },
+  { id: "singleTooth", label: "Single Tooth" },
+  { id: "implant", label: "Dental Implant" },
+  { id: "orthodontic", label: "Orthodontic" },
+  { id: "peads", label: "Peads" },
+  { id: "fullDenture", label: "Full Denture" },
+  { id: "smileMakeovers", label: "Smile Makeover" },
+  { id: "cosmatics", label: "Cosmetic" },
+  { id: "surgical", label: "Surgical" },
+];
+
+export const departmentLabel = (sheetType = "") =>
+  DEPARTMENT_OPTIONS.find((department) => department.id === sheetType)?.label || "Comprehensive";
+
+export const REFERRAL_ROLE_OPTIONS = [
+  { value: "", label: "No Referral", code: "" },
+  { value: "dentist", label: "Dentist", code: "D" },
+  { value: "assistant-manager", label: "Assistant Manager", code: "A" },
+  { value: "assistant", label: "Assistant", code: "A" },
+  { value: "office-boy", label: "Office Boy", code: "O" },
+  { value: "receptionist", label: "Receptionist", code: "R" },
+  { value: "other", label: "Other", code: "" },
+];
+
+export const referralCodeForRole = (role = "") =>
+  REFERRAL_ROLE_OPTIONS.find((option) => option.value === role)?.code || "";
+
+export const referralRoleFromCode = (code = "") => {
+  const cleanCode = String(code || "").replace(/[()]/g, "").trim().toUpperCase();
+
+  if (!cleanCode) {
+    return "";
+  }
+
+  return REFERRAL_ROLE_OPTIONS.find((option) => option.code === cleanCode)?.label || "";
+};
 
 export const normalizeCategoryKey = (category = "") => {
   const clean = String(category).toLowerCase();

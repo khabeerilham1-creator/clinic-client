@@ -119,7 +119,7 @@ function AppointmentDashboardModules({
         <div className="panel-heading">
           <div>
             <h2>Add New Appointment</h2>
-            <p>Date, time, client and purpose entry.</p>
+            <p>Date, time, name and purpose entry.</p>
           </div>
         </div>
 

@@ -3,7 +3,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Layout from "../components/Layout";
 import toothChart from "../assets/tooth-chart.png";
-import { CATEGORY_OPTIONS, normalizeCategoryKey } from "../utils/clinicData";
+import { DEPARTMENT_OPTIONS } from "../utils/clinicData";
+import {
+  appointmentArray,
+  appointmentRequestParams,
+  filterManualAppointmentsForUser,
+  patientAppointmentSummary,
+} from "../utils/appointmentHelpers";
 import { openPatientFile } from "../utils/clientNavigation";
 import { printPatientFile } from "../utils/printPatientFile";
 import { addActivityLog } from "../utils/activityLog";
@@ -21,19 +27,24 @@ import {
   invoiceTotal,
   matchesPeriod,
   mobileNumber,
+  patientDepartmentId,
+  patientDepartmentLabel,
   patientArray,
   patientName,
   patientRecordDate,
+  paymentsTotal,
   plannedVisitStatus,
   regNo,
 } from "../utils/patientHelpers";
 
 function PatientsList({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
+  const role = sessionStorage.getItem("role") || "";
   const [patients, setPatients] = useState([]);
+  const [manualAppointments, setManualAppointments] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(String(now.getMonth() + 1));
   const [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
@@ -49,14 +60,21 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
     setError("");
 
     try {
-      const response = await api.get("/patients", {
-        params: { limit: 1000, sort: "createdAt", order: -1, shift: activeShiftId() },
-      });
+      const [patientsResponse, appointmentsResponse] = await Promise.all([
+        api.get("/patients", {
+          params: { limit: 1000, sort: "createdAt", order: -1, shift: activeShiftId() },
+        }),
+        api.get("/appointments", {
+          params: appointmentRequestParams(),
+        }),
+      ]);
 
-      setPatients(filterPatientsForActiveShift(patientArray(response.data)));
+      setPatients(filterPatientsForActiveShift(patientArray(patientsResponse.data)));
+      setManualAppointments(filterManualAppointmentsForUser(appointmentArray(appointmentsResponse.data)));
       } catch (requestError) {
         console.error(requestError);
       setPatients([]);
+      setManualAppointments([]);
       setError("");
       } finally {
       setLoading(false);
@@ -220,7 +238,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
         <section className="record-summary">
           <div>
-            <span>Visible records</span>
+            <span>REGISTERED CASES</span>
             <strong>{loading ? "..." : totals.patients}</strong>
           </div>
           <div>

@@ -301,6 +301,25 @@ function Checkup({ patientData, setPatientData }) {
         </div>
       </div>
 
+      <section className="clinical-chart-card followup-toggle-card">
+        <div>
+          <h3>Follow Up Needed</h3>
+          <p className="table-subtext">Only cases marked yes here will appear in Follow Up.</p>
+        </div>
+        <div className="segmented-control" aria-label="Follow up needed">
+          {["No", "Yes"].map((option) => (
+            <button
+              key={option}
+              type="button"
+              className={(checkupData.followUpNeeded || "No") === option ? "active" : ""}
+              onClick={() => setCheckup({ followUpNeeded: option })}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="clinical-chart-card">
         <ClinicalSelector
           title="Soft Tissue Chart"

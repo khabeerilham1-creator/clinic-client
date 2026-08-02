@@ -334,7 +334,14 @@ export const patientCompletedCase = (patient) => {
   return Boolean(visit && plannedVisitStatus(visit) === "Done");
 };
 
-export const patientFollowUpCase = (patient) => patientCompletedCase(patient);
+export const patientFollowUpCase = (patient) => {
+  const value =
+    patient?.checkup?.followUpNeeded ||
+    patient?.checkup?.followUpNeed ||
+    patient?.checkup?.followUp;
+
+  return String(value || "").trim().toLowerCase() === "yes";
+};
 
 export const manualAppointmentMatchesPatient = (appointment, patient) => {
   const patientId = String(patient?._id || "");

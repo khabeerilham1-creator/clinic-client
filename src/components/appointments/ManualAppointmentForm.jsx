@@ -41,7 +41,7 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
     event.preventDefault();
 
     if (!canSave || saving) {
-      setError("Please enter date, time, client name and purpose.");
+      setError("Please enter date, time, name and purpose.");
       return;
     }
 
@@ -89,18 +89,18 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
         </label>
 
         <label className="field">
-          <span>Client name</span>
+          <span>Name</span>
           <input
             type="text"
             value={form.clientName}
             onChange={(event) => updateField("clientName", event.target.value)}
-            placeholder="Client name"
+            placeholder="Name"
             autoCapitalize="words"
           />
         </label>
 
         <label className="field">
-          <span>Mobile</span>
+          <span>Contact</span>
           <input
             type="tel"
             value={form.mobileNumber}

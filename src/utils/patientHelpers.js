@@ -1,4 +1,9 @@
-import { SHIFT_OPTIONS } from "./clinicData";
+import {
+  departmentLabel,
+  referralCodeForRole,
+  referralRoleFromCode,
+  SHIFT_OPTIONS,
+} from "./clinicData";
 
 export const patientArray = (payload) => {
   if (Array.isArray(payload)) {
@@ -276,6 +281,11 @@ export const titledPatientName = (patient) => {
 
 export const mobileNumber = (patient) => bio(patient).mobileNumber || "-";
 
+export const patientDepartmentId = (patient) =>
+  patient?.entrySheetType || patient?.sheetType || patient?.department || "routine";
+
+export const patientDepartmentLabel = (patient) => departmentLabel(patientDepartmentId(patient));
+
 export const formatCurrency = (value) =>
   `Rs ${Number(value || 0).toLocaleString("en-PK")}`;
 
@@ -386,6 +396,65 @@ export const paymentsTotal = (patient) =>
 
 export const balanceDue = (patient) =>
   Math.max(netAmount(patient) - paymentsTotal(patient), 0);
+
+const labRecordTotal = (record) => {
+  const explicitTotal = Number(record?.totalAmount || record?.total_amount || record?.amount || 0);
+
+  if (explicitTotal) {
+    return explicitTotal;
+  }
+
+  return Number(record?.units || 0) * Number(record?.costPerUnit || record?.cost_per_unit || 0);
+};
+
+export const patientLabExpenseTotal = (patient) =>
+  (patient?.labRecords || patient?.labExpenses || []).reduce(
+    (sum, record) => sum + labRecordTotal(record),
+    0
+  );
+
+export const referralInfo = (patient) => {
+  const patientBio = bio(patient);
+  const referredByName = String(patientBio.referredByName || patientBio.referredBy || "").trim();
+  const role = patientBio.referredByRole || "";
+  const explicitCode = referralCodeForRole(role);
+  const codeFromName = referredByName.match(/\(([ROAD])\)\s*$/i)?.[1]?.toUpperCase() || "";
+  const code = explicitCode || codeFromName;
+  const roleLabel =
+    patientBio.referredByRoleLabel ||
+    referralRoleFromCode(code) ||
+    (role ? role.replace(/-/g, " ") : "");
+
+  return {
+    date: patientBio.referralDate || patientBio.referredDate || patientBio.date || "",
+    name: referredByName.replace(/\s*\([ROAD]\)\s*$/i, ""),
+    rawName: referredByName,
+    role,
+    roleLabel,
+    code,
+    hasReferral: Boolean(referredByName || role || code),
+  };
+};
+
+export const caseShareCalculation = (patient, manualExpense = 0) => {
+  const totalAmount = netAmount(patient);
+  const dentalMaterial = Math.round(totalAmount * 0.1);
+  const labCharges = patientLabExpenseTotal(patient);
+  const extraExpense = Number(manualExpense || 0);
+  const totalExpense = dentalMaterial + labCharges + extraExpense;
+  const shareBase = Math.max(totalAmount - totalExpense, 0);
+  const share = Math.round(shareBase * 0.15);
+
+  return {
+    totalAmount,
+    dentalMaterial,
+    labCharges,
+    extraExpense,
+    totalExpense,
+    shareBase,
+    share,
+  };
+};
 
 export const patientRecordDate = (patient) =>
   bio(patient).date || patient?.createdAt || patient?.updatedAt || "";

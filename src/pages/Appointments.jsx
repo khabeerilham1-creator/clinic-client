@@ -61,15 +61,33 @@ function AppointmentCard({ appointment, tone, patient, onOpenPatient }) {
   );
 }
 
+const WEEK_DAYS = [
+  { key: 1, label: "Monday" },
+  { key: 2, label: "Tuesday" },
+  { key: 3, label: "Wednesday" },
+  { key: 4, label: "Thursday" },
+  { key: 5, label: "Friday" },
+  { key: 6, label: "Saturday" },
+  { key: 0, label: "Sunday" },
+];
+
+const weekdayKey = (value) => {
+  const date = new Date(`${value}T00:00:00`);
+
+  return Number.isNaN(date.getTime()) ? null : date.getDay();
+};
+
 function Appointments({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
+  const role = sessionStorage.getItem("role") || "";
   const [patients, setPatients] = useState([]);
   const [manualAppointments, setManualAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [search, setSearch] = useState("");
-  const [activeClientSection, setActiveClientSection] = useState("expected");
+  const [caseDetailSection, setCaseDetailSection] = useState("");
+  const [activeWeekday, setActiveWeekday] = useState(1);
 
   useEffect(() => {
     fetchAppointments();
@@ -176,30 +194,41 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     return { today, weekly, upcoming, manual, expected, ongoing, completedCases, followUp };
   }, [allAppointments, todayKey, week.startKey, week.endKey, patients, manualAppointments, search]);
 
-  const activeClients = grouped[activeClientSection] || grouped.expected;
+  const activeClients = grouped[caseDetailSection] || grouped.expected;
   const clientSectionDetails = {
     expected: {
-      title: "Expected Clients",
-      detail: "Checkup clients with a completed file and no planned sequence dates.",
+      title: "Expected Cases",
+      detail: "Expected cases are checkup-only cases that have not been scheduled or started yet, so the appointment is not confirmed.",
       count: grouped.expected.length,
     },
     ongoing: {
       title: "On Going",
-      detail: "Clients whose planned sequence has appointment dates.",
+      detail: "Cases whose planned sequence has appointment dates.",
       count: grouped.ongoing.length,
     },
     completedCases: {
       title: "Completed Cases",
-      detail: "The case has been completed.",
+      detail: "The case has been successfully completed.",
       count: grouped.completedCases.length,
     },
     followUp: {
       title: "Follow Up",
-      detail: "Completed cases labelled by treatment phase.",
+      detail: "Only cases marked Follow Up Needed: Yes in Clinical Exam.",
       count: grouped.followUp.length,
     },
   };
-  const currentClientSection = clientSectionDetails[activeClientSection] || clientSectionDetails.expected;
+  const currentClientSection = clientSectionDetails[caseDetailSection] || clientSectionDetails.expected;
+  const canDelete = role === "admin";
+  const weeklyByDay = useMemo(
+    () =>
+      WEEK_DAYS.map((day) => ({
+        ...day,
+        appointments: grouped.weekly.filter((appointment) => weekdayKey(appointment.dateKey) === day.key),
+      })),
+    [grouped.weekly]
+  );
+  const selectedWeekdayAppointments =
+    weeklyByDay.find((day) => day.key === activeWeekday)?.appointments || [];
 
   const handleManualCreated = () => {
     setActionMessage("Appointment saved.");
@@ -243,6 +272,80 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     }
   };
 
+  if (caseDetailSection) {
+    return (
+      <Layout
+        activePage={activePage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      >
+        <div className="page">
+          <section className="page-hero">
+            <div>
+              <div className="eyebrow">Case status</div>
+              <h1>{currentClientSection.title}</h1>
+              <p>{currentClientSection.detail}</p>
+            </div>
+            <div className="hero-actions no-print">
+              <button className="btn" type="button" onClick={() => setCaseDetailSection("")}>
+                Back
+              </button>
+            </div>
+          </section>
+
+          <section className="panel">
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Reg No</th>
+                    <th>Contact</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan="4">Loading cases...</td>
+                    </tr>
+                  )}
+                  {!loading && activeClients.length === 0 && (
+                    <tr>
+                      <td colSpan="4">No cases found in this section.</td>
+                    </tr>
+                  )}
+                  {activeClients.map(({ patient, summary }) => (
+                    <tr key={patient._id || regNo(patient)}>
+                      <td>
+                        <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
+                          {patientName(patient)}
+                        </button>
+                      </td>
+                      <td>
+                        <span className="pill">{regNo(patient) || "-"}</span>
+                      </td>
+                      <td>{mobileNumber(patient)}</td>
+                      <td>
+                        {caseDetailSection === "completedCases"
+                          ? "The case has been successfully completed."
+                          : caseDetailSection === "followUp"
+                            ? "Follow up needed"
+                            : caseDetailSection === "ongoing"
+                              ? `${summary.scheduledCount} scheduled`
+                              : "Checkup done, appointment expected"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </Layout>
+    );
+  };
+
   return (
     <Layout
       activePage={activePage}
@@ -255,7 +358,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Appointments</div>
             <h1>{shift?.label ? `${shift.label} Appointments` : "Appointments"}</h1>
             <p>
-              Search, update and review expected, ongoing, completed and follow-up clients.
+              Search, update and review expected, ongoing, completed and follow-up cases.
             </p>
           </div>
 
@@ -272,7 +375,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             <span>Search appointments</span>
             <input
               type="text"
-              placeholder="Client name, reg no, mobile, purpose or phase"
+              placeholder="Name, reg no, contact, purpose or phase"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -288,29 +391,29 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
         />
 
         <section className="metrics-grid">
-          <button className={`metric-card metric-button ${activeClientSection === "expected" ? "active" : ""}`} type="button" onClick={() => setActiveClientSection("expected")}>
+          <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("expected")}>
             <div className="metric-accent blue" />
-            <div className="metric-label">Expected Clients</div>
+            <div className="metric-label">Expected Cases</div>
             <div className="metric-value">{loading ? "..." : grouped.expected.length}</div>
-            <div className="metric-detail">Checkup files without planned dates</div>
+            <div className="metric-detail">Checkup done, appointment not confirmed</div>
           </button>
-          <button className={`metric-card metric-button ${activeClientSection === "ongoing" ? "active" : ""}`} type="button" onClick={() => setActiveClientSection("ongoing")}>
+          <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("ongoing")}>
             <div className="metric-accent gold" />
             <div className="metric-label">On Going</div>
             <div className="metric-value">{loading ? "..." : grouped.ongoing.length}</div>
             <div className="metric-detail">Planned sequence has dates</div>
           </button>
-          <button className={`metric-card metric-button ${activeClientSection === "completedCases" ? "active" : ""}`} type="button" onClick={() => setActiveClientSection("completedCases")}>
+          <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("completedCases")}>
             <div className="metric-accent green" />
             <div className="metric-label">Completed Cases</div>
             <div className="metric-value">{loading ? "..." : grouped.completedCases.length}</div>
-            <div className="metric-detail">Last appointment is done</div>
+            <div className="metric-detail">Successfully completed cases</div>
           </button>
-          <button className={`metric-card metric-button ${activeClientSection === "followUp" ? "active" : ""}`} type="button" onClick={() => setActiveClientSection("followUp")}>
+          <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("followUp")}>
             <div className="metric-accent rose" />
             <div className="metric-label">Follow Up</div>
             <div className="metric-value">{loading ? "..." : grouped.followUp.length}</div>
-            <div className="metric-detail">Phase labels for completed cases</div>
+            <div className="metric-detail">Clinical Exam marked yes</div>
           </button>
         </section>
 
@@ -359,12 +462,26 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
               <span className="pill warning">{grouped.weekly.length}</span>
             </div>
 
+            <div className="weekday-tabs no-print" role="group" aria-label="Weekly appointments by day">
+              {weeklyByDay.map((day) => (
+                <button
+                  key={day.key}
+                  type="button"
+                  className={activeWeekday === day.key ? "active" : ""}
+                  onClick={() => setActiveWeekday(day.key)}
+                >
+                  <span>{day.label}</span>
+                  <strong>{day.appointments.length}</strong>
+                </button>
+              ))}
+            </div>
+
             <div className="schedule-stack">
-              {!loading && grouped.weekly.length === 0 && (
-                <div className="empty-state compact">No appointments this week.</div>
+              {!loading && selectedWeekdayAppointments.length === 0 && (
+                <div className="empty-state compact">No appointments for this day.</div>
               )}
 
-              {grouped.weekly.slice(0, 8).map((appointment, index) => (
+              {selectedWeekdayAppointments.slice(0, 8).map((appointment, index) => (
                 <AppointmentCard
                   key={`${appointment.source}-${appointment.id}-week-${index}`}
                   appointment={appointment}
@@ -390,9 +507,9 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Client</th>
+                    <th>Name</th>
                     <th>Type</th>
-                    <th>Mobile</th>
+                    <th>Contact</th>
                     <th>Time</th>
                     <th>Purpose</th>
                   </tr>
@@ -448,54 +565,18 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
               <span className="pill warning">{currentClientSection.count}</span>
             </div>
 
-            <div className="data-table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Client</th>
-                    <th>Reg No</th>
-                    <th>Mobile</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan="4">Loading clients...</td>
-                    </tr>
-                  )}
-                  {!loading && activeClients.length === 0 && (
-                    <tr>
-                      <td colSpan="4">No clients found in this section.</td>
-                    </tr>
-                  )}
-                  {activeClients.map(({ patient, summary }) => (
-                    <tr key={patient._id || regNo(patient)}>
-                      <td>
-                        <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
-                          {patientName(patient)}
-                        </button>
-                      </td>
-                      <td>
-                        <span className="pill">{regNo(patient) || "-"}</span>
-                      </td>
-                      <td>{mobileNumber(patient)}</td>
-                      <td>
-                        {activeClientSection === "completedCases" && (
-                          <span className="table-subtext">The case has been completed.</span>
-                        )}
-                        {activeClientSection === "followUp"
-                          ? summary.phaseLabel || "Phase completed"
-                          : activeClientSection === "ongoing"
-                            ? `${summary.scheduledCount} scheduled`
-                            : activeClientSection === "expected"
-                              ? "Checkup completed, date expected"
-                              : summary.phaseLabel || "Completed"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="quick-grid">
+              {Object.entries(clientSectionDetails).map(([sectionKey, section]) => (
+                <button
+                  key={sectionKey}
+                  className="quick-action"
+                  type="button"
+                  onClick={() => setCaseDetailSection(sectionKey)}
+                >
+                  <span>{section.count}</span>
+                  {section.title}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -514,7 +595,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                   <tr>
                     <th>Date</th>
                     <th>Time</th>
-                    <th>Client</th>
+                    <th>Name</th>
                     <th>Purpose</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -563,9 +644,13 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                         </select>
                       </td>
                       <td>
-                        <button className="btn btn-sm" type="button" onClick={() => deleteManualAppointment(appointment)}>
-                          Delete
-                        </button>
+                        {canDelete ? (
+                          <button className="btn btn-sm" type="button" onClick={() => deleteManualAppointment(appointment)}>
+                            Delete
+                          </button>
+                        ) : (
+                          <span className="table-subtext">Admin only</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -579,7 +664,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
               <div className="panel-heading">
                 <div>
                   <h2>Completed Cases</h2>
-                  <p>The case has been completed.</p>
+                  <p>The case has been successfully completed.</p>
                 </div>
                 <span className="pill success">{grouped.completedCases.length}</span>
               </div>
@@ -588,9 +673,9 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Client</th>
+                      <th>Name</th>
                       <th>Reg No</th>
-                      <th>Mobile</th>
+                      <th>Contact</th>
                       <th>Phase</th>
                     </tr>
                   </thead>
@@ -601,7 +686,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                           <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
                             {patientName(patient)}
                           </button>
-                          <small className="table-subtext">The case has been completed.</small>
+                          <small className="table-subtext">The case has been successfully completed.</small>
                         </td>
                         <td>
                           <span className="pill">{regNo(patient) || "-"}</span>
