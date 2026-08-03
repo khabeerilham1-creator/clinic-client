@@ -1480,16 +1480,9 @@ textarea:focus {
 
 .login-card {
   align-self: center;
-
-  /* Smaller size */
-  width: 360px;
-
-  /* Move towards the left */
+  width: min(480px, calc(100% - 48px));
   margin: 0 auto;
-  transform: translateX(-180px);
-
-  /* Styling */
-  padding: 24px;
+  padding: 34px;
   border-radius: 24px;
   background: #fff;
   box-shadow: var(--shadow);
@@ -3091,6 +3084,12 @@ textarea:focus {
   margin: 0 auto;
 }
 
+.auth-screen-login .auth-stage-login {
+  justify-content: flex-end;
+  padding-left: clamp(24px, 4vw, 72px);
+  padding-right: clamp(36px, 9vw, 172px);
+}
+
 .auth-field {
   display: grid;
   gap: 8px;
@@ -3210,6 +3209,12 @@ textarea:focus {
 }
 
 @media (max-width: 980px) {
+  .auth-screen-login .auth-stage-login {
+    justify-content: center;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
   .auth-login-form {
     margin: 0 auto;
   }
@@ -3257,23 +3262,59 @@ textarea:focus {
 }
 
 .auth-login-form {
-  width: min(540px, calc(100vw - 56px));
+  width: min(390px, calc(100vw - 56px));
+  gap: 13px;
+  padding: clamp(18px, 2vw, 24px);
   border-color: rgba(213, 165, 59, 0.72);
   background: rgba(3, 22, 18, 0.82);
 }
 
+.auth-login-form .auth-field {
+  gap: 6px;
+}
+
+.auth-login-form .auth-field span {
+  font-size: 11px;
+}
+
 .auth-login-form .auth-field input {
-  min-height: 62px;
+  min-height: 50px;
   border: 2px solid rgba(213, 165, 59, 0.86);
 }
 
 .auth-login-form .auth-password-field {
-  grid-template-columns: minmax(0, 1fr) 62px;
+  grid-template-columns: minmax(0, 1fr) 52px;
 }
 
 .auth-login-form .auth-eye-button,
 .auth-login-form .auth-continue-button {
-  min-height: 62px;
+  min-height: 50px;
+}
+
+.auth-screen-department .auth-stage-department {
+  justify-content: flex-end;
+  padding-right: min(8vw, 140px);
+}
+
+.auth-screen-department .auth-department-grid {
+  width: min(520px, calc(100vw - 48px));
+  grid-template-columns: 1fr;
+}
+
+.auth-screen-department .auth-department-choice {
+  aspect-ratio: 16 / 5;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 2px solid rgba(213, 165, 59, 0.88);
+  background: rgba(4, 30, 24, 0.76);
+  color: #fff7d6;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.auth-screen-department .auth-department-choice.aesthetics {
+  border-color: rgba(155, 246, 218, 0.7);
 }
 
 .auth-screen-shift .auth-stage-shift {
@@ -3408,6 +3449,7 @@ textarea:focus {
 }
 
 @media (max-width: 980px) {
+  .auth-screen-department .auth-stage-department,
   .auth-screen-shift .auth-stage-shift {
     justify-content: center;
     padding-right: 20px;

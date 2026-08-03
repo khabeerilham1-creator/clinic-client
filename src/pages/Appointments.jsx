@@ -9,7 +9,6 @@ import {
   appointmentRequestParams,
   currentWeekRange,
   filterManualAppointmentsForUser,
-  manualAppointmentCard,
   manualAppointmentMatchesPatient,
   patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
@@ -79,7 +78,6 @@ const weekdayKey = (value) => {
 
 function Appointments({ activePage, setActivePage, handleLogout }) {
   const shift = activeShift();
-  const role = sessionStorage.getItem("role") || "";
   const [patients, setPatients] = useState([]);
   const [manualAppointments, setManualAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,10 +172,6 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     const weekly = activeAppointments
       .filter((appointment) => appointment.dateKey >= week.startKey && appointment.dateKey <= week.endKey)
       .filter(appointmentMatchesSearch);
-    const upcoming = activeAppointments.filter((appointment) => appointment.dateKey > week.endKey);
-    const manual = filterManualAppointmentsForUser(manualAppointments)
-      .map(manualAppointmentCard)
-      .filter(appointmentMatchesSearch);
     const patientSummaries = patients
       .map((patient) => ({
         patient,
@@ -188,10 +182,9 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     );
     const expected = filteredPatientSummaries.filter(({ summary }) => summary.isExpected);
     const ongoing = filteredPatientSummaries.filter(({ summary }) => summary.isOngoing);
-    const completedCases = filteredPatientSummaries.filter(({ summary }) => summary.isCompletedCase);
     const followUp = filteredPatientSummaries.filter(({ summary }) => summary.isFollowUp);
 
-    return { today, weekly, upcoming, manual, expected, ongoing, completedCases, followUp };
+    return { today, weekly, expected, ongoing, followUp };
   }, [allAppointments, todayKey, week.startKey, week.endKey, patients, manualAppointments, search]);
 
   const activeClients = grouped[caseDetailSection] || grouped.expected;
@@ -206,11 +199,6 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
       detail: "Cases whose planned sequence has appointment dates.",
       count: grouped.ongoing.length,
     },
-    completedCases: {
-      title: "Completed Cases",
-      detail: "The case has been successfully completed.",
-      count: grouped.completedCases.length,
-    },
     followUp: {
       title: "Follow Up",
       detail: "Only cases marked Follow Up Needed: Yes in Clinical Exam.",
@@ -218,7 +206,6 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     },
   };
   const currentClientSection = clientSectionDetails[caseDetailSection] || clientSectionDetails.expected;
-  const canDelete = role === "admin";
   const weeklyByDay = useMemo(
     () =>
       WEEK_DAYS.map((day) => ({
@@ -233,43 +220,6 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
   const handleManualCreated = () => {
     setActionMessage("Appointment saved.");
     fetchAppointments();
-  };
-
-  const updateManualStatus = async (appointment, status) => {
-    if (!appointment.raw?._id) {
-      return;
-    }
-
-    setActionMessage("");
-
-    try {
-      await api.put(`/appointments/${appointment.raw._id}`, {
-        ...appointment.raw,
-        status,
-      });
-      setActionMessage("Appointment status updated.");
-      fetchAppointments();
-    } catch (requestError) {
-      console.error(requestError);
-      setError("Appointment status could not be updated.");
-    }
-  };
-
-  const deleteManualAppointment = async (appointment) => {
-    if (!appointment.raw?._id || !window.confirm("Delete this appointment?")) {
-      return;
-    }
-
-    setActionMessage("");
-
-    try {
-      await api.delete(`/appointments/${appointment.raw._id}`);
-      setActionMessage("Appointment deleted.");
-      fetchAppointments();
-    } catch (requestError) {
-      console.error(requestError);
-      setError("Appointment could not be deleted.");
-    }
   };
 
   if (caseDetailSection) {
@@ -327,9 +277,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                       </td>
                       <td>{mobileNumber(patient)}</td>
                       <td>
-                        {caseDetailSection === "completedCases"
-                          ? "The case has been successfully completed."
-                          : caseDetailSection === "followUp"
+                        {caseDetailSection === "followUp"
                             ? "Follow up needed"
                             : caseDetailSection === "ongoing"
                               ? `${summary.scheduledCount} scheduled`
@@ -390,7 +338,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
           onOpenPatient={(patient) => openPatientFile(patient, setActivePage)}
         />
 
-        <section className="metrics-grid">
+        <section className="metrics-grid three">
           <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("expected")}>
             <div className="metric-accent blue" />
             <div className="metric-label">Expected Cases</div>
@@ -402,12 +350,6 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             <div className="metric-label">On Going</div>
             <div className="metric-value">{loading ? "..." : grouped.ongoing.length}</div>
             <div className="metric-detail">Planned sequence has dates</div>
-          </button>
-          <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("completedCases")}>
-            <div className="metric-accent green" />
-            <div className="metric-label">Completed Cases</div>
-            <div className="metric-value">{loading ? "..." : grouped.completedCases.length}</div>
-            <div className="metric-detail">Successfully completed cases</div>
           </button>
           <button className="metric-card metric-button" type="button" onClick={() => setCaseDetailSection("followUp")}>
             <div className="metric-accent rose" />
@@ -580,126 +522,6 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
             </div>
           </div>
 
-          <div className="panel wide">
-            <div className="panel-heading">
-              <div>
-                <h2>Update Appointments</h2>
-                <p>Update status or remove appointment entries.</p>
-              </div>
-              <span className="pill">{grouped.manual.length}</span>
-            </div>
-
-            <div className="data-table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Name</th>
-                    <th>Purpose</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan="6">Loading appointments...</td>
-                    </tr>
-                  )}
-                  {!loading && grouped.manual.length === 0 && (
-                    <tr>
-                      <td colSpan="6">No appointments saved yet.</td>
-                    </tr>
-                  )}
-                  {grouped.manual.map((appointment) => (
-                    <tr key={`manual-record-${appointment.id}`}>
-                      <td>{appointment.dateLabel || "-"}</td>
-                      <td>{appointment.timeLabel || formatTimeDisplay(appointment.time) || "-"}</td>
-                      <td>
-                        {appointmentPatient(appointment) ? (
-                          <button
-                            className="patient-link"
-                            type="button"
-                            onClick={() => openPatientFile(appointmentPatient(appointment), setActivePage)}
-                          >
-                            {appointment.clientName}
-                          </button>
-                        ) : (
-                          <strong>{appointment.clientName}</strong>
-                        )}
-                        <small className="table-subtext">{appointment.mobileNumber}</small>
-                      </td>
-                      <td>{appointment.purpose}</td>
-                      <td>
-                        <select
-                          className="table-select"
-                          value={appointment.raw?.status || "scheduled"}
-                          onChange={(event) => updateManualStatus(appointment, event.target.value)}
-                        >
-                          <option value="scheduled">Scheduled</option>
-                          <option value="completed">Completed</option>
-                          <option value="missed">Missed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </td>
-                      <td>
-                        {canDelete ? (
-                          <button className="btn btn-sm" type="button" onClick={() => deleteManualAppointment(appointment)}>
-                            Delete
-                          </button>
-                        ) : (
-                          <span className="table-subtext">Admin only</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {grouped.completedCases.length > 0 && (
-            <div className="panel wide">
-              <div className="panel-heading">
-                <div>
-                  <h2>Completed Cases</h2>
-                  <p>The case has been successfully completed.</p>
-                </div>
-                <span className="pill success">{grouped.completedCases.length}</span>
-              </div>
-
-              <div className="data-table-wrap">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Reg No</th>
-                      <th>Contact</th>
-                      <th>Phase</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {grouped.completedCases.slice(0, 8).map(({ patient, summary }) => (
-                      <tr key={`completed-case-${patient._id || regNo(patient)}`}>
-                        <td>
-                          <button className="patient-link" type="button" onClick={() => openPatientFile(patient, setActivePage)}>
-                            {patientName(patient)}
-                          </button>
-                          <small className="table-subtext">The case has been successfully completed.</small>
-                        </td>
-                        <td>
-                          <span className="pill">{regNo(patient) || "-"}</span>
-                        </td>
-                        <td>{mobileNumber(patient)}</td>
-                        <td>{summary.phaseLabel || "Phase completed"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </section>
       </div>
     </Layout>

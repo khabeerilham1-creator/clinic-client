@@ -149,6 +149,34 @@ export const manualAppointmentMatchesUser = (appointment, user = storedUser()) =
 export const filterManualAppointmentsForUser = (appointments, user = storedUser()) =>
   (appointments || []).filter((appointment) => manualAppointmentMatchesUser(appointment, user));
 
+const appointmentDateTime = (appointment, appointmentKey) => {
+  const parts = String(appointmentKey || "").split("-").map(Number);
+  const timeText = String(appointment?.time || "").trim().toLowerCase();
+  const timeMatch = timeText.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+
+  if (parts.length !== 3 || parts.some(Number.isNaN) || !timeMatch) {
+    return null;
+  }
+
+  let hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2] || 0);
+  const period = timeMatch[3];
+
+  if (period === "pm" && hour < 12) {
+    hour += 12;
+  }
+
+  if (period === "am" && hour === 12) {
+    hour = 0;
+  }
+
+  if (hour > 23 || minute > 59) {
+    return null;
+  }
+
+  return new Date(parts[0], parts[1] - 1, parts[2], hour, minute);
+};
+
 const appointmentStatusFromDate = (appointment) => {
   const status = normalizeText(appointment?.status).replace(" ", "-");
 
@@ -165,7 +193,8 @@ const appointmentStatusFromDate = (appointment) => {
   }
 
   const appointmentKey = dateKey(appointment?.date);
-  const today = dateKey(new Date());
+  const now = new Date();
+  const today = dateKey(now);
 
   if (!appointmentKey || !today) {
     return "Scheduled";
@@ -176,6 +205,12 @@ const appointmentStatusFromDate = (appointment) => {
   }
 
   if (appointmentKey === today) {
+    const appointmentTime = appointmentDateTime(appointment, appointmentKey);
+
+    if (appointmentTime && appointmentTime.getTime() < now.getTime()) {
+      return "Done";
+    }
+
     return "Today";
   }
 

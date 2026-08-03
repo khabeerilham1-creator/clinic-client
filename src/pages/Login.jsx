@@ -11,6 +11,11 @@ const ROLE_OPTIONS = [
   { id: "dentist", label: "Dentist", tone: "dentist" },
 ];
 
+const DEPARTMENT_OPTIONS = [
+  { id: "dental", label: "Dental", detail: "Select clinic shift" },
+  { id: "aesthetics", label: "Aesthetics", detail: "Coming soon" },
+];
+
 const dentistIdForShift = (shiftId) =>
   shiftId === "evening" ? "dr-abdur-rehman" : "dr-tufyl";
 
@@ -88,7 +93,7 @@ function Login({ onLogin }) {
       });
       setPassword("");
       setSelectedShiftId("");
-      setStep("shift");
+      setStep("department");
       playSectionSound("success");
     } catch (requestError) {
       console.error(requestError);
@@ -237,13 +242,15 @@ function Login({ onLogin }) {
       ? "welcome"
       : step === "admin"
         ? "login"
-        : step === "shift" && selectedShift
-          ? "shift-password"
-          : step === "shift"
-            ? "shift"
-            : selectedRole
-              ? "account-password"
-              : "account";
+        : step === "department"
+          ? "department"
+          : step === "shift" && selectedShift
+            ? "shift-password"
+            : step === "shift"
+              ? "shift"
+              : selectedRole
+                ? "account-password"
+                : "account";
   const screenTone =
     screenMode === "shift-password" && selectedShift?.id
       ? `auth-shift-${selectedShift.id}`
@@ -255,10 +262,12 @@ function Login({ onLogin }) {
       ? authAsset("welcome.png")
         : screenMode === "login"
           ? authAsset("login.png")
-        : screenMode === "shift"
+        : screenMode === "department"
           ? authAsset("shift-departments.png")
+        : screenMode === "shift"
+          ? authAsset("shift.png")
           : screenMode === "shift-password"
-            ? authAsset(`shift-${selectedShift?.id || "morning"}.png`)
+            ? authAsset("shift.png")
             : screenMode === "account"
               ? authAsset("accounts.png")
               : authAsset(`account-${selectedRole || "admin"}.png`);
@@ -271,6 +280,12 @@ function Login({ onLogin }) {
       return;
     }
 
+    if (step === "department") {
+      setStep("admin");
+      setPassword("");
+      return;
+    }
+
     if (step === "shift" && selectedShift) {
       setSelectedShiftId("");
       setPassword("");
@@ -278,7 +293,7 @@ function Login({ onLogin }) {
     }
 
     if (step === "shift") {
-      setStep("admin");
+      setStep("department");
       setPassword("");
       return;
     }
@@ -364,13 +379,40 @@ function Login({ onLogin }) {
               {loading ? "Checking..." : "Continue"}
             </button>
           </form>
+        ) : step === "department" ? (
+          <div className="auth-choice-grid auth-department-grid" role="group" aria-label="Select department">
+            {DEPARTMENT_OPTIONS.map((department) => (
+              <button
+                key={department.id}
+                type="button"
+                className={`auth-image-choice auth-department-choice ${department.id}`}
+                onClick={() => {
+                  if (department.id === "aesthetics") {
+                    setError("Aesthetics coming soon.");
+                    playSectionSound("warning");
+                    return;
+                  }
+
+                  setError("");
+                  setSelectedShiftId("");
+                  setPassword("");
+                  setStep("shift");
+                  playSectionSound("section");
+                }}
+                aria-label={`${department.label} ${department.detail}`}
+              >
+                <span className="auth-choice-title">{department.label}</span>
+                <span className="auth-choice-subtitle">{department.detail}</span>
+              </button>
+            ))}
+          </div>
         ) : step === "shift" && !selectedShift ? (
           <div className="auth-choice-grid auth-shift-grid" role="group" aria-label="Select shift">
             {SHIFT_OPTIONS.map((shift) => (
               <button
                 key={shift.id}
                 type="button"
-                 className={`auth-image-choice auth-shift-choice ${shift.id}`}
+                className={`auth-image-choice auth-shift-choice ${shift.id}`}
                 style={{ "--auth-choice-bg": `url(/auth-assets/shift-${shift.id}-card.png)` }}
                 onClick={() => {
                   setSelectedShiftId(shift.id);
@@ -380,8 +422,8 @@ function Login({ onLogin }) {
                 }}
                 aria-label={shift.label}
               >
-                <span className="auth-choice-title">{shift.serviceLabel || shift.label}</span>
-                <span className="auth-choice-subtitle">{shift.label}</span>
+                <span className="auth-choice-title">{shift.label}</span>
+                <span className="auth-choice-subtitle">{shift.doctorName}</span>
               </button>
             ))}
           </div>

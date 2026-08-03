@@ -133,6 +133,7 @@ function Expenses({
   initialCategory = "administration",
   allowedCategories,
 }) {
+  const moduleOnly = !Array.isArray(allowedCategories);
   const categoryOptions = useMemo(() => {
     if (!Array.isArray(allowedCategories) || allowedCategories.length === 0) {
       return CATEGORIES;
@@ -157,8 +158,13 @@ function Expenses({
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
+    if (moduleOnly) {
+      setLoading(false);
+      return;
+    }
+
     fetchExpenses();
-  }, []);
+  }, [moduleOnly]);
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -791,6 +797,44 @@ function Expenses({
   const canShowLedger =
     activeCategory === "dental-material" || activeCategory === "dental-implants";
 
+  const renderExpenseModules = () => (
+    <section className="role-action-grid expense-module-grid no-print">
+      <button className="role-action-card green" type="button" onClick={() => setActivePage("daily-expense")}>
+        <span>DE</span>
+        <strong>Daily Expense</strong>
+        <small>Daily expense sheet and monthly totals.</small>
+      </button>
+      <button className="role-action-card gold" type="button" onClick={() => setActivePage("dental-material")}>
+        <span>DM</span>
+        <strong>Dental Material</strong>
+        <small>Material entries with payment ledgers.</small>
+      </button>
+      <button className="role-action-card blue" type="button" onClick={() => setActivePage("lab-records")}>
+        <span>DL</span>
+        <strong>Dental Lab</strong>
+        <small>Lab case records and payment details.</small>
+      </button>
+    </section>
+  );
+
+  if (moduleOnly) {
+    return (
+      <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
+        <div className="page">
+          <section className="page-hero">
+            <div>
+              <div className="eyebrow">Expense control</div>
+              <h1>Expenses</h1>
+              <p>Choose the expense area you want to open.</p>
+            </div>
+          </section>
+
+          {renderExpenseModules()}
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
       <div className="page printable-page">
@@ -820,23 +864,7 @@ function Expenses({
         {error && <div className="notice danger">{error}</div>}
         {message && <div className={`notice ${message.type === "danger" ? "danger" : ""}`}>{message.text}</div>}
 
-        <section className="role-action-grid expense-module-grid no-print">
-          <button className="role-action-card green" type="button" onClick={() => setActivePage("daily-expense")}>
-            <span>DE</span>
-            <strong>Daily Expense</strong>
-            <small>Daily expense sheet and monthly totals.</small>
-          </button>
-          <button className="role-action-card gold" type="button" onClick={() => setActivePage("dental-material")}>
-            <span>DM</span>
-            <strong>Dental Material</strong>
-            <small>Material entries with payment ledgers.</small>
-          </button>
-          <button className="role-action-card blue" type="button" onClick={() => setActivePage("lab-records")}>
-            <span>DL</span>
-            <strong>Dental Lab</strong>
-            <small>Lab case records and payment details.</small>
-          </button>
-        </section>
+        {renderExpenseModules()}
 
         <section className="toolbar-panel no-print">
           <div className="segmented-control" aria-label="Expense category">
