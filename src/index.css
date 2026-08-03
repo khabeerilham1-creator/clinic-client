@@ -1480,9 +1480,16 @@ textarea:focus {
 
 .login-card {
   align-self: center;
-  width: min(480px, calc(100% - 48px));
+
+  /* Smaller size */
+  width: 360px;
+
+  /* Move towards the left */
   margin: 0 auto;
-  padding: 34px;
+  transform: translateX(-180px);
+
+  /* Styling */
+  padding: 24px;
   border-radius: 24px;
   background: #fff;
   box-shadow: var(--shadow);
