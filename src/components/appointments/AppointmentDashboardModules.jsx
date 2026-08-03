@@ -8,8 +8,9 @@ import {
 import { dateKey, formatDateDisplay } from "../../utils/patientHelpers";
 import ManualAppointmentForm from "./ManualAppointmentForm";
 
-function MiniAppointment({ appointment, onOpenPatient }) {
+function MiniAppointment({ appointment, onOpenPatient, onEditAppointment, onDeleteAppointment }) {
   const canOpen = Boolean(appointment.patient && onOpenPatient);
+  const canManage = appointment.source === "manual" && (onEditAppointment || onDeleteAppointment);
 
   return (
     <div className={`appointment-mini ${appointment.source}`}>
@@ -27,6 +28,20 @@ function MiniAppointment({ appointment, onOpenPatient }) {
       <span className={`pill ${appointment.status === "Done" ? "success" : appointment.status === "Today" ? "warning" : ""}`}>
         {appointment.source === "manual" ? "Appointment" : `Visit ${appointment.visitNo || "-"}`}
       </span>
+      {canManage && (
+        <div className="row-actions appointment-actions no-print">
+          {onEditAppointment && (
+            <button className="btn btn-sm" type="button" onClick={() => onEditAppointment(appointment)}>
+              Edit
+            </button>
+          )}
+          {onDeleteAppointment && (
+            <button className="btn btn-sm btn-danger" type="button" onClick={() => onDeleteAppointment(appointment)}>
+              Delete
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -35,7 +50,12 @@ function AppointmentDashboardModules({
   patients = [],
   manualAppointments = [],
   loading = false,
+  editingAppointment = null,
   onAppointmentCreated,
+  onAppointmentSaved,
+  onCancelAppointmentEdit,
+  onEditAppointment,
+  onDeleteAppointment,
   onOpenAppointments,
   onOpenPatient,
 }) {
@@ -80,6 +100,8 @@ function AppointmentDashboardModules({
               key={`${appointment.source}-${appointment.id}`}
               appointment={appointment}
               onOpenPatient={onOpenPatient}
+              onEditAppointment={onEditAppointment}
+              onDeleteAppointment={onDeleteAppointment}
             />
           ))}
         </div>
@@ -104,6 +126,8 @@ function AppointmentDashboardModules({
               key={`${appointment.source}-${appointment.id}`}
               appointment={appointment}
               onOpenPatient={onOpenPatient}
+              onEditAppointment={onEditAppointment}
+              onDeleteAppointment={onDeleteAppointment}
             />
           ))}
         </div>
@@ -118,12 +142,18 @@ function AppointmentDashboardModules({
       <div className="panel appointment-module add-appointment-module">
         <div className="panel-heading">
           <div>
-            <h2>Add New Appointment</h2>
+            <h2>{editingAppointment ? "Edit Appointment" : "Add New Appointment"}</h2>
             <p>Date, time, name and purpose entry.</p>
           </div>
         </div>
 
-        <ManualAppointmentForm compact onCreated={onAppointmentCreated} />
+        <ManualAppointmentForm
+          compact
+          appointment={editingAppointment}
+          onCreated={onAppointmentCreated}
+          onSaved={onAppointmentSaved}
+          onCancelEdit={onCancelAppointmentEdit}
+        />
       </div>
     </section>
   );

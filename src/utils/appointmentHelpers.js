@@ -86,7 +86,7 @@ export const manualAppointmentPayload = (form) => {
     "";
 
   return {
-    date: form.date || "",
+    date: dateKey(form.date) || form.date || "",
     time: form.time || "",
     clientName: form.clientName || "",
     purpose: form.purpose || "",

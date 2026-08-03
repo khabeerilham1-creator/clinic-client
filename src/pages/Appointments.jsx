@@ -27,9 +27,17 @@ import {
   regNo,
 } from "../utils/patientHelpers";
 
-function AppointmentCard({ appointment, tone, patient, onOpenPatient }) {
+function AppointmentCard({
+  appointment,
+  tone,
+  patient,
+  onOpenPatient,
+  onEditAppointment,
+  onDeleteAppointment,
+}) {
   const name = appointment.clientName || appointment.patientName;
   const canOpen = Boolean(patient && onOpenPatient);
+  const canManage = appointment.source === "manual" && (onEditAppointment || onDeleteAppointment);
 
   return (
     <div className={`schedule-card ${tone}`}>
@@ -56,6 +64,21 @@ function AppointmentCard({ appointment, tone, patient, onOpenPatient }) {
         <span>{appointment.mobileNumber}</span>
         <span>{appointment.source === "manual" ? "Appointment" : `Reg ${appointment.registrationNo || "-"}`}</span>
       </div>
+
+      {canManage && (
+        <div className="row-actions appointment-actions no-print">
+          {onEditAppointment && (
+            <button className="btn btn-sm" type="button" onClick={() => onEditAppointment(appointment)}>
+              Edit
+            </button>
+          )}
+          {onDeleteAppointment && (
+            <button className="btn btn-sm btn-danger" type="button" onClick={() => onDeleteAppointment(appointment)}>
+              Delete
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -86,6 +109,7 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
   const [search, setSearch] = useState("");
   const [caseDetailSection, setCaseDetailSection] = useState("");
   const [activeWeekday, setActiveWeekday] = useState(1);
+  const [editingAppointment, setEditingAppointment] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -222,6 +246,49 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     fetchAppointments();
   };
 
+  const handleManualSaved = (_appointment, wasEditing) => {
+    setActionMessage(wasEditing ? "Appointment updated." : "Appointment saved.");
+    setEditingAppointment(null);
+    fetchAppointments();
+  };
+
+  const handleDeleteAppointment = async (appointment) => {
+    if (appointment.source !== "manual") {
+      setActionMessage("Open the patient file to change planned visits.");
+      return;
+    }
+
+    const id = appointment.raw?._id || appointment.id;
+
+    if (!id) {
+      setError("Appointment ID is missing.");
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete appointment for ${appointment.clientName || appointment.patientName}?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setError("");
+    setActionMessage("");
+
+    try {
+      await api.delete(`/appointments/${id}`);
+      setActionMessage("Appointment deleted.");
+
+      if ((editingAppointment?.raw?._id || editingAppointment?.id) === id) {
+        setEditingAppointment(null);
+      }
+
+      fetchAppointments();
+    } catch (requestError) {
+      console.error(requestError);
+      setError(requestError?.response?.data?.detail || "Appointment could not be deleted.");
+    }
+  };
+
   if (caseDetailSection) {
     return (
       <Layout
@@ -334,7 +401,12 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
           patients={patients}
           manualAppointments={manualAppointments}
           loading={loading}
+          editingAppointment={editingAppointment}
           onAppointmentCreated={handleManualCreated}
+          onAppointmentSaved={handleManualSaved}
+          onCancelAppointmentEdit={() => setEditingAppointment(null)}
+          onEditAppointment={setEditingAppointment}
+          onDeleteAppointment={handleDeleteAppointment}
           onOpenPatient={(patient) => openPatientFile(patient, setActivePage)}
         />
 
@@ -389,6 +461,8 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                   appointment={appointment}
                   patient={appointmentPatient(appointment)}
                   onOpenPatient={(patient) => openPatientFile(patient, setActivePage)}
+                  onEditAppointment={setEditingAppointment}
+                  onDeleteAppointment={handleDeleteAppointment}
                   tone="today"
                 />
               ))}
@@ -429,6 +503,8 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                   appointment={appointment}
                   patient={appointmentPatient(appointment)}
                   onOpenPatient={(patient) => openPatientFile(patient, setActivePage)}
+                  onEditAppointment={setEditingAppointment}
+                  onDeleteAppointment={handleDeleteAppointment}
                   tone="tomorrow"
                 />
               ))}
@@ -454,18 +530,19 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                     <th>Contact</th>
                     <th>Time</th>
                     <th>Purpose</th>
+                    <th className="no-print">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="6">Loading weekly appointments...</td>
+                      <td colSpan="7">Loading weekly appointments...</td>
                     </tr>
                   )}
 
                   {!loading && grouped.weekly.length === 0 && (
                     <tr>
-                      <td colSpan="6">No appointments found this week.</td>
+                      <td colSpan="7">No appointments found this week.</td>
                     </tr>
                   )}
 
@@ -491,6 +568,31 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                       <td>{appointment.mobileNumber}</td>
                       <td>{appointment.timeLabel || formatTimeDisplay(appointment.time) || "-"}</td>
                       <td>{appointment.purpose || appointment.procedure || "-"}</td>
+                      <td className="row-actions no-print">
+                        {appointment.source === "manual" ? (
+                          <>
+                            <button className="btn btn-sm" type="button" onClick={() => setEditingAppointment(appointment)}>
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-danger"
+                              type="button"
+                              onClick={() => handleDeleteAppointment(appointment)}
+                            >
+                              Delete
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            className="btn btn-sm"
+                            type="button"
+                            onClick={() => openPatientFile(appointmentPatient(appointment), setActivePage)}
+                            disabled={!appointmentPatient(appointment)}
+                          >
+                            Open
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

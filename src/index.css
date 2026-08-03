@@ -3081,13 +3081,13 @@ textarea:focus {
 }
 
 .auth-login-form {
-  margin: 0 auto;
+  margin: 0;
 }
 
 .auth-screen-login .auth-stage-login {
   justify-content: flex-end;
   padding-left: clamp(24px, 4vw, 72px);
-  padding-right: clamp(36px, 9vw, 172px);
+  padding-right: clamp(52px, 11vw, 210px);
 }
 
 .auth-field {
@@ -3262,9 +3262,9 @@ textarea:focus {
 }
 
 .auth-login-form {
-  width: min(390px, calc(100vw - 56px));
-  gap: 13px;
-  padding: clamp(18px, 2vw, 24px);
+  width: min(310px, calc(100vw - 56px));
+  gap: 10px;
+  padding: clamp(14px, 1.8vw, 18px);
   border-color: rgba(213, 165, 59, 0.72);
   background: rgba(3, 22, 18, 0.82);
 }
@@ -3278,17 +3278,18 @@ textarea:focus {
 }
 
 .auth-login-form .auth-field input {
-  min-height: 50px;
+  min-height: 42px;
   border: 2px solid rgba(213, 165, 59, 0.86);
+  font-size: 14px;
 }
 
 .auth-login-form .auth-password-field {
-  grid-template-columns: minmax(0, 1fr) 52px;
+  grid-template-columns: minmax(0, 1fr) 44px;
 }
 
 .auth-login-form .auth-eye-button,
 .auth-login-form .auth-continue-button {
-  min-height: 50px;
+  min-height: 42px;
 }
 
 .auth-screen-department .auth-stage-department {

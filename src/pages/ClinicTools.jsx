@@ -1,15 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
+import api from "../api";
 import Layout from "../components/Layout";
 import PriceListPanel from "../components/patient/PriceListPanel";
 import { AcknowledgementSheet } from "../components/patient/SpecialtySheets";
-import { dateKey, formatTimeDisplay } from "../utils/patientHelpers";
-
-const entryStorageKey = "clinicEntrySheetRows";
+import { activeShift, dateKey, formatDateDisplay, formatTimeDisplay } from "../utils/patientHelpers";
 
 const emptyEntry = () => ({
-  id: `${Date.now()}`,
-  date: dateKey(new Date()),
+  date: formatDateDisplay(new Date()),
   name: "",
   time: "",
   purpose: "",
@@ -18,44 +16,152 @@ const emptyEntry = () => ({
   exitTime: "",
 });
 
-const readEntries = () => {
+const entryArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.entries)) {
+    return payload.entries;
+  }
+
+  return [];
+};
+
+const safeUser = () => {
   try {
-    return JSON.parse(localStorage.getItem(entryStorageKey) || "[]");
+    return JSON.parse(sessionStorage.getItem("user") || "{}");
   } catch (error) {
-    return [];
+    return {};
   }
 };
 
+const entryId = (entry) => entry?._id || entry?.id || "";
+
 export function EntrySheet({ activePage, setActivePage, handleLogout }) {
   const [form, setForm] = useState(emptyEntry);
-  const [entries, setEntries] = useState(readEntries);
+  const [entries, setEntries] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const shift = activeShift();
 
-  const saveEntry = (event) => {
+  useEffect(() => {
+    fetchEntries();
+  }, [shift?.id]);
+
+  const fetchEntries = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.get("/entry-sheet", {
+        params: {
+          limit: 1000,
+          shift: shift?.id || undefined,
+        },
+      });
+      setEntries(entryArray(response.data));
+    } catch (requestError) {
+      console.error(requestError);
+      setEntries([]);
+      setError("Entry sheet could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const entryPayload = () => {
+    const user = safeUser();
+
+    return {
+      ...form,
+      date: dateKey(form.date) || "",
+      shiftId: shift?.id || user.shiftId || "",
+      shiftName: shift?.label || user.shiftName || "",
+      createdByRole: sessionStorage.getItem("role") || user.role || "",
+      createdByName: user.name || "",
+    };
+  };
+
+  const saveEntry = async (event) => {
     event.preventDefault();
 
-    if (!form.name.trim()) {
+    if (!form.name.trim() || !dateKey(form.date)) {
+      setError("Please enter name and date as day/month/year.");
       return;
     }
 
-    const savedEntry = { ...form, id: editingId || form.id || `${Date.now()}` };
-    const nextEntries = editingId
-      ? entries.map((entry) => (entry.id === editingId ? savedEntry : entry))
-      : [savedEntry, ...entries];
+    setSaving(true);
+    setError("");
+    setMessage("");
 
-    setEntries(nextEntries);
-    localStorage.setItem(entryStorageKey, JSON.stringify(nextEntries));
-    setEditingId(null);
-    setForm(emptyEntry());
+    try {
+      const payload = entryPayload();
+
+      if (editingId) {
+        await api.put(`/entry-sheet/${editingId}`, payload);
+        setMessage("Entry updated.");
+      } else {
+        await api.post("/entry-sheet", payload);
+        setMessage("Entry saved.");
+      }
+
+      setEditingId(null);
+      setForm(emptyEntry());
+      fetchEntries();
+    } catch (requestError) {
+      console.error(requestError);
+      setError(requestError?.response?.data?.detail || "Entry could not be saved.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setError("");
+    setMessage("");
   };
 
   const editEntry = (entry) => {
-    setEditingId(entry.id);
-    setForm({ ...emptyEntry(), ...entry });
+    setEditingId(entryId(entry));
+    setForm({ ...emptyEntry(), ...entry, date: formatDateDisplay(entry.date) });
+    setError("");
+    setMessage("");
+  };
+
+  const deleteEntry = async (entry) => {
+    const id = entryId(entry);
+
+    if (!id) {
+      setError("Entry ID is missing.");
+      return;
+    }
+
+    if (!window.confirm(`Delete entry for ${entry.name}?`)) {
+      return;
+    }
+
+    setError("");
+    setMessage("");
+
+    try {
+      await api.delete(`/entry-sheet/${id}`);
+      setMessage("Entry deleted.");
+
+      if (editingId === id) {
+        setEditingId(null);
+        setForm(emptyEntry());
+      }
+
+      fetchEntries();
+    } catch (requestError) {
+      console.error(requestError);
+      setError(requestError?.response?.data?.detail || "Entry could not be deleted.");
+    }
   };
 
   const cancelEdit = () => {
@@ -76,6 +182,15 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
 
         <section className="panel">
           <form className="appointment-form-grid entry-sheet-form" onSubmit={saveEntry}>
+            <label className="field">
+              <span>Date</span>
+              <input
+                inputMode="numeric"
+                placeholder="dd/mm/yyyy"
+                value={form.date}
+                onChange={(event) => updateField("date", event.target.value)}
+              />
+            </label>
             <label className="field">
               <span>Name</span>
               <input value={form.name} onChange={(event) => updateField("name", event.target.value)} />
@@ -104,15 +219,17 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
               <span>Exit Time</span>
               <input type="time" value={form.exitTime} onChange={(event) => updateField("exitTime", event.target.value)} />
             </label>
-            <button className="btn btn-primary btn-full" type="submit">
-              {editingId ? "Update Entry" : "Save Entry"}
+            <button className="btn btn-primary btn-full" type="submit" disabled={saving}>
+              {saving ? "Saving..." : editingId ? "Update Entry" : "Save Entry"}
             </button>
             {editingId && (
-              <button className="btn btn-full" type="button" onClick={cancelEdit}>
+              <button className="btn btn-full" type="button" onClick={cancelEdit} disabled={saving}>
                 Cancel
               </button>
             )}
           </form>
+          {error && <div className="notice danger compact-notice">{error}</div>}
+          {message && <div className="notice compact-notice">{message}</div>}
         </section>
 
         <section className="panel">
@@ -120,6 +237,7 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th>Date</th>
                   <th>Name</th>
                   <th>Time</th>
                   <th>Purpose</th>
@@ -130,13 +248,19 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
                 </tr>
               </thead>
               <tbody>
-                {entries.length === 0 && (
+                {loading && (
                   <tr>
-                    <td colSpan="7">No entry sheet records yet.</td>
+                    <td colSpan="8">Loading entry sheet...</td>
                   </tr>
                 )}
-                {entries.map((entry) => (
-                  <tr key={entry.id}>
+                {!loading && entries.length === 0 && (
+                  <tr>
+                    <td colSpan="8">No entry sheet records yet.</td>
+                  </tr>
+                )}
+                {!loading && entries.map((entry) => (
+                  <tr key={entryId(entry)}>
+                    <td>{formatDateDisplay(entry.date) || "-"}</td>
                     <td>{entry.name}</td>
                     <td>{formatTimeDisplay(entry.time) || "-"}</td>
                     <td>{entry.purpose}</td>
@@ -146,6 +270,9 @@ export function EntrySheet({ activePage, setActivePage, handleLogout }) {
                     <td className="row-actions no-print">
                       <button className="btn btn-sm" type="button" onClick={() => editEntry(entry)}>
                         Edit
+                      </button>
+                      <button className="btn btn-sm btn-danger" type="button" onClick={() => deleteEntry(entry)}>
+                        Delete
                       </button>
                     </td>
                   </tr>

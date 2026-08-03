@@ -423,7 +423,6 @@ function Login({ onLogin }) {
                 aria-label={shift.label}
               >
                 <span className="auth-choice-title">{shift.label}</span>
-                <span className="auth-choice-subtitle">{shift.doctorName}</span>
               </button>
             ))}
           </div>

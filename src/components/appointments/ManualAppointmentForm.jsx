@@ -1,32 +1,73 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import api from "../../api";
 import {
   APPOINTMENT_PURPOSE_OPTIONS,
   manualAppointmentPayload,
 } from "../../utils/appointmentHelpers";
-import { dateKey } from "../../utils/patientHelpers";
+import { dateKey, formatDateDisplay } from "../../utils/patientHelpers";
+
+const STATUS_OPTIONS = [
+  { value: "scheduled", label: "Scheduled" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "missed", label: "Missed" },
+];
 
 const emptyForm = () => ({
-  date: dateKey(new Date()),
+  date: formatDateDisplay(new Date()),
   time: "",
   clientName: "",
   mobileNumber: "",
   purpose: APPOINTMENT_PURPOSE_OPTIONS[0],
   notes: "",
   status: "scheduled",
+  patientId: "",
+  registrationNo: "",
 });
 
-function ManualAppointmentForm({ onCreated, compact = false }) {
+const appointmentId = (appointment) => appointment?._id || appointment?.id || "";
+
+const formFromAppointment = (appointment) => {
+  const raw = appointment?.raw || appointment || {};
+
+  return {
+    ...emptyForm(),
+    date: formatDateDisplay(raw.date || appointment?.date || new Date()),
+    time: raw.time || appointment?.time || "",
+    clientName: raw.clientName || appointment?.clientName || appointment?.patientName || "",
+    mobileNumber: raw.mobileNumber || appointment?.mobileNumber || "",
+    purpose: raw.purpose || appointment?.purpose || appointment?.procedure || APPOINTMENT_PURPOSE_OPTIONS[0],
+    notes: raw.notes || appointment?.notes || "",
+    status: raw.status || appointment?.status || "scheduled",
+    patientId: raw.patientId || appointment?.patientId || "",
+    registrationNo: raw.registrationNo || appointment?.registrationNo || "",
+  };
+};
+
+function ManualAppointmentForm({
+  appointment,
+  onCreated,
+  onSaved,
+  onCancelEdit,
+  compact = false,
+}) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const editingId = appointmentId(appointment);
 
   const canSave = useMemo(
-    () => form.date && form.time && form.clientName.trim() && form.purpose,
+    () => dateKey(form.date) && form.time && form.clientName.trim() && form.purpose,
     [form]
   );
+
+  useEffect(() => {
+    setForm(editingId ? formFromAppointment(appointment) : emptyForm());
+    setMessage("");
+    setError("");
+  }, [appointment, editingId]);
 
   const updateField = (field, value) => {
     setForm((current) => ({
@@ -41,7 +82,7 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
     event.preventDefault();
 
     if (!canSave || saving) {
-      setError("Please enter date, time, name and purpose.");
+      setError("Please enter date as day/month/year, time, name and purpose.");
       return;
     }
 
@@ -51,12 +92,22 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
 
     try {
       const payload = manualAppointmentPayload(form);
-      const response = await api.post("/appointments", payload);
-      setForm(emptyForm());
-      setMessage("Appointment saved.");
+      const response = editingId
+        ? await api.put(`/appointments/${editingId}`, payload)
+        : await api.post("/appointments", payload);
 
-      if (onCreated) {
+      if (!editingId) {
+        setForm(emptyForm());
+      }
+
+      setMessage(editingId ? "Appointment updated." : "Appointment saved.");
+
+      if (!editingId && onCreated && !onSaved) {
         onCreated(response.data?.appointment);
+      }
+
+      if (onSaved) {
+        onSaved(response.data?.appointment, Boolean(editingId));
       }
     } catch (requestError) {
       console.error(requestError);
@@ -72,10 +123,11 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
         <label className="field">
           <span>Date</span>
           <input
-            type="date"
+            type="text"
+            inputMode="numeric"
+            placeholder="dd/mm/yyyy"
             value={form.date}
             onChange={(event) => updateField("date", event.target.value)}
-            max="9999-12-31"
           />
         </label>
 
@@ -124,6 +176,20 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
         </label>
 
         <label className="field">
+          <span>Status</span>
+          <select
+            value={form.status}
+            onChange={(event) => updateField("status", event.target.value)}
+          >
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
           <span>Notes</span>
           <input
             type="text"
@@ -138,8 +204,13 @@ function ManualAppointmentForm({ onCreated, compact = false }) {
       {message && <div className="notice compact-notice">{message}</div>}
 
       <button className="btn btn-primary btn-full" type="submit" disabled={saving || !canSave}>
-        {saving ? "Saving..." : "Save appointment"}
+        {saving ? "Saving..." : editingId ? "Update appointment" : "Save appointment"}
       </button>
+      {editingId && onCancelEdit && (
+        <button className="btn btn-full" type="button" onClick={onCancelEdit} disabled={saving}>
+          Cancel edit
+        </button>
+      )}
     </form>
   );
 }
