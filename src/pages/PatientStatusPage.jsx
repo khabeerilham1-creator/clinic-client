@@ -31,19 +31,19 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
   const role = sessionStorage.getItem("role") || user.role || "";
   const modeDetails = {
     ongoing: {
-      title: "On Going Client",
-      description: "Clients with appointment date and time.",
-      empty: "No ongoing clients found.",
+      title: "On Going Cases",
+      description: "Cases with appointment date and time.",
+      empty: "No ongoing cases found.",
     },
     "completed-cases": {
       title: "Completed Cases",
-      description: "Clients whose last planned appointment is done.",
+      description: "Cases whose last planned appointment is done.",
       empty: "No completed cases found.",
     },
     expected: {
-      title: "Expected Clients",
-      description: "Checkup clients with completed files and no planned sequence dates.",
-      empty: "No expected clients found.",
+      title: "Expected Cases",
+      description: "Expected cases are checkup-only cases whose appointment is not confirmed.",
+      empty: "No expected cases found.",
     },
   };
   const currentMode = modeDetails[mode] || modeDetails.ongoing;
@@ -99,7 +99,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
       <div className="page">
         <section className="page-hero accent-hero">
           <div>
-            <div className="eyebrow">Client status</div>
+            <div className="eyebrow">Case status</div>
             <h1>{currentMode.title}</h1>
             <p>{totalRows} records found. {currentMode.description}</p>
           </div>
@@ -112,9 +112,9 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Client</th>
+                  <th>Name</th>
                   <th>Reg No</th>
-                  <th>Mobile</th>
+                  <th>Contact</th>
                   <th>Appointments</th>
                   <th>Balance</th>
                 </tr>
@@ -122,7 +122,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="5">Loading clients...</td>
+                    <td colSpan="5">Loading cases...</td>
                   </tr>
                 )}
                 {!loading && totalRows === 0 && (
@@ -146,9 +146,9 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
                     <td>{mobileNumber(patient)}</td>
                     <td>
                       {mode === "expected"
-                        ? "Checkup completed, date expected"
+                        ? "Checkup done, appointment expected"
                         : mode === "completed-cases"
-                          ? summary.phaseLabel || "The case has been completed."
+                          ? summary.phaseLabel || "The case has been successfully completed."
                           : `${summary.scheduledCount} scheduled`}
                     </td>
                     <td>{formatCurrency(balanceDue(patient))}</td>

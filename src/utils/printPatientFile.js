@@ -228,7 +228,7 @@ const specialtyBioGrid = (patient, includeFileNo = false) => {
   const rows = [
     ["Name", titledPatientName(patient), "Date", formatDate(patientBio.date || new Date())],
     ["Birthdate", patientBio.birthDate || "", "Gender", patientBio.gender || ""],
-    ["Address", patientBio.address || "", "Cell No", patientBio.cellNo || mobileNumber(patient)],
+    ["Address", patientBio.address || "", "Contact", patientBio.cellNo || mobileNumber(patient)],
   ];
 
   if (includeFileNo) {
@@ -444,7 +444,7 @@ const acknowledgementPage = (patient) => {
 
       <div class="ack-print-signatures">
         <div><span>${plainValue(acknowledgement.patientSignature)}</span><b>Patient / Guardian Signature</b></div>
-        <div><span>${plainValue(acknowledgement.staffSignature)}</span><b>Doctor / Staff Signature</b></div>
+        <div><span>${plainValue(acknowledgement.staffSignature)}</span><b>Dentist / Staff Signature</b></div>
         <div><span>${plainValue(acknowledgement.date || formatOptionalDate(new Date()))}</span><b>Date</b></div>
       </div>
     </section>
@@ -467,8 +467,8 @@ const checkupPage = (patient, copyLabel, toothChartUrl) => {
         <div><b>Reg No</b><span>${escapeHtml(regNo(patient) || "-")}</span></div>
         <div><b>Date</b><span>${escapeHtml(formatDate(patientBio.date || new Date()))}</span></div>
         <div><b>Patient</b><span>${escapeHtml(titledPatientName(patient))}</span></div>
-        <div><b>Mobile</b><span>${escapeHtml(mobileNumber(patient))}</span></div>
-        <div><b>Doctor</b><span>${escapeHtml(patientBio.doctorName || DOCTOR_NAME)}</span></div>
+        <div><b>Contact</b><span>${escapeHtml(mobileNumber(patient))}</span></div>
+        <div><b>Dentist</b><span>${escapeHtml(patientBio.doctorName || DOCTOR_NAME)}</span></div>
         <div><b>Category</b><span>${escapeHtml(patientBio.category || "-")}</span></div>
         <div><b>Age</b><span>${escapeHtml(patientBio.age || "-")}</span></div>
         <div><b>Type</b><span>${escapeHtml(patientBio.patientType || "-")}</span></div>
@@ -525,8 +525,8 @@ const invoicePage = (patient, copyLabel, invoice) => {
           <div><b>Reg</b><span>${escapeHtml(regNo(patient) || "-")}</span></div>
           <div><b>Date</b><span>${escapeHtml(formatDate(patientBio.date || new Date()))}</span></div>
           <div><b>Name</b><span>${escapeHtml(titledPatientName(patient))}</span></div>
-          <div><b>Mobile</b><span>${escapeHtml(mobileNumber(patient))}</span></div>
-          <div><b>Doctor</b><span>${escapeHtml(patientBio.doctorName || DOCTOR_NAME)}</span></div>
+          <div><b>Contact</b><span>${escapeHtml(mobileNumber(patient))}</span></div>
+          <div><b>Dentist</b><span>${escapeHtml(patientBio.doctorName || DOCTOR_NAME)}</span></div>
           <div><b>Cat</b><span>${escapeHtml(patientBio.category || "-")}</span></div>
         </div>
 

@@ -204,14 +204,14 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             <div>
               <div className="eyebrow">Dentist workspace</div>
               <h1>{dentistName}</h1>
-              <p>{dateLabel}. Client list and summary for the selected dentist.</p>
+              <p>{dateLabel}. Case list and summary for the selected dentist.</p>
             </div>
             <div className="hero-actions no-print">
               <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
-                New client
+                New case
               </button>
               <button className="btn btn-primary" onClick={() => setActivePage("dentist-patients")}>
-                Client list
+                Case list
               </button>
               <button className="btn" onClick={() => setActivePage("dentist-summary")}>
                 Summary
@@ -232,9 +232,9 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           <section className="metrics-grid">
             <div className="metric-card gold-bordered">
               <div className="metric-accent blue" />
-              <div className="metric-label">Clients</div>
+              <div className="metric-label">Cases</div>
               <div className="metric-value">{loading ? "..." : dentistPatients.length}</div>
-              <div className="metric-detail">Records linked with this dentist</div>
+              <div className="metric-detail">Cases linked with this dentist</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent green" />
@@ -242,15 +242,15 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
               <div className="metric-value">
                 {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.category === "ongoing").length}
               </div>
-              <div className="metric-detail">Clients with appointments</div>
+              <div className="metric-detail">Cases with appointments</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent gold" />
-              <div className="metric-label">Expected</div>
+              <div className="metric-label">Expected Cases</div>
               <div className="metric-value">
                 {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.isExpected).length}
               </div>
-              <div className="metric-detail">Checkup files waiting for planned dates</div>
+              <div className="metric-detail">Checkup done, appointment not confirmed</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent rose" />
@@ -258,7 +258,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
               <div className="metric-value">
                 {loading ? "..." : dentistPatientSummaries.filter(({ summary }) => summary.isCompletedCase).length}
               </div>
-              <div className="metric-detail">The case has been completed</div>
+              <div className="metric-detail">The case has been successfully completed</div>
             </div>
             <div className="metric-card gold-bordered">
               <div className="metric-accent gold" />
@@ -272,8 +272,8 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             <div className="panel xl gold-bordered">
               <div className="panel-heading">
                 <div>
-                  <h2>Client List</h2>
-                  <p>{dentistPatients.length} records available.</p>
+                  <h2>Case List</h2>
+                  <p>{dentistPatients.length} cases available.</p>
                 </div>
               </div>
 
@@ -281,9 +281,9 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Client</th>
+                      <th>Name</th>
                       <th>Reg No</th>
-                      <th>Mobile</th>
+                      <th>Contact</th>
                       <th>Status</th>
                       <th>Balance</th>
                     </tr>
@@ -291,12 +291,12 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
                   <tbody>
                     {loading && (
                       <tr>
-                        <td colSpan="5">Loading clients...</td>
+                        <td colSpan="5">Loading cases...</td>
                       </tr>
                     )}
                     {!loading && dentistPatients.length === 0 && (
                       <tr>
-                        <td colSpan="5">No clients found.</td>
+                        <td colSpan="5">No cases found.</td>
                       </tr>
                     )}
                     {dentistPatients.slice(0, 12).map((patient) => (
@@ -329,7 +329,7 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             <div className="panel gold-bordered">
               <div className="panel-heading">
                 <div>
-                  <h2>Summary of Clients</h2>
+                  <h2>Summary of Cases</h2>
                   <p>Table format can be expanded when shared.</p>
                 </div>
               </div>
@@ -377,37 +377,30 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
           <RoleAction
             short="A"
             title="Appointments"
-            detail="View scheduled clients"
+            detail="View scheduled cases"
             tone="gold"
             onClick={() => setActivePage("appointments")}
           />
           <RoleAction
             short="+"
-            title="New Checkup"
-            detail="Open a fresh comprehensive checkup file"
+            title="New Case"
+            detail="Open a fresh comprehensive case file"
             tone="green"
             onClick={() => setActivePage("patients")}
           />
           <RoleAction
             short="R"
-            title="Registered Clients"
-            detail="Search and open client records"
+            title="Registered Cases"
+            detail="Search and open case records"
             tone="cyan"
             onClick={() => setActivePage("patients-list")}
           />
           <RoleAction
-            short="LR"
-            title="Lab Records"
-            detail="Lab cases and payment ledgers"
+            short="E"
+            title="Expenses"
+            detail="Daily expense, dental material and dental lab"
             tone="blue"
-            onClick={() => setActivePage("lab-records")}
-          />
-          <RoleAction
-            short="DM"
-            title="Dental Material"
-            detail="Material entries and ledgers"
-            tone="gold"
-            onClick={() => setActivePage("dental-material")}
+            onClick={() => setActivePage("expenses")}
           />
           <RoleAction
             short="LF"
@@ -416,101 +409,6 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             tone="green"
             onClick={() => setActivePage("lab-follow-up")}
           />
-        </section>
-
-        <section className="role-action-grid receptionist-status-grid">
-          <RoleAction
-            short="TE"
-            title="Total Entries"
-            detail={`${patients.length} registered`}
-            tone="blue"
-            onClick={() => setActivePage("patients-list")}
-          />
-          <RoleAction
-            short="EX"
-            title="Expected"
-            detail={`${expectedPatients.length} checkup clients`}
-            tone="gold"
-            onClick={() => setActivePage("appointments")}
-          />
-          <RoleAction
-            short="C"
-            title="Completed Cases"
-            detail={`${completedPatients.length} completed`}
-            tone="green"
-            onClick={() => setActivePage("completed-patients")}
-          />
-          <RoleAction
-            short="FU"
-            title="Follow Up"
-            detail={`${followUpPatients.length} phase completed`}
-            tone="rose"
-            onClick={() => setActivePage("appointments")}
-          />
-        </section>
-
-        <section className="metrics-grid">
-          <div className="metric-card gold-bordered">
-            <div className="metric-accent green" />
-            <div className="metric-label">Today&apos;s Income</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(incomeDetails.todayTotal)}</div>
-            <div className="metric-detail">{incomeDetails.todayRows.length} payments today</div>
-          </div>
-          <div className="metric-card gold-bordered">
-            <div className="metric-accent blue" />
-            <div className="metric-label">Monthly Income</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(incomeDetails.monthlyTotal)}</div>
-            <div className="metric-detail">Current month received</div>
-          </div>
-          <div className="metric-card gold-bordered">
-            <div className="metric-accent gold" />
-            <div className="metric-label">Quarterly Income</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(incomeDetails.quarterlyTotal)}</div>
-            <div className="metric-detail">Current quarter received</div>
-          </div>
-        </section>
-
-        <section className="panel">
-          <div className="panel-heading">
-            <div>
-              <h2>Today&apos;s Income Details</h2>
-              <p>Payments recorded on {formatDateDisplay(new Date())}.</p>
-            </div>
-            <span className="pill success">{incomeDetails.todayRows.length}</span>
-          </div>
-
-          <div className="data-table-wrap">
-            <table className="data-table compact-table">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th>Reg No</th>
-                  <th>Details</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan="4">Loading income details...</td>
-                  </tr>
-                )}
-                {!loading && incomeDetails.todayRows.length === 0 && (
-                  <tr>
-                    <td colSpan="4">No income recorded today.</td>
-                  </tr>
-                )}
-                {!loading && incomeDetails.todayRows.map((row, index) => (
-                  <tr key={`${row.patient._id || regNo(row.patient)}-${row.entry.id || index}`}>
-                    <td>{patientName(row.patient)}</td>
-                    <td>{regNo(row.patient) || "-"}</td>
-                    <td>{row.entry.description || "Payment received"}</td>
-                    <td>{formatCurrency(row.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </section>
       </div>
     </Layout>

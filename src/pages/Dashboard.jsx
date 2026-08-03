@@ -7,7 +7,6 @@ import {
   appointmentRequestParams,
   appointmentTimeline,
   filterManualAppointmentsForUser,
-  patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
 import { openPatientFile } from "../utils/clientNavigation";
 import {
@@ -161,17 +160,6 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     };
   }, [patients, periodPatients, selectedMonth, selectedYear]);
 
-  const dashboardSummary = useMemo(() => {
-    const summaries = patients.map((patient) => patientAppointmentSummary(patient, manualAppointments));
-
-    return {
-      totalEntries: patients.length,
-      expected: summaries.filter((summary) => summary.isExpected).length,
-      completedCases: summaries.filter((summary) => summary.isCompletedCase).length,
-      followUp: summaries.filter((summary) => summary.isFollowUp).length,
-    };
-  }, [patients, manualAppointments]);
-
   const dueAccounts = patients
     .filter((patient) => balanceDue(patient) > 0)
     .sort((a, b) => balanceDue(b) - balanceDue(a))
@@ -189,14 +177,14 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             <div className="eyebrow">Clinic overview</div>
             <h1>{shift?.label || "Executive Dashboard"}</h1>
             <p>
-              {dateLabel}. Client flow, treatment plans and account health at a glance.
+              {dateLabel}. Case flow, treatment plans and account health at a glance.
             </p>
           </div>
 
           <div className="hero-actions no-print">
             <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
               <span className="btn-icon">+</span>
-              New checkup
+              New case
             </button>
             <button className="btn" onClick={() => setActivePage("appointments")}>
               Appointments
@@ -219,41 +207,14 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
           </button>
           <button className="role-action-card green" type="button" onClick={() => setActivePage("patients")}>
             <span>+</span>
-            <strong>New Checkup</strong>
-            <small>Open a fresh comprehensive checkup file.</small>
+            <strong>New Case</strong>
+            <small>Open a fresh comprehensive case file.</small>
           </button>
           <button className="role-action-card cyan" type="button" onClick={() => setActivePage("patients-list")}>
             <span>R</span>
-            <strong>Registered Clients</strong>
+            <strong>Registered Cases</strong>
             <small>{selectedPeriodLabel}</small>
           </button>
-        </section>
-
-        <section className="metrics-grid">
-          <StatCard
-            label="Total Entries"
-            value={loading ? "..." : dashboardSummary.totalEntries}
-            detail="All registered client files"
-            accent="blue"
-          />
-          <StatCard
-            label="Expected"
-            value={loading ? "..." : dashboardSummary.expected}
-            detail="Checkup clients waiting for planned dates"
-            accent="gold"
-          />
-          <StatCard
-            label="Completed Cases"
-            value={loading ? "..." : dashboardSummary.completedCases}
-            detail="Last planned appointment is done"
-            accent="green"
-          />
-          <StatCard
-            label="Follow Up"
-            value={loading ? "..." : dashboardSummary.followUp}
-            detail="Completed cases with phase labels"
-            accent="rose"
-          />
         </section>
 
         <section className="toolbar-panel revenue-filter">
@@ -308,18 +269,18 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             accent="rose"
           />
           <StatCard
-            label="Clients"
+            label="Cases"
             value={loading ? "..." : periodMetrics.patients}
-            detail="Filtered by client record date"
+            detail="Filtered by case record date"
             accent="blue"
           />
         </section>
 
         <section className="metrics-grid">
           <StatCard
-            label="Total clients"
+            label="Total cases"
             value={loading ? "..." : metrics.totalPatients}
-            detail="Complete client records"
+            detail="Complete case records"
             accent="blue"
           />
           <StatCard
@@ -346,7 +307,7 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
           <div className="panel xl">
             <div className="panel-heading">
               <div>
-                <h2>Selected Period Clients A-Z</h2>
+                <h2>Selected Period Cases A-Z</h2>
                 <p>{periodMetrics.patients} records match the current dashboard filter.</p>
               </div>
               <button className="btn btn-sm" onClick={() => setActivePage("patients-list")}>
@@ -358,9 +319,9 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Client</th>
+                    <th>Name</th>
                     <th>Reg No</th>
-                    <th>Mobile</th>
+                    <th>Contact</th>
                     <th>Total</th>
                     <th>Due</th>
                   </tr>
@@ -368,13 +329,13 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="5">Loading recent clients...</td>
+                      <td colSpan="5">Loading recent cases...</td>
                     </tr>
                   )}
 
                   {!loading && selectedPeriodPatients.length === 0 && (
                     <tr>
-                      <td colSpan="5">No clients found for the selected period.</td>
+                      <td colSpan="5">No cases found for the selected period.</td>
                     </tr>
                   )}
 

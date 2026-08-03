@@ -11,6 +11,7 @@ import {
 import {
   activeShiftId,
   balanceDue,
+  caseShareCalculation,
   dentistProfileForUser,
   filterPatientsForDentist,
   filterPatientsForActiveShift,
@@ -19,35 +20,36 @@ import {
   mobileNumber,
   netAmount,
   patientArray,
+  patientDepartmentLabel,
   patientName,
   regNo,
 } from "../utils/patientHelpers";
 
 const PAGE_COPY = {
   patients: {
-    title: "Client List",
+    title: "Case List",
     eyebrow: "Dentist",
-    description: "Clients linked with the selected dentist.",
+    description: "Cases linked with the selected dentist.",
   },
   summary: {
-    title: "Summary of Clients",
+    title: "Summary of Cases",
     eyebrow: "Dentist",
     description: "Summary table ready for the detailed format.",
   },
   salary: {
-    title: "Client List Salary Based",
+    title: "Salary Based Cases",
     eyebrow: "Dentist",
-    description: "Salary based client list.",
+    description: "Salary based case list.",
   },
   percentage: {
-    title: "Client List Percentage Base",
+    title: "Percentage Cases",
     eyebrow: "Dentist",
-    description: "Percentage based client list.",
+    description: "Percentage based case list with 15% share.",
   },
   referral: {
-    title: "Client List Referral Based",
+    title: "Referral Cases",
     eyebrow: "Dentist",
-    description: "Referral based client list.",
+    description: "Referral based case list.",
   },
 };
 
@@ -102,12 +104,14 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
     () => ({
       patients: patients.length,
       ongoing: patientSummaries.filter(({ summary }) => summary.category === "ongoing").length,
-      completed: patientSummaries.filter(({ summary }) => summary.category === "completed").length,
-      toBeAppointed: patientSummaries.filter(({ summary }) => summary.category === "to-be-appointed").length,
+      completed: patientSummaries.filter(({ summary }) => summary.isCompletedCase).length,
+      toBeAppointed: patientSummaries.filter(({ summary }) => summary.isExpected).length,
       value: patients.reduce((sum, patient) => sum + netAmount(patient), 0),
+      share: patients.reduce((sum, patient) => sum + caseShareCalculation(patient).share, 0),
     }),
     [patients, patientSummaries]
   );
+  const isPercentageDentist = dentistProfile.shiftId === "evening" || mode === "percentage";
 
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
@@ -122,7 +126,7 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
           </div>
           <div className="hero-actions no-print">
             <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
-              New client
+              New case
             </button>
           </div>
         </section>
@@ -131,9 +135,9 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
 
         <section className="metrics-grid">
           <div className="metric-card gold-bordered">
-            <div className="metric-label">Clients</div>
+            <div className="metric-label">Cases</div>
             <div className="metric-value">{loading ? "..." : totals.patients}</div>
-            <div className="metric-detail">Visible records</div>
+            <div className="metric-detail">Visible cases</div>
           </div>
           <div className="metric-card gold-bordered">
             <div className="metric-label">On going</div>
@@ -146,14 +150,19 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
             <div className="metric-detail">Visits completed</div>
           </div>
           <div className="metric-card gold-bordered">
-            <div className="metric-label">To appoint</div>
+            <div className="metric-label">Expected Cases</div>
             <div className="metric-value">{loading ? "..." : totals.toBeAppointed}</div>
             <div className="metric-detail">Plans missing date/time</div>
           </div>
           <div className="metric-card gold-bordered">
-            <div className="metric-label">Treatment value</div>
+            <div className="metric-label">Treatment Value</div>
             <div className="metric-value">{loading ? "..." : formatCurrency(totals.value)}</div>
             <div className="metric-detail">Invoice net amount</div>
+          </div>
+          <div className="metric-card gold-bordered">
+            <div className="metric-label">15% Share</div>
+            <div className="metric-value">{loading ? "..." : formatCurrency(totals.share)}</div>
+            <div className="metric-detail">After 10% material and lab expenses</div>
           </div>
         </section>
 
@@ -162,50 +171,63 @@ function DentistWorkspace({ activePage, setActivePage, handleLogout, mode = "pat
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Client</th>
+                  <th>Name</th>
                   <th>Reg No</th>
-                  <th>Mobile</th>
+                  <th>Contact</th>
+                  <th>Department</th>
                   <th>Status</th>
                   <th>Net Amount</th>
+                  <th>Total Expense</th>
+                  <th>15% Share</th>
                   <th>Balance</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="6">Loading clients...</td>
+                    <td colSpan="9">Loading cases...</td>
                   </tr>
                 )}
                 {!loading && patients.length === 0 && (
                   <tr>
-                    <td colSpan="6">No clients found.</td>
+                    <td colSpan="9">No cases found.</td>
                   </tr>
                 )}
-                {patientSummaries.map(({ patient, summary }) => (
-                  <tr key={patient._id || regNo(patient)}>
+                {patientSummaries.map(({ patient, summary }) => {
+                  const share = caseShareCalculation(patient);
+
+                  return (
+                  <tr key={patient._id || regNo(patient)} className={isPercentageDentist ? "percentage-case-row" : ""}>
                     <td>
                       <div className="patient-cell">
                         <span className="patient-avatar">{initials(patientName(patient))}</span>
                         <strong>{patientName(patient)}</strong>
+                        {isPercentageDentist && <small className="table-subtext">Percentage case</small>}
                       </div>
                     </td>
                     <td>
                       <span className="pill">{regNo(patient) || "-"}</span>
                     </td>
                     <td>{mobileNumber(patient)}</td>
+                    <td>{patientDepartmentLabel(patient)}</td>
                     <td>
-                      <span className={summary.category === "ongoing" ? "pill warning" : summary.category === "completed" ? "pill success" : "pill"}>
+                      <span className={summary.category === "ongoing" ? "pill warning" : summary.isCompletedCase ? "pill success" : "pill"}>
                         {summary.category === "ongoing"
                           ? "On going"
-                          : summary.category === "to-be-appointed"
-                            ? "To be appointed"
+                          : summary.isExpected
+                            ? "Expected"
                             : "Completed"}
                       </span>
                     </td>
                     <td>{formatCurrency(netAmount(patient))}</td>
+                    <td>{formatCurrency(share.totalExpense)}</td>
+                    <td>
+                      <span className="pill success">{formatCurrency(share.share)}</span>
+                    </td>
                     <td>{formatCurrency(balanceDue(patient))}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

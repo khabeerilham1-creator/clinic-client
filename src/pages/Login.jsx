@@ -253,10 +253,10 @@ function Login({ onLogin }) {
   const backgroundImage =
     screenMode === "welcome"
       ? authAsset("welcome.png")
-      : screenMode === "login"
-        ? authAsset("login.png")
+        : screenMode === "login"
+          ? authAsset("login.png")
         : screenMode === "shift"
-          ? authAsset("shift.png")
+          ? authAsset("shift-departments.png")
           : screenMode === "shift-password"
             ? authAsset(`shift-${selectedShift?.id || "morning"}.png`)
             : screenMode === "account"
@@ -380,7 +380,8 @@ function Login({ onLogin }) {
                 }}
                 aria-label={shift.label}
               >
-                <span className="sr-only">{shift.label}</span>
+                <span className="auth-choice-title">{shift.serviceLabel || shift.label}</span>
+                <span className="auth-choice-subtitle">{shift.label}</span>
               </button>
             ))}
           </div>

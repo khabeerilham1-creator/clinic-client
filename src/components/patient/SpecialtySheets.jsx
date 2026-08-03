@@ -388,7 +388,7 @@ export function AcknowledgementSheet({ patientData, setPatientData }) {
             onChange={(value) => updateAcknowledgement("patientSignature", value)}
           />
           <Field
-            label="Doctor / Staff Signature"
+            label="Dentist / Staff Signature"
             value={acknowledgement.staffSignature}
             onChange={(value) => updateAcknowledgement("staffSignature", value)}
           />

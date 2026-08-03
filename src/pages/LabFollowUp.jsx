@@ -301,7 +301,7 @@ function LabFollowUp({ activePage, setActivePage, handleLogout }) {
           <div>
             <div className="eyebrow">Receptionist</div>
             <h1>Lab Cases Follow Up</h1>
-            <p>{rows.length} lab cases connected with registered clients.</p>
+            <p>{rows.length} lab cases connected with registered cases.</p>
           </div>
           <div className="hero-actions no-print">
             <button className="btn" type="button" onClick={fetchPatients}>Refresh</button>

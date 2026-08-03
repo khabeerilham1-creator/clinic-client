@@ -201,7 +201,7 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
       }
     } catch (requestError) {
       console.error(requestError);
-      setError("Lab records could not be loaded. Please check the backend connection.");
+      setError("Dental lab records could not be loaded. Please check the backend connection.");
     } finally {
       setLoading(false);
     }
@@ -645,9 +645,9 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
 
         <section className="page-hero">
           <div>
-            <div className="eyebrow">Lab module</div>
+            <div className="eyebrow">Dental Lab</div>
             <h1>{activeLab}</h1>
-            <p>Lab cases with separate printable payment ledger for every lab.</p>
+            <p>Select lab first, add new case records and manage payment details.</p>
           </div>
 
           <div className="hero-actions no-print">
@@ -664,7 +664,7 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
         {message && <div className={`notice ${message.type === "danger" ? "danger" : ""}`}>{message.text}</div>}
 
         <section className="toolbar-panel lab-switcher no-print">
-          <div className="segmented-control lab-tabs" aria-label="Lab records">
+          <div className="segmented-control lab-tabs" aria-label="Dental lab records">
             {labs.map((lab) => (
               <button
                 key={lab}
@@ -735,13 +735,13 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="8">Loading lab records...</td>
+                      <td colSpan="8">Loading dental lab records...</td>
                     </tr>
                   )}
 
                   {!loading && monthlyLabRows.length === 0 && (
                     <tr>
-                      <td colSpan="8">No lab records for this month.</td>
+                      <td colSpan="8">No dental lab records for this month.</td>
                     </tr>
                   )}
 
@@ -829,7 +829,7 @@ function LabRecords({ activePage, setActivePage, handleLogout }) {
           <div className="panel">
             <div className="panel-heading">
               <div>
-                <h2>{editingId ? "Update Lab Case" : "Add Lab Case"}</h2>
+            <h2>{editingId ? "Update Case" : "Add New Case"}</h2>
                 <p>
                   {selectedPatient
                     ? `Selected: ${patientName(selectedPatient)} | Reg ${regNo(selectedPatient) || "-"}`

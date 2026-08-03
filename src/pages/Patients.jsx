@@ -281,7 +281,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       notify(
         (typeof detail === "string" && detail) ||
           error?.message ||
-          "Error saving client. Try again.",
+          "Error saving case. Try again.",
         "danger"
       );
     } finally {

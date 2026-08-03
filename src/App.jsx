@@ -22,6 +22,7 @@ import Notifications from "./pages/Notifications";
 import Messenger from "./pages/Messenger";
 import LabFollowUp from "./pages/LabFollowUp";
 import LedgerExpensePage from "./pages/LedgerExpensePage";
+import ReferralCases from "./pages/ReferralCases";
 import {
   AcknowledgementTool,
   EntrySheet,
@@ -48,6 +49,7 @@ const ROLE_PAGES = {
     "account-receivable",
     "inventory",
     "expenses",
+    "referral-cases",
     "ongoing-patients",
     "completed-patients",
     "to-be-appointed",
@@ -113,6 +115,8 @@ const ROLE_PAGES = {
     "medications",
     "installment-mode",
     "account-receivable",
+    "expenses",
+    "referral-cases",
     "lab-records",
     "dental-material",
     "lab-follow-up",
@@ -341,6 +345,16 @@ function App() {
   if (currentPage === "messenger") {
     return (
       <Messenger
+        activePage={currentPage}
+        setActivePage={setActivePage}
+        handleLogout={handleLogout}
+      />
+    );
+  }
+
+  if (currentPage === "referral-cases") {
+    return (
+      <ReferralCases
         activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}

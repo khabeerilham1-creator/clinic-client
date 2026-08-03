@@ -8,7 +8,7 @@ const ROLE_OPTIONS = [
   { id: "admin", label: "Admin" },
   { id: "receptionist", label: "Receptionist" },
   { id: "dentist", label: "Dentist" },
-  { id: "doctor", label: "Doctor" },
+  { id: "doctor", label: "Dentist" },
 ];
 
 const roleLabel = (role) => ROLE_OPTIONS.find((item) => item.id === role)?.label || role || "Staff";

@@ -86,19 +86,15 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
     return patients
       .filter((patient) => {
-        const patientBio = bio(patient);
         const matchesQuery =
           !query ||
           patientName(patient).toLowerCase().includes(query) ||
           regNo(patient).toLowerCase().includes(query) ||
           mobileNumber(patient).toLowerCase().includes(query);
 
-        const matchesCategory =
-          category === "all" ||
-          normalizeCategoryKey(patientBio.category) === category;
         const matchesSelectedPeriod = matchesPeriod(patientRecordDate(patient), selectedMonth, selectedYear);
 
-        return matchesQuery && matchesCategory && matchesSelectedPeriod;
+        return matchesQuery && matchesSelectedPeriod;
       })
       .sort((a, b) => {
         const dateCompare = String(dateKey(patientRecordDate(b))).localeCompare(String(dateKey(patientRecordDate(a))));
@@ -109,7 +105,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
         return String(regNo(b)).localeCompare(String(regNo(a)), undefined, { numeric: true });
       });
-  }, [patients, search, category, selectedMonth, selectedYear]);
+  }, [patients, search, selectedMonth, selectedYear]);
 
   const recordYears = useMemo(() => {
     const years = patients
@@ -124,17 +120,48 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
     { month: "long", year: "numeric" }
   );
 
+  const patientSummaries = useMemo(
+    () =>
+      filteredPatients.map((patient) => ({
+        patient,
+        summary: patientAppointmentSummary(patient, manualAppointments),
+      })),
+    [filteredPatients, manualAppointments]
+  );
+
+  const departmentStats = useMemo(
+    () =>
+      DEPARTMENT_OPTIONS.map((department) => {
+        const rows = patientSummaries.filter(({ patient }) => patientDepartmentId(patient) === department.id);
+
+        return {
+          ...department,
+          rows,
+          total: rows.length,
+          expected: rows.filter(({ summary }) => summary.isExpected).length,
+          completed: rows.filter(({ summary }) => summary.isCompletedCase).length,
+          followUp: rows.filter(({ summary }) => summary.isFollowUp).length,
+        };
+      }),
+    [patientSummaries]
+  );
+
+  const selectedDepartmentStats = departmentStats.find((department) => department.id === selectedDepartment);
+  const visibleRows = selectedDepartmentStats?.rows || patientSummaries;
+  const canDelete = role === "admin";
+
   const totals = useMemo(() => {
     return {
       patients: filteredPatients.length,
-      revenue: filteredPatients.reduce((sum, patient) => sum + invoiceTotal(patient), 0),
-      due: filteredPatients.reduce((sum, patient) => sum + balanceDue(patient), 0),
+      expected: patientSummaries.filter(({ summary }) => summary.isExpected).length,
+      completed: patientSummaries.filter(({ summary }) => summary.isCompletedCase).length,
+      followUp: patientSummaries.filter(({ summary }) => summary.isFollowUp).length,
     };
-  }, [filteredPatients]);
+  }, [filteredPatients, patientSummaries]);
 
   const handleDelete = async (patient) => {
     const name = patientName(patient);
-    const confirmed = window.confirm(`Delete client record for ${name}?`);
+    const confirmed = window.confirm(`Delete case record for ${name}?`);
 
     if (!confirmed) {
       return;
@@ -144,7 +171,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       await api.delete(`/patients/${patient._id}`);
       setPatients((current) => current.filter((item) => item._id !== patient._id));
       setSelectedPatient(null);
-      await addActivityLog("Deleted client", name, { regNo: regNo(patient) });
+      await addActivityLog("Deleted case", name, { regNo: regNo(patient) });
     } catch (requestError) {
       console.error(requestError);
       alert("Delete failed. Please try again.");
@@ -153,7 +180,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
 
   const handleEdit = async (patient) => {
     localStorage.setItem("editPatient", JSON.stringify({ ...patient, isEditing: true }));
-    await addActivityLog("Opened client edit", patientName(patient), { regNo: regNo(patient) });
+    await addActivityLog("Opened case edit", patientName(patient), { regNo: regNo(patient) });
     setActivePage("patients");
   };
 
@@ -170,18 +197,27 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
       <div className="page">
         <section className="page-hero">
           <div>
-            <div className="eyebrow">Client command file</div>
-            <h1>{shift?.label ? `${shift.label} Client Records` : "Client Records"}</h1>
+            <div className="eyebrow">Registered cases</div>
+            <h1>
+              {selectedDepartmentStats
+                ? selectedDepartmentStats.label
+                : shift?.label
+                  ? `${shift.label} Registered Cases`
+                  : "Registered Cases"}
+            </h1>
             <p>
-              Search, audit, edit, print and manage {selectedPeriodLabel} records.
+              {selectedDepartmentStats
+                ? `${selectedDepartmentStats.total} cases in ${selectedDepartmentStats.label}.`
+                : `Search and audit ${selectedPeriodLabel} cases by department.`}
             </p>
           </div>
 
           <div className="hero-actions no-print">
-            <button className="btn btn-primary" onClick={() => setActivePage("patients")}>
-              <span className="btn-icon">+</span>
-              New Checkup
-            </button>
+            {selectedDepartmentStats && (
+              <button className="btn" type="button" onClick={() => setSelectedDepartment(null)}>
+                Back
+              </button>
+            )}
             <button className="btn" onClick={fetchPatients}>Refresh</button>
           </div>
         </section>
@@ -193,25 +229,10 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
             <span>Search</span>
             <input
               type="text"
-              placeholder="Name, reg no or mobile number"
+              placeholder="Name, reg no or contact"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-          </div>
-
-          <div className="segmented-control" aria-label="Filter by category">
-            {["all", ...CATEGORY_OPTIONS.map((option) => option.key)].map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={category === item ? "active" : ""}
-                onClick={() => setCategory(item)}
-              >
-                {item === "all"
-                  ? "All"
-                  : CATEGORY_OPTIONS.find((option) => option.key === item)?.label.replace("Category ", "Cat ")}
-              </button>
-            ))}
           </div>
 
           <div className="filter-controls">
@@ -236,18 +257,39 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
           </div>
         </section>
 
-        <section className="record-summary">
+        {!selectedDepartmentStats && (
+          <section className="department-case-grid">
+            {departmentStats.map((department) => (
+              <button
+                key={department.id}
+                type="button"
+                className="department-case-card"
+                onClick={() => setSelectedDepartment(department.id)}
+              >
+                <strong>{department.label}</strong>
+                <span>{department.total} cases</span>
+                <small>Expected {department.expected} | Completed {department.completed} | Follow up {department.followUp}</small>
+              </button>
+            ))}
+          </section>
+        )}
+
+        <section className="record-summary registered-summary">
           <div>
             <span>REGISTERED CASES</span>
-            <strong>{loading ? "..." : totals.patients}</strong>
+            <strong>{loading ? "..." : (selectedDepartmentStats?.total ?? totals.patients)}</strong>
           </div>
           <div>
-            <span>Invoice value</span>
-            <strong>{loading ? "..." : formatCurrency(totals.revenue)}</strong>
+            <span>Expected Cases</span>
+            <strong>{loading ? "..." : (selectedDepartmentStats?.expected ?? totals.expected)}</strong>
           </div>
           <div>
-            <span>Balance due</span>
-            <strong>{loading ? "..." : formatCurrency(totals.due)}</strong>
+            <span>Completed Cases</span>
+            <strong>{loading ? "..." : (selectedDepartmentStats?.completed ?? totals.completed)}</strong>
+          </div>
+          <div>
+            <span>Follow Up</span>
+            <strong>{loading ? "..." : (selectedDepartmentStats?.followUp ?? totals.followUp)}</strong>
           </div>
         </section>
 
@@ -256,31 +298,29 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
             <table className="data-table patient-table">
               <thead>
                 <tr>
-                  <th>Client</th>
+                  <th>Name</th>
                   <th>Reg No</th>
-                  <th>Mobile</th>
-                  <th>Category</th>
-                  <th>Invoice</th>
-                  <th>Due</th>
+                  <th>Contact</th>
+                  <th>Department</th>
+                  <th>Total Amount</th>
+                  <th>Balance</th>
                   <th className="no-print">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="7">Loading client records...</td>
+                    <td colSpan="7">Loading case records...</td>
                   </tr>
                 )}
 
-                {!loading && filteredPatients.length === 0 && (
+                {!loading && visibleRows.length === 0 && (
                   <tr>
-                    <td colSpan="7">No matching clients found.</td>
+                    <td colSpan="7">No matching cases found.</td>
                   </tr>
                 )}
 
-                {filteredPatients.map((patient) => {
-                  const patientBio = bio(patient);
-
+                {visibleRows.map(({ patient }) => {
                   return (
                     <tr key={patient._id || regNo(patient)}>
                       <td>
@@ -294,7 +334,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                             >
                               {patientName(patient)}
                             </button>
-                            <small>{patientBio.patientType || "Client"}</small>
+                            <small>{patientDepartmentLabel(patient)}</small>
                           </div>
                         </div>
                       </td>
@@ -302,7 +342,7 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                         <span className="pill">{regNo(patient) || "-"}</span>
                       </td>
                       <td>{mobileNumber(patient)}</td>
-                      <td>{patientBio.category || "-"}</td>
+                      <td>{patientDepartmentLabel(patient)}</td>
                       <td>{formatCurrency(invoiceTotal(patient))}</td>
                       <td>
                         <span className={balanceDue(patient) > 0 ? "pill warning" : "pill success"}>
@@ -313,9 +353,11 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                         <button className="btn btn-sm" onClick={() => setSelectedPatient(patient)}>
                           View
                         </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(patient)}>
-                          Delete
-                        </button>
+                        {canDelete && (
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDelete(patient)}>
+                            Delete
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -350,10 +392,10 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                 <div className="detail-card">
                   <h3>Bio Data</h3>
                   <dl>
-                    <dt>Category</dt>
-                    <dd>{bio(selectedPatient).category || "-"}</dd>
-                    <dt>Client type</dt>
-                    <dd>{bio(selectedPatient).patientType || "-"}</dd>
+                    <dt>Department</dt>
+                    <dd>{patientDepartmentLabel(selectedPatient)}</dd>
+                    <dt>Contact</dt>
+                    <dd>{mobileNumber(selectedPatient)}</dd>
                     <dt>Age</dt>
                     <dd>{bio(selectedPatient).age || "-"}</dd>
                     <dt>Email</dt>
@@ -368,6 +410,8 @@ function PatientsList({ activePage, setActivePage, handleLogout }) {
                   <dl>
                     <dt>Total invoice</dt>
                     <dd>{formatCurrency(invoiceTotal(selectedPatient))}</dd>
+                    <dt>Paid</dt>
+                    <dd>{formatCurrency(paymentsTotal(selectedPatient))}</dd>
                     <dt>Discount</dt>
                     <dd>{formatCurrency(discountAmount(selectedPatient))}</dd>
                     <dt>Balance due</dt>

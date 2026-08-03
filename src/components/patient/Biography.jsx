@@ -186,7 +186,7 @@ function Biography({
         mb-6
         text-gray-800
       ">
-        Biography Section
+        Bio Data
       </h2>
 
       <div className="
@@ -305,7 +305,7 @@ function Biography({
             mb-1
             font-medium
           ">
-            Patient Name
+            Case Name
           </label>
 
           <input
@@ -476,7 +476,7 @@ function Biography({
             mb-1
             font-medium
           ">
-            Mobile Number
+            Contact
           </label>
 
           <input
