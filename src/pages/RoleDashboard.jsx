@@ -6,6 +6,7 @@ import Layout from "../components/Layout";
 import {
   appointmentArray,
   appointmentRequestParams,
+  expectedAppointmentStatus,
   filterManualAppointmentsForUser,
   patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
@@ -127,6 +128,10 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
   const expectedPatients = patientSummaries.filter(({ summary }) => summary.isExpected);
   const completedPatients = patientSummaries.filter(({ summary }) => summary.isCompletedCase);
   const followUpPatients = patientSummaries.filter(({ summary }) => summary.isFollowUp);
+  const toBeAppointmentPatients = patientSummaries.filter(
+    ({ patient, summary }) =>
+      summary.isExpected && expectedAppointmentStatus(patient) === "to-be-appointment"
+  );
   const incomeDetails = useMemo(() => {
     const reference = new Date();
     const todayStart = startOfDay(reference);
@@ -403,11 +408,60 @@ function RoleDashboard({ activePage, setActivePage, handleLogout }) {
             onClick={() => setActivePage("expenses")}
           />
           <RoleAction
+            short="DM"
+            title="Dental Material"
+            detail="Open dental material entries"
+            tone="gold"
+            onClick={() => setActivePage("dental-material")}
+          />
+          <RoleAction
             short="LF"
             title="Lab Follow Up Sheet"
             detail="Pending and completed lab cases"
             tone="green"
             onClick={() => setActivePage("lab-follow-up")}
+          />
+          <RoleAction
+            short={loading ? "..." : String(ongoingPatients.length)}
+            title="On Going Cases"
+            detail="All departments"
+            tone="cyan"
+            onClick={() => setActivePage("ongoing-patients")}
+          />
+          <RoleAction
+            short={loading ? "..." : String(completedPatients.length)}
+            title="Completed Cases"
+            detail="All departments"
+            tone="green"
+            onClick={() => setActivePage("completed-patients")}
+          />
+          <RoleAction
+            short={loading ? "..." : String(expectedPatients.length)}
+            title="Expected Cases"
+            detail="Checkup done, appointment expected"
+            tone="blue"
+            onClick={() => setActivePage("expected-cases")}
+          />
+          <RoleAction
+            short={loading ? "..." : String(toBeAppointmentPatients.length)}
+            title="To Be Appointment"
+            detail="Cases marked from Expected"
+            tone="gold"
+            onClick={() => setActivePage("to-be-appointed")}
+          />
+          <RoleAction
+            short={loading ? "..." : String(followUpPatients.length)}
+            title="Follow Up"
+            detail="Only Follow Up Needed: Yes"
+            tone="rose"
+            onClick={() => setActivePage("follow-up")}
+          />
+          <RoleAction
+            short="AR"
+            title="Receivables"
+            detail="Open account receivables"
+            tone="cyan"
+            onClick={() => setActivePage("account-receivable")}
           />
         </section>
       </div>

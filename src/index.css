@@ -2545,6 +2545,23 @@ textarea:focus {
   min-width: 760px;
 }
 
+.compact-segmented {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  min-width: 220px;
+}
+
+.compact-segmented button {
+  white-space: nowrap;
+}
+
+.terms-list {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--ink);
+  line-height: 1.8;
+}
+
 .active-price-category {
   background: var(--green-soft) !important;
   color: var(--green) !important;

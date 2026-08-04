@@ -8,7 +8,6 @@ import PlannedSequence from "../components/patient/PlannedSequence";
 import Invoice from "../components/patient/Invoice";
 import AccountLedger from "../components/patient/AccountLedger";
 import {
-  AcknowledgementSheet,
   FullDentureSheet,
   ImplantCommencementSheet,
   OrthodonticAdjustmentsSheet,
@@ -60,7 +59,6 @@ const TABS = [
   { id: "checkup", label: "Clinical Exam" },
   { id: "plannedSequence", label: "Planned" },
   { id: "invoice", label: "Invoice" },
-  { id: "acknowledgement", label: "Acknowledgement" },
   { id: "account", label: "Account Status" },
 ];
 
@@ -74,21 +72,18 @@ const SHEET_TABS = {
     { id: "implantSheet", label: "Commencement" },
     { id: "plannedSequence", label: "Planned" },
     { id: "invoice", label: "Invoice" },
-    { id: "acknowledgement", label: "Acknowledgement" },
     { id: "account", label: "Account Status" },
   ],
   orthodontic: [
-    { id: "orthodonticAssessment", label: "Assessment" },
-    { id: "orthodonticAdjustments", label: "Monthly Adjustment" },
+    { id: "orthodonticAssessment", label: "Bio-data" },
     { id: "plannedSequence", label: "Planned" },
+    { id: "orthodonticAdjustments", label: "Monthly Adjustment" },
     { id: "invoice", label: "Invoice" },
-    { id: "acknowledgement", label: "Acknowledgement" },
     { id: "account", label: "Account Status" },
   ],
   fullDenture: [
     { id: "fullDentureSheet", label: "Denture Sheet" },
     { id: "invoice", label: "Invoice" },
-    { id: "acknowledgement", label: "Acknowledgement" },
     { id: "account", label: "Account Status" },
   ],
   smileMakeovers: [{ id: "formatPending", label: "Format Pending" }],
@@ -185,9 +180,6 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
         (invoice.items || []).some((item) => item.details || Number(item.cost || 0) > 0)
       ),
     account: (data.accountLedger || []).length > 0 || paymentsTotal(data) > 0 || balanceDue(data) > 0,
-    acknowledgement:
-      Boolean(data.biography?.patientName) ||
-      Object.values(data.acknowledgement || {}).some(Boolean),
     implantSheet: Boolean(data.biography?.patientName),
     orthodonticAssessment:
       Boolean(data.biography?.patientName) ||
@@ -355,8 +347,8 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       return "account";
     }
 
-    if (tab === "acknowledgement") {
-      return "acknowledgement";
+    if (tab === "plannedSequence") {
+      return "plannedSequence";
     }
 
     if (sheetType === "implant") {
@@ -371,7 +363,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       return "fullDenture";
     }
 
-    return tab === "plannedSequence" ? "checkup" : tab;
+    return tab;
   };
 
   return (
@@ -472,7 +464,6 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             {tab === "formatPending" && (
               <div className="empty-state">Format pending.</div>
             )}
-            {tab === "acknowledgement" && <AcknowledgementSheet patientData={data} setPatientData={setData} />}
             {tab === "invoice" && (
               <Invoice
                 patientData={data}

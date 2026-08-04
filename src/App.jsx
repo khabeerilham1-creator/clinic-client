@@ -52,7 +52,9 @@ const ROLE_PAGES = {
     "referral-cases",
     "ongoing-patients",
     "completed-patients",
+    "expected-cases",
     "to-be-appointed",
+    "follow-up",
     "logs",
     "notifications",
     "messenger",
@@ -76,7 +78,9 @@ const ROLE_PAGES = {
     "installment-mode",
     "ongoing-patients",
     "completed-patients",
+    "expected-cases",
     "to-be-appointed",
+    "follow-up",
     "notifications",
     "messenger",
 
@@ -98,7 +102,9 @@ const ROLE_PAGES = {
     "installment-mode",
     "ongoing-patients",
     "completed-patients",
+    "expected-cases",
     "to-be-appointed",
+    "follow-up",
     "notifications",
     "messenger",
 
@@ -126,7 +132,9 @@ const ROLE_PAGES = {
     "daily-expense",
     "ongoing-patients",
     "completed-patients",
+    "expected-cases",
     "to-be-appointed",
+    "follow-up",
     "official-contact",
     "notifications",
     "messenger",
@@ -398,20 +406,24 @@ function App() {
   if (
     currentPage === "ongoing-patients" ||
     currentPage === "completed-patients" ||
-    currentPage === "to-be-appointed"
+    currentPage === "expected-cases" ||
+    currentPage === "to-be-appointed" ||
+    currentPage === "follow-up"
   ) {
+    const statusModeMap = {
+      "ongoing-patients": "ongoing",
+      "completed-patients": "completed-cases",
+      "expected-cases": "expected",
+      "to-be-appointed": "to-be-appointment",
+      "follow-up": "follow-up",
+    };
+
     return (
       <PatientStatusPage
         activePage={currentPage}
         setActivePage={setActivePage}
         handleLogout={handleLogout}
-        mode={
-          currentPage === "ongoing-patients"
-            ? "ongoing"
-            : currentPage === "completed-patients"
-              ? "completed-cases"
-              : "expected"
-        }
+        mode={statusModeMap[currentPage]}
       />
     );
   }

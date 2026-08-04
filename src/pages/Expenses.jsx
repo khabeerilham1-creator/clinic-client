@@ -133,6 +133,7 @@ function Expenses({
   initialCategory = "administration",
   allowedCategories,
 }) {
+  const role = sessionStorage.getItem("role") || "";
   const moduleOnly = !Array.isArray(allowedCategories);
   const categoryOptions = useMemo(() => {
     if (!Array.isArray(allowedCategories) || allowedCategories.length === 0) {
@@ -156,6 +157,9 @@ function Expenses({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState(null);
+  const singleCategoryOnly = categoryOptions.length === 1;
+  const simpleMaterialView =
+    role === "receptionist" && singleCategoryOnly && activeCategory === "dental-material";
 
   useEffect(() => {
     if (moduleOnly) {
@@ -728,10 +732,12 @@ function Expenses({
           <td>{expense.qty || "-"}</td>
           <td>{formatCurrency(expense.ratePerUnit)}</td>
           <td>{formatCurrency(entryBill(expense))}</td>
-          <td>{formatCurrency(entryPaid(expense))}</td>
-          <td>{formatCurrency(entryRemaining(expense))}</td>
+          {!simpleMaterialView && <td>{formatCurrency(entryPaid(expense))}</td>}
+          {!simpleMaterialView && <td>{formatCurrency(entryRemaining(expense))}</td>}
           <td className="row-actions no-print">
-            <button className="btn btn-sm" type="button" onClick={() => setLedgerRecordId(expense._id)}>Ledger</button>
+            {!simpleMaterialView && (
+              <button className="btn btn-sm" type="button" onClick={() => setLedgerRecordId(expense._id)}>Ledger</button>
+            )}
             <button className="btn btn-sm" type="button" onClick={() => handleEdit(expense)}>Edit</button>
             <button className="btn btn-sm btn-danger" type="button" onClick={() => handleDelete(expense)}>Delete</button>
           </td>
@@ -784,7 +790,9 @@ function Expenses({
     }
 
     if (activeCategory === "dental-material") {
-      return ["Date", "Shop", "Item", "Qty", "Rate Per Unit", "Total Amount", "Paid", "Remaining"];
+      return simpleMaterialView
+        ? ["Date", "Shop", "Item", "Qty", "Rate Per Unit", "Total Amount"]
+        : ["Date", "Shop", "Item", "Qty", "Rate Per Unit", "Total Amount", "Paid", "Remaining"];
     }
 
     if (activeCategory === "dental-implants") {
@@ -795,7 +803,7 @@ function Expenses({
   };
 
   const canShowLedger =
-    activeCategory === "dental-material" || activeCategory === "dental-implants";
+    !simpleMaterialView && (activeCategory === "dental-material" || activeCategory === "dental-implants");
 
   const renderExpenseModules = () => (
     <section className="role-action-grid expense-module-grid no-print">
@@ -864,7 +872,7 @@ function Expenses({
         {error && <div className="notice danger">{error}</div>}
         {message && <div className={`notice ${message.type === "danger" ? "danger" : ""}`}>{message.text}</div>}
 
-        {renderExpenseModules()}
+        {!singleCategoryOnly && renderExpenseModules()}
 
         <section className="toolbar-panel no-print">
           <div className="segmented-control" aria-label="Expense category">
@@ -899,18 +907,22 @@ function Expenses({
             <div className="metric-value">{loading ? "..." : formatCurrency(totals.bill)}</div>
             <div className="metric-detail">Visible entries</div>
           </div>
-          <div className="metric-card">
-            <div className="metric-accent green" />
-            <div className="metric-label">Paid</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(totals.paid)}</div>
-            <div className="metric-detail">Payments recorded</div>
-          </div>
-          <div className="metric-card">
-            <div className="metric-accent gold" />
-            <div className="metric-label">Remaining</div>
-            <div className="metric-value">{loading ? "..." : formatCurrency(totals.remaining)}</div>
-            <div className="metric-detail">Still pending</div>
-          </div>
+          {!simpleMaterialView && (
+            <div className="metric-card">
+              <div className="metric-accent green" />
+              <div className="metric-label">Paid</div>
+              <div className="metric-value">{loading ? "..." : formatCurrency(totals.paid)}</div>
+              <div className="metric-detail">Payments recorded</div>
+            </div>
+          )}
+          {!simpleMaterialView && (
+            <div className="metric-card">
+              <div className="metric-accent gold" />
+              <div className="metric-label">Remaining</div>
+              <div className="metric-value">{loading ? "..." : formatCurrency(totals.remaining)}</div>
+              <div className="metric-detail">Still pending</div>
+            </div>
+          )}
         </section>
 
         <section className="panel">

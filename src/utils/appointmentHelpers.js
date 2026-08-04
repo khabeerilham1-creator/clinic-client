@@ -149,34 +149,6 @@ export const manualAppointmentMatchesUser = (appointment, user = storedUser()) =
 export const filterManualAppointmentsForUser = (appointments, user = storedUser()) =>
   (appointments || []).filter((appointment) => manualAppointmentMatchesUser(appointment, user));
 
-const appointmentDateTime = (appointment, appointmentKey) => {
-  const parts = String(appointmentKey || "").split("-").map(Number);
-  const timeText = String(appointment?.time || "").trim().toLowerCase();
-  const timeMatch = timeText.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
-
-  if (parts.length !== 3 || parts.some(Number.isNaN) || !timeMatch) {
-    return null;
-  }
-
-  let hour = Number(timeMatch[1]);
-  const minute = Number(timeMatch[2] || 0);
-  const period = timeMatch[3];
-
-  if (period === "pm" && hour < 12) {
-    hour += 12;
-  }
-
-  if (period === "am" && hour === 12) {
-    hour = 0;
-  }
-
-  if (hour > 23 || minute > 59) {
-    return null;
-  }
-
-  return new Date(parts[0], parts[1] - 1, parts[2], hour, minute);
-};
-
 const appointmentStatusFromDate = (appointment) => {
   const status = normalizeText(appointment?.status).replace(" ", "-");
 
@@ -205,12 +177,6 @@ const appointmentStatusFromDate = (appointment) => {
   }
 
   if (appointmentKey === today) {
-    const appointmentTime = appointmentDateTime(appointment, appointmentKey);
-
-    if (appointmentTime && appointmentTime.getTime() < now.getTime()) {
-      return "Done";
-    }
-
     return "Today";
   }
 
@@ -303,6 +269,22 @@ export const currentWeekRange = (reference = new Date()) => {
   };
 };
 
+export const currentMonthRange = (reference = new Date()) => {
+  const start = new Date(reference.getFullYear(), reference.getMonth(), 1);
+  const end = new Date(reference.getFullYear(), reference.getMonth() + 1, 0);
+
+  return {
+    start,
+    end,
+    startKey: dateKey(start),
+    endKey: dateKey(end),
+    label: start.toLocaleDateString("en-PK", {
+      month: "long",
+      year: "numeric",
+    }),
+  };
+};
+
 export const rowHasTreatment = (row) =>
   Boolean(row?.date || row?.time || row?.procedure || row?.treatment || row?.details);
 
@@ -377,6 +359,21 @@ export const patientFollowUpCase = (patient) => {
 
   return String(value || "").trim().toLowerCase() === "yes";
 };
+
+export const expectedAppointmentStatus = (patient) => {
+  const rawStatus =
+    patient?.appointmentStatus ||
+    patient?.checkup?.appointmentStatus ||
+    patient?.checkup?.expectedAppointmentStatus ||
+    "silent";
+
+  const status = normalizeText(rawStatus).replace(/\s+/g, "-");
+
+  return status === "to-be-appointment" ? "to-be-appointment" : "silent";
+};
+
+export const patientToBeAppointmentCase = (patient) =>
+  patientExpectedForAppointment(patient) && expectedAppointmentStatus(patient) === "to-be-appointment";
 
 export const manualAppointmentMatchesPatient = (appointment, patient) => {
   const patientId = String(patient?._id || "");

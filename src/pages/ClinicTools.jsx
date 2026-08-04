@@ -362,22 +362,143 @@ export function Medications({ activePage, setActivePage, handleLogout }) {
 }
 
 export function InstallmentMode({ activePage, setActivePage, handleLogout }) {
+  const [form, setForm] = useState({
+    customerName: "",
+    contactNo: "",
+    alternateContactNo: "",
+    address: "",
+    cnicNo: "",
+    businessJob: "",
+    guarantorOneName: "",
+    guarantorOneCnic: "",
+    guarantorOnePhone: "",
+    guarantorOneAddress: "",
+    guarantorOneBusiness: "",
+    guarantorTwoName: "",
+    guarantorTwoCnic: "",
+    guarantorTwoPhone: "",
+    guarantorTwoAddress: "",
+    guarantorTwoBusiness: "",
+    totalAmount: "",
+    downPayment: "50000",
+    monthlyInstallment: "8000",
+    dueDate: "5th of Every Month",
+    agreementDate: todayDisplayValue(),
+    totalInstallments: "",
+  });
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const field = (label, key, type = "text", textarea = false) => (
+    <label className="field">
+      <span>{label}</span>
+      {textarea ? (
+        <textarea value={form[key]} onChange={(event) => updateField(key, event.target.value)} />
+      ) : (
+        <input type={type} value={form[key]} onChange={(event) => updateField(key, event.target.value)} />
+      )}
+    </label>
+  );
+
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
-      <div className="page">
+      <div className="page printable-page">
         <section className="page-hero">
           <div>
             <div className="eyebrow">Payments</div>
-            <h1>Installment Mode</h1>
-            <p>Plan installment amount, paid amount and remaining balance.</p>
+            <h1>Installment Agreement Form</h1>
+            <p>Customer biodata, guarantors, installment details and signatures.</p>
+          </div>
+          <button className="btn btn-primary no-print" type="button" onClick={() => window.print()}>
+            Print
+          </button>
+        </section>
+
+        <section className="panel printable-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Customer Biodata</h2>
+            </div>
+          </div>
+          <div className="appointment-form-grid">
+            {field("Full Name", "customerName")}
+            {field("Contact No.", "contactNo")}
+            {field("Alternate Contact No.", "alternateContactNo")}
+            {field("CNIC No.", "cnicNo")}
+            {field("Business / Job", "businessJob")}
+            <div className="sheet-grid-wide">{field("Address", "address", "text", true)}</div>
           </div>
         </section>
-        <section className="panel">
+
+        <section className="panel printable-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Guarantor No. 1</h2>
+              <p>Must be 35 years or above and not a sibling.</p>
+            </div>
+          </div>
           <div className="appointment-form-grid">
-            <label className="field"><span>Total Amount</span><input type="number" /></label>
-            <label className="field"><span>Advance Paid</span><input type="number" /></label>
-            <label className="field"><span>Installments</span><input type="number" /></label>
-            <label className="field"><span>Monthly Due Date</span><input type="date" /></label>
+            {field("Name", "guarantorOneName")}
+            {field("CNIC No.", "guarantorOneCnic")}
+            {field("Phone No.", "guarantorOnePhone")}
+            {field("Business / Job", "guarantorOneBusiness")}
+            <div className="sheet-grid-wide">{field("Address", "guarantorOneAddress", "text", true)}</div>
+          </div>
+        </section>
+
+        <section className="panel printable-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Guarantor No. 2</h2>
+              <p>Must be 35 years or above and not a sibling.</p>
+            </div>
+          </div>
+          <div className="appointment-form-grid">
+            {field("Name", "guarantorTwoName")}
+            {field("CNIC No.", "guarantorTwoCnic")}
+            {field("Phone No.", "guarantorTwoPhone")}
+            {field("Business / Job", "guarantorTwoBusiness")}
+            <div className="sheet-grid-wide">{field("Address", "guarantorTwoAddress", "text", true)}</div>
+          </div>
+        </section>
+
+        <section className="panel printable-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Installment Details</h2>
+              <p>Orthodontic installment defaults: Rs 50,000 down payment and Rs 8,000 monthly.</p>
+            </div>
+          </div>
+          <div className="appointment-form-grid">
+            {field("Total Amount", "totalAmount", "number")}
+            {field("Down Payment", "downPayment", "number")}
+            {field("Monthly Installment", "monthlyInstallment", "number")}
+            {field("Due Date", "dueDate")}
+            {field("Agreement Date", "agreementDate")}
+            {field("Total Installments", "totalInstallments", "number")}
+          </div>
+        </section>
+
+        <section className="panel printable-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Terms & Conditions</h2>
+            </div>
+          </div>
+          <ol className="terms-list">
+            <li>Two guarantors are mandatory.</li>
+            <li>Both guarantors must be 35 years of age or older.</li>
+            <li>Siblings cannot act as guarantors.</li>
+            <li>Monthly installment must be paid on or before the 5th of every month.</li>
+            <li>The customer confirms all provided information is true and correct.</li>
+            <li>CNIC copies of the customer and both guarantors are mandatory with this form.</li>
+          </ol>
+          <div className="ack-signature-grid">
+            {field("Customer Signature", "customerSignature")}
+            {field("Guarantor No. 1 Signature", "guarantorOneSignature")}
+            {field("Guarantor No. 2 Signature", "guarantorTwoSignature")}
           </div>
         </section>
       </div>

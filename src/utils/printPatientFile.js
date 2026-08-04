@@ -380,8 +380,24 @@ const implantCommencementPage = (patient) => `
   </section>
 `;
 
+const plannedSequencePage = (patient) => {
+  const plannedRows = plannedSequenceRows(patient);
+
+  return `
+    <section class="specialty-page">
+      <h1>Planned Sequence</h1>
+      ${specialtyBioGrid(patient)}
+      <table class="line-table">
+        <thead><tr><th>S No</th><th>Date</th><th>Time</th><th>Procedure</th><th>Status</th></tr></thead>
+        <tbody>${rowsOrEmpty(plannedRows, 5, "No planned sequence selected.")}</tbody>
+      </table>
+    </section>
+  `;
+};
+
 const accountStatusPage = (patient) => {
   const patientTotal = netAmount(patient);
+  const paymentPlan = patient?.paymentPlan || {};
   let paidRunning = 0;
   const ledgerRows = safeList(patient?.accountLedger)
     .filter((entry) => Number(entry.amount || 0) > 0)
@@ -401,6 +417,19 @@ const accountStatusPage = (patient) => {
     <section class="specialty-page">
       <h1>Account Status</h1>
       ${specialtyBioGrid(patient)}
+      ${
+        paymentPlan.type
+          ? `
+            <table class="line-table">
+              <tbody>
+                <tr><th>Payment Type</th><td>${escapeHtml(paymentPlan.type === "installment" ? "Installments" : "Full Cash")}</td></tr>
+                <tr><th>Down Payment</th><td>${escapeHtml(formatCurrencyBlank(paymentPlan.downPayment))}</td></tr>
+                <tr><th>Monthly Installment</th><td>${escapeHtml(formatCurrencyBlank(paymentPlan.monthlyInstallment))}</td></tr>
+              </tbody>
+            </table>
+          `
+          : ""
+      }
       <table class="line-table account-print">
         <thead><tr><th>S No</th><th>Date</th><th>Amount</th><th>Paid</th><th>Balance</th></tr></thead>
         <tbody>${tableRows(ledgerRows, 5, "No account entries recorded.")}</tbody>
@@ -574,9 +603,10 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
 
   const toothChartUrl = new URL(toothChartSrc, window.location.origin).href;
   const invoices = invoiceGroups(patient);
-  const normalizedMode = ["biography", "plannedSequence"].includes(mode) ? "checkup" : mode;
+  const normalizedMode = mode === "biography" ? "checkup" : mode;
   const shouldPrintCheckup = normalizedMode === "all" || normalizedMode === "checkup";
   const shouldPrintInvoice = normalizedMode === "all" || normalizedMode === "invoice";
+  const shouldPrintPlannedSequence = normalizedMode === "plannedSequence";
   const checkupPages = shouldPrintCheckup
     ? `
         ${checkupPage(patient, "Clinic Copy", toothChartUrl)}
@@ -593,6 +623,7 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
         )
         .join("")
     : "";
+  const plannedPages = shouldPrintPlannedSequence ? plannedSequencePage(patient) : "";
   const specialtyPages = [
     normalizedMode === "implant" ? implantCommencementPage(patient) : "",
     normalizedMode === "orthodontic" ? orthodonticAssessmentPage(patient) : "",
@@ -601,7 +632,7 @@ export function printPatientFile(patient, toothChartSrc, mode = "all") {
     normalizedMode === "account" ? accountStatusPage(patient) : "",
     normalizedMode === "acknowledgement" ? acknowledgementPage(patient) : "",
   ].join("");
-  const pages = checkupPages || invoicePages || specialtyPages ? `${checkupPages}${invoicePages}${specialtyPages}` : checkupPage(patient, "Clinic Copy", toothChartUrl);
+  const pages = checkupPages || invoicePages || plannedPages || specialtyPages ? `${checkupPages}${invoicePages}${plannedPages}${specialtyPages}` : checkupPage(patient, "Clinic Copy", toothChartUrl);
 
   printWindow.document.write(`
     <!DOCTYPE html>

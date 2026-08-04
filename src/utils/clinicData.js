@@ -155,43 +155,110 @@ export const LAB_TASK_CONDITIONS = [
   .map(([condition, treatment]) => ({ condition, treatment }))
   .sort((a, b) => a.condition.localeCompare(b.condition));
 
-export const PRICE_LIST = [
-  { description: "Bleaching", category1: 50000, category2: 40000, category3: 30000 },
-  { description: "Braces", category1: 150000, category2: 125000, category3: 100000 },
-  { description: "Ceramic Crowns per unit", category1: 35000, category2: 30000, category3: 25000 },
-  { description: "Ceramic Crowns Veneer", category1: 35000, category2: 30000, category3: 25000 },
-  { description: "Cobalt Chrome P/D", category1: 50000, category2: 40000, category3: 30000 },
-  { description: "Complex EXT", category1: 7500, category2: 5000, category3: 3000 },
-  { description: "Composite Build Up", category1: 15000, category2: 10000, category3: 8000 },
-  { description: "Dental Implants", category1: 125000, category2: 85000, category3: 65000 },
-  { description: "Epulis removal", category1: 15000, category2: 12000, category3: 10000 },
-  { description: "F/D Acrylic per jaw", category1: 50000, category2: 40000, category3: 35000 },
-  { description: "F/D Removable per jaw", category1: 60000, category2: 50000, category3: 40000 },
-  { description: "Fiber Post", category1: 5000, category2: 3000, category3: 2000 },
-  { description: "General Gingivectomy", category1: 20000, category2: 15000, category3: 10000 },
-  { description: "Impacted Tooth EXT", category1: 25000, category2: 15000, category3: 10000 },
-  { description: "L-Gingivectomy Pulpotomy", category1: 10000, category2: 8000, category3: 6000 },
-  { description: "Moderate Filling", category1: 10000, category2: 8000, category3: 6000 },
-  { description: "MTA Pulpotomy", category1: 15000, category2: 10000, category3: 8000 },
-  { description: "Night Guard", category1: 15000, category2: 10000, category3: 8000 },
-  { description: "P/D per unit", category1: 5000, category2: 3000, category3: 2500 },
-  { description: "P/D Removable per unit", category1: 7000, category2: 5000, category3: 4000 },
-  { description: "Per Retainers", category1: 10000, category2: 7500, category3: 5000 },
-  { description: "RCT", category1: 20000, category2: 15000, category3: 10000 },
-  { description: "Root Planing", category1: 20000, category2: 15000, category3: 10000 },
-  { description: "Sealants Filling", category1: 10000, category2: 8000, category3: 6000 },
-  { description: "Simple EXT", category1: 5000, category2: 3000, category3: 2000 },
-  { description: "Surgical EXT", category1: 15000, category2: 10000, category3: 7000 },
-  { description: "U/S & Polishing", category1: 15000, category2: 10000, category3: 8000 },
-].sort((a, b) => a.description.localeCompare(b.description));
+export const PRICE_LIST_SECTIONS = [
+  {
+    section: "Consultation",
+    items: [
+      ["Consultation", 1000],
+    ],
+  },
+  {
+    section: "Soft tissues treatment modalities",
+    items: [
+      ["u/s Scaling & Polishing", 10000],
+      ["Root Planning", 20000],
+      ["Localized Gingivectomy", 10000],
+      ["Generalized Gingivectomy", 20000],
+      ["Epulis surgical removal", 15000],
+      ["Crown lengthning", 5000],
+    ],
+  },
+  {
+    section: "Tooth Fillings",
+    items: [
+      ["Sealants", 6000],
+      ["Moderate Composite Filling", 7500],
+      ["Composite Build up", 10000],
+      ["Fibre Post", 2500],
+      ["Dycal", 5000],
+    ],
+  },
+  {
+    section: "Root canal treatment",
+    items: [
+      ["Posterior teeth (premolars & molars)", 25000],
+      ["Anterior teeth (incisors & canines)", 20000],
+      ["Pulpotomy permanent tooth", 20000],
+      ["Pulpotomy Paeds", 15000],
+    ],
+  },
+  {
+    section: "Tooth Extraction",
+    items: [
+      ["Simple Extraction", 5000],
+      ["BDR extraction", 7500],
+      ["Complex extraction", 10000],
+      ["Surgical extraction", 15000],
+      ["Wisdom tooth extraction", 20000],
+      ["Apicectomy", 15000],
+    ],
+  },
+  {
+    section: "Crowns & Bridges",
+    items: [
+      ["PFM crown", 10000],
+      ["Zirconia/Ceramic grade I", 25000],
+      ["Zirconia/Ceramic grade II", 15000],
+      ["Overlay ceramic", 35000],
+      ["Veneer ceramic", 35000],
+    ],
+  },
+  {
+    section: "Dental Implants",
+    items: [
+      ["Turkish Mode", 65000],
+      ["Swiss Izen", 85000],
+    ],
+  },
+  {
+    section: "Acrylic Removable teeth",
+    items: [
+      ["Simple Partial Denture", 5000],
+      ["Molloplast Partial denture", 7500],
+      ["Simple Full Denture", "50000/jaw"],
+      ["Molloplast Full Denture", 65000],
+      ["Cobolt Chrome Partial denture", 45000],
+      ["Night Guard", "15000/jaw"],
+    ],
+  },
+  {
+    section: "Cosmetic",
+    items: [
+      ["LED tooth whitening system", 40000],
+      ["Dental Jewellary", "??"],
+    ],
+  },
+];
 
-export const getTreatmentPrice = (description, category) => {
-  const categoryKey = normalizeCategoryKey(category);
+export const PRICE_LIST = PRICE_LIST_SECTIONS.flatMap(({ section, items }) =>
+  items.map(([description, price]) => ({
+    section,
+    description,
+    price,
+  }))
+);
 
-  if (categoryKey === "category4") {
-    return 0;
+export const treatmentPriceValue = (price) => {
+  if (typeof price === "number") {
+    return price;
   }
 
+  const numeric = String(price || "").match(/\d+/);
+
+  return numeric ? Number(numeric[0]) : 0;
+};
+
+export const getTreatmentPrice = (description) => {
   const item = PRICE_LIST.find(
     (entry) => entry.description.toLowerCase() === String(description).toLowerCase()
   );
@@ -200,7 +267,7 @@ export const getTreatmentPrice = (description, category) => {
     return 0;
   }
 
-  return item[categoryKey] || 0;
+  return treatmentPriceValue(item.price);
 };
 
 export const treatmentOptions = PRICE_LIST.map((item) => item.description);

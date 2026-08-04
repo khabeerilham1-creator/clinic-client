@@ -12,6 +12,7 @@ import {
   mobileNumber,
   netAmount,
   patientArray,
+  patientRecordDate,
   patientName,
   paymentsTotal,
   regNo,
@@ -49,7 +50,7 @@ const patientDepartment = (patient) => {
     return "Ortho";
   }
 
-  if (sheet === "fullDenture") {
+  if (sheet === "fulldenture") {
     return "Prosthetic";
   }
 
@@ -58,7 +59,7 @@ const patientDepartment = (patient) => {
   }
 
   const invoiceText = (patient?.invoice || [])
-    .map((row) => `${row?.procedure || ""} ${row?.treatment || ""}`)
+    .map((row) => `${row?.procedure || ""} ${row?.treatment || ""} ${row?.details || ""}`)
     .join(" ")
     .toLowerCase();
 
@@ -178,6 +179,9 @@ function AdminFinance({ activePage, setActivePage, handleLogout, mode = "receiva
         };
       })
       .filter((row) => row.balance > 0)
+      .filter((row) =>
+        recordInPeriod({ date: patientRecordDate(row.patient) }, periodMonth, periodYear)
+      )
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [patients, periodMonth, periodYear]);
 

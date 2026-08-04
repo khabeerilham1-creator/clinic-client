@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   appointmentInitials,
@@ -59,12 +59,20 @@ function AppointmentDashboardModules({
   onOpenAppointments,
   onOpenPatient,
 }) {
-  const today = dateKey(new Date());
-  const isSunday = new Date().getDay() === 0;
-  const week = useMemo(() => currentWeekRange(), []);
+  const [referenceNow, setReferenceNow] = useState(new Date());
+  const today = dateKey(referenceNow);
+  const isSunday = referenceNow.getDay() === 0;
+  const week = useMemo(() => currentWeekRange(referenceNow), [referenceNow]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setReferenceNow(new Date()), 60000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   const appointments = useMemo(
     () => appointmentTimeline(patients, manualAppointments),
-    [patients, manualAppointments]
+    [patients, manualAppointments, today]
   );
   const activeAppointments = appointments.filter(
     (appointment) => !["Done", "Cancelled", "Missed"].includes(appointment.status)

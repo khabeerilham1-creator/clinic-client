@@ -1,9 +1,7 @@
 import React from "react";
 
 import {
-  CATEGORY_OPTIONS,
   getTreatmentPrice,
-  normalizeCategoryKey,
   PRICE_LIST,
 } from "../../utils/clinicData";
 import {
@@ -83,11 +81,16 @@ const invoicesDiscount = (invoices) =>
 const invoiceSubtotal = (invoice) =>
   (invoice.items || []).reduce((sum, item) => sum + Number(item.cost || 0), 0);
 
+const ORTHODONTIC_CASH_DISCOUNT = 25000;
+const ORTHODONTIC_DOWN_PAYMENT = 50000;
+const ORTHODONTIC_MONTHLY_INSTALLMENT = 8000;
+
 function Invoice({ patientData, setPatientData, initialPayment, setInitialPayment }) {
   const invoices = cleanInvoices(patientData);
-  const category = patientData.biography?.category || CATEGORY_OPTIONS[0].value;
-  const categoryKey = normalizeCategoryKey(category);
   const payment = initialPayment || { date: todayDisplayValue(), amount: "", description: "" };
+  const isOrthodonticCase = patientData.entrySheetType === "orthodontic";
+  const paymentPlan = patientData.paymentPlan || {};
+  const paymentMode = paymentPlan.type || "";
 
   const updateInvoices = (nextInvoices) => {
     const normalized = nextInvoices.map((invoice, invoiceIndex) => ({
@@ -142,7 +145,7 @@ function Invoice({ patientData, setPatientData, initialPayment, setInitialPaymen
         };
 
         if (field === "details") {
-          const autoRate = getTreatmentPrice(value, category);
+          const autoRate = getTreatmentPrice(value);
           item.rate = autoRate || "";
           item.qty = item.qty || 1;
           item.manualRate = false;
@@ -221,13 +224,58 @@ function Invoice({ patientData, setPatientData, initialPayment, setInitialPaymen
   const totalAmount = invoices.reduce((sum, invoice) => sum + invoiceSubtotal(invoice), 0);
   const discountAmount = invoicesDiscount(invoices);
   const netCost = Math.max(totalAmount - discountAmount, 0);
+  const installmentDownPayment = Number(paymentPlan.downPayment || ORTHODONTIC_DOWN_PAYMENT);
+  const monthlyInstallment = Number(paymentPlan.monthlyInstallment || ORTHODONTIC_MONTHLY_INSTALLMENT);
+  const installmentRemaining = Math.max(netCost - installmentDownPayment, 0);
+  const installmentMonths = monthlyInstallment > 0 ? Math.ceil(installmentRemaining / monthlyInstallment) : 0;
+
+  const updatePaymentPlan = (updates) => {
+    setPatientData((current) => ({
+      ...current,
+      paymentPlan: {
+        ...(current.paymentPlan || {}),
+        ...updates,
+      },
+    }));
+  };
+
+  const handleOrthodonticPaymentMode = (mode) => {
+    const nextInvoices = invoices.map((invoice, index) => ({
+      ...invoice,
+      discount: mode === "cash" && index === 0 ? ORTHODONTIC_CASH_DISCOUNT : "",
+    }));
+
+    updateInvoices(nextInvoices);
+    updatePaymentPlan({
+      type: mode,
+      discount: mode === "cash" ? ORTHODONTIC_CASH_DISCOUNT : 0,
+      downPayment: mode === "installment" ? ORTHODONTIC_DOWN_PAYMENT : "",
+      monthlyInstallment: mode === "installment" ? ORTHODONTIC_MONTHLY_INSTALLMENT : "",
+    });
+
+    if (setInitialPayment) {
+      setInitialPayment((current) => ({
+        ...current,
+        amount:
+          mode === "installment" && !Number(current.amount || 0)
+            ? String(ORTHODONTIC_DOWN_PAYMENT)
+            : current.amount,
+        description:
+          mode === "installment"
+            ? current.description || "Orthodontic down payment"
+            : mode === "cash"
+              ? current.description || "Full cash payment"
+              : current.description,
+      }));
+    }
+  };
 
   return (
     <div>
       <div className="panel-heading">
         <div>
           <h2>Invoice</h2>
-          <p>Prices auto-fill from the clinic price list for {category}.</p>
+          <p>Prices auto-fill from the clinic price list.</p>
         </div>
 
         <button onClick={addInvoice} className="btn btn-dark no-print" type="button">
@@ -238,10 +286,66 @@ function Invoice({ patientData, setPatientData, initialPayment, setInitialPaymen
       <datalist id="treatment-price-list">
         {PRICE_LIST.map((item) => (
           <option key={item.description} value={item.description}>
-            {formatCurrency(item[categoryKey] || 0)}
+            {formatCurrency(getTreatmentPrice(item.description))}
           </option>
         ))}
       </datalist>
+
+      {isOrthodonticCase && (
+        <section className="detail-card no-print">
+          <div className="panel-heading">
+            <div>
+              <h3>Orthodontic Payment Mode</h3>
+              <p>Cash has Rs 25,000 discount. Installments have no discount.</p>
+            </div>
+          </div>
+
+          <div className="payment-panel">
+            <label className="field">
+              <span>Payment Type</span>
+              <select value={paymentMode} onChange={(event) => handleOrthodonticPaymentMode(event.target.value)}>
+                <option value="">Select payment type</option>
+                <option value="cash">Full Cash</option>
+                <option value="installment">Installments</option>
+              </select>
+            </label>
+
+            {paymentMode === "cash" && (
+              <div className="calculated-field">
+                <span>Cash Discount</span>
+                <strong>{formatCurrency(ORTHODONTIC_CASH_DISCOUNT)}</strong>
+              </div>
+            )}
+
+            {paymentMode === "installment" && (
+              <>
+                <label className="field">
+                  <span>Down Payment</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={paymentPlan.downPayment || ORTHODONTIC_DOWN_PAYMENT}
+                    onChange={(event) => updatePaymentPlan({ downPayment: event.target.value })}
+                  />
+                </label>
+                <label className="field">
+                  <span>Monthly Installment</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={paymentPlan.monthlyInstallment || ORTHODONTIC_MONTHLY_INSTALLMENT}
+                    onChange={(event) => updatePaymentPlan({ monthlyInstallment: event.target.value })}
+                  />
+                </label>
+                <div className="calculated-field">
+                  <span>Approx Months</span>
+                  <strong>{installmentMonths || "-"}</strong>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Treatment Summary Block */}
       <section className="detail-card treatment-summary-card no-print" style={{ marginBottom: "24px" }}>

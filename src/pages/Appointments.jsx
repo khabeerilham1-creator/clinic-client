@@ -7,6 +7,7 @@ import {
   appointmentArray,
   appointmentTimeline,
   appointmentRequestParams,
+  currentMonthRange,
   currentWeekRange,
   filterManualAppointmentsForUser,
   manualAppointmentMatchesPatient,
@@ -110,9 +111,16 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
   const [caseDetailSection, setCaseDetailSection] = useState("");
   const [activeWeekday, setActiveWeekday] = useState(1);
   const [editingAppointment, setEditingAppointment] = useState(null);
+  const [referenceNow, setReferenceNow] = useState(new Date());
 
   useEffect(() => {
     fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setReferenceNow(new Date()), 60000);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   const fetchAppointments = async () => {
@@ -141,12 +149,13 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     }
   };
 
-  const todayKey = dateKey(new Date());
-  const isSunday = new Date().getDay() === 0;
-  const week = useMemo(() => currentWeekRange(), []);
+  const todayKey = dateKey(referenceNow);
+  const isSunday = referenceNow.getDay() === 0;
+  const week = useMemo(() => currentWeekRange(referenceNow), [referenceNow]);
+  const month = useMemo(() => currentMonthRange(referenceNow), [referenceNow]);
   const allAppointments = useMemo(
     () => appointmentTimeline(patients, manualAppointments),
-    [patients, manualAppointments]
+    [patients, manualAppointments, todayKey]
   );
 
   const appointmentPatient = (appointment) =>
@@ -196,6 +205,9 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     const weekly = activeAppointments
       .filter((appointment) => appointment.dateKey >= week.startKey && appointment.dateKey <= week.endKey)
       .filter(appointmentMatchesSearch);
+    const monthly = activeAppointments
+      .filter((appointment) => appointment.dateKey >= month.startKey && appointment.dateKey <= month.endKey)
+      .filter(appointmentMatchesSearch);
     const patientSummaries = patients
       .map((patient) => ({
         patient,
@@ -208,8 +220,8 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
     const ongoing = filteredPatientSummaries.filter(({ summary }) => summary.isOngoing);
     const followUp = filteredPatientSummaries.filter(({ summary }) => summary.isFollowUp);
 
-    return { today, weekly, expected, ongoing, followUp };
-  }, [allAppointments, todayKey, week.startKey, week.endKey, patients, manualAppointments, search]);
+    return { today, weekly, monthly, expected, ongoing, followUp };
+  }, [allAppointments, todayKey, week.startKey, week.endKey, month.startKey, month.endKey, patients, manualAppointments, search]);
 
   const activeClients = grouped[caseDetailSection] || grouped.expected;
   const clientSectionDetails = {
@@ -514,10 +526,10 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
           <div className="panel wide">
             <div className="panel-heading">
               <div>
-                <h2>All Weekly Appointments</h2>
-                <p>Planned and added appointments for the current week.</p>
+                <h2>Monthly Appointments</h2>
+                <p>Planned and added appointments for {month.label}.</p>
               </div>
-              <span className="pill success">{grouped.weekly.length}</span>
+              <span className="pill success">{grouped.monthly.length}</span>
             </div>
 
             <div className="data-table-wrap">
@@ -534,20 +546,20 @@ function Appointments({ activePage, setActivePage, handleLogout }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading && (
+                    {loading && (
+                      <tr>
+                        <td colSpan="7">Loading monthly appointments...</td>
+                      </tr>
+                    )}
+
+                  {!loading && grouped.monthly.length === 0 && (
                     <tr>
-                      <td colSpan="7">Loading weekly appointments...</td>
+                      <td colSpan="7">No appointments found this month.</td>
                     </tr>
                   )}
 
-                  {!loading && grouped.weekly.length === 0 && (
-                    <tr>
-                      <td colSpan="7">No appointments found this week.</td>
-                    </tr>
-                  )}
-
-                  {grouped.weekly.map((appointment, index) => (
-                    <tr key={`${appointment.source}-${appointment.id}-weekly-row-${index}`}>
+                  {grouped.monthly.map((appointment, index) => (
+                    <tr key={`${appointment.source}-${appointment.id}-monthly-row-${index}`}>
                       <td>
                         <span className="pill">{formatDateDisplay(appointment.date)}</span>
                       </td>

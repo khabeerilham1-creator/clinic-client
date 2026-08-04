@@ -5,7 +5,9 @@ import Layout from "../components/Layout";
 import {
   appointmentArray,
   appointmentRequestParams,
+  expectedAppointmentStatus,
   filterManualAppointmentsForUser,
+  patientToBeAppointmentCase,
   patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
 import { openPatientFile } from "../utils/clientNavigation";
@@ -18,6 +20,7 @@ import {
   initials,
   mobileNumber,
   patientArray,
+  patientDepartmentLabel,
   patientName,
   regNo,
 } from "../utils/patientHelpers";
@@ -27,6 +30,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
   const [manualAppointments, setManualAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const role = sessionStorage.getItem("role") || user.role || "";
   const modeDetails = {
@@ -44,6 +48,16 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
       title: "Expected Cases",
       description: "Expected cases are checkup-only cases whose appointment is not confirmed.",
       empty: "No expected cases found.",
+    },
+    "to-be-appointment": {
+      title: "To Be Appointment",
+      description: "Expected cases marked as To Be Appointment.",
+      empty: "No to-be-appointment cases found.",
+    },
+    "follow-up": {
+      title: "Follow Up",
+      description: "Only cases marked Follow Up Needed: Yes in Clinical Exam.",
+      empty: "No follow-up cases found.",
     },
   };
   const currentMode = modeDetails[mode] || modeDetails.ongoing;
@@ -89,10 +103,53 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
           patient,
           summary: patientAppointmentSummary(patient, manualAppointments),
         }))
-        .filter(({ summary }) => summary.category === mode),
+        .filter(({ patient, summary }) => {
+          if (mode === "follow-up") {
+            return summary.isFollowUp;
+          }
+
+          if (mode === "to-be-appointment") {
+            return patientToBeAppointmentCase(patient);
+          }
+
+          if (mode === "expected") {
+            return summary.isExpected;
+          }
+
+          return summary.category === mode;
+        }),
     [patients, manualAppointments, mode]
   );
   const totalRows = visiblePatients.length;
+  const showExpectedStatus = mode === "expected" || mode === "to-be-appointment";
+  const columnCount = showExpectedStatus ? 7 : 6;
+
+  const updateExpectedStatus = async (patient, status) => {
+    if (!patient?._id) {
+      setMessage("Patient ID is missing.");
+      return;
+    }
+
+    const payload = {
+      ...patient,
+      appointmentStatus: status,
+      checkup: {
+        ...(patient.checkup || {}),
+        appointmentStatus: status,
+      },
+    };
+
+    try {
+      await api.put(`/patients/${patient._id}`, payload);
+      setPatients((current) =>
+        current.map((item) => (item._id === patient._id ? payload : item))
+      );
+      setMessage("Appointment status updated.");
+    } catch (requestError) {
+      console.error(requestError);
+      setMessage("Appointment status could not be updated.");
+    }
+  };
 
   return (
     <Layout activePage={activePage} setActivePage={setActivePage} handleLogout={handleLogout}>
@@ -106,6 +163,7 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
         </section>
 
         {error && <div className="notice danger">{error}</div>}
+        {message && <div className="notice">{message}</div>}
 
         <section className="panel gold-bordered">
           <div className="data-table-wrap">
@@ -114,20 +172,22 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
                 <tr>
                   <th>Name</th>
                   <th>Reg No</th>
+                  <th>Department</th>
                   <th>Contact</th>
                   <th>Appointments</th>
+                  {showExpectedStatus && <th>Status</th>}
                   <th>Balance</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="5">Loading cases...</td>
+                    <td colSpan={columnCount}>Loading cases...</td>
                   </tr>
                 )}
                 {!loading && totalRows === 0 && (
                   <tr>
-                    <td colSpan="5">{currentMode.empty}</td>
+                    <td colSpan={columnCount}>{currentMode.empty}</td>
                   </tr>
                 )}
                 {visiblePatients.map(({ patient, summary }) => (
@@ -143,14 +203,42 @@ function PatientStatusPage({ activePage, setActivePage, handleLogout, mode = "on
                     <td>
                       <span className="pill">{regNo(patient) || "-"}</span>
                     </td>
+                    <td>{patientDepartmentLabel(patient)}</td>
                     <td>{mobileNumber(patient)}</td>
                     <td>
                       {mode === "expected"
                         ? "Checkup done, appointment expected"
+                        : mode === "to-be-appointment"
+                          ? "To be appointed"
+                        : mode === "follow-up"
+                          ? "Follow up needed"
                         : mode === "completed-cases"
                           ? summary.phaseLabel || "The case has been successfully completed."
                           : `${summary.scheduledCount} scheduled`}
                     </td>
+                    {showExpectedStatus && (
+                      <td>
+                        {mode === "expected" ? (
+                          <div className="segmented-control compact-segmented">
+                            {[
+                              ["silent", "Silent"],
+                              ["to-be-appointment", "To Be Appointment"],
+                            ].map(([value, label]) => (
+                              <button
+                                key={value}
+                                type="button"
+                                className={expectedAppointmentStatus(patient) === value ? "active" : ""}
+                                onClick={() => updateExpectedStatus(patient, value)}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="pill warning">To Be Appointment</span>
+                        )}
+                      </td>
+                    )}
                     <td>{formatCurrency(balanceDue(patient))}</td>
                   </tr>
                 ))}

@@ -6,7 +6,9 @@ import {
   appointmentArray,
   appointmentRequestParams,
   appointmentTimeline,
+  expectedAppointmentStatus,
   filterManualAppointmentsForUser,
+  patientAppointmentSummary,
 } from "../utils/appointmentHelpers";
 import { openPatientFile } from "../utils/clientNavigation";
 import {
@@ -88,6 +90,24 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
     () => appointmentTimeline(patients, manualAppointments),
     [patients, manualAppointments]
   );
+  const caseStatusMetrics = useMemo(() => {
+    const summaries = patients.map((patient) => ({
+      patient,
+      summary: patientAppointmentSummary(patient, manualAppointments),
+    }));
+
+    return {
+      ongoing: summaries.filter(({ summary }) => summary.isOngoing).length,
+      completed: summaries.filter(({ summary }) => summary.isCompletedCase).length,
+      expected: summaries.filter(({ summary }) => summary.isExpected).length,
+      toBeAppointment: summaries.filter(
+        ({ patient, summary }) =>
+          summary.isExpected && expectedAppointmentStatus(patient) === "to-be-appointment"
+      ).length,
+      followUp: summaries.filter(({ summary }) => summary.isFollowUp).length,
+      receivables: patients.filter((patient) => balanceDue(patient) > 0).length,
+    };
+  }, [patients, manualAppointments]);
 
   const metrics = useMemo(() => {
     const todayPatients = patients.filter((patient) => {
@@ -214,6 +234,36 @@ function Dashboard({ activePage, setActivePage, handleLogout }) {
             <span>R</span>
             <strong>Registered Cases</strong>
             <small>{selectedPeriodLabel}</small>
+          </button>
+          <button className="role-action-card blue" type="button" onClick={() => setActivePage("ongoing-patients")}>
+            <span>{loading ? "..." : caseStatusMetrics.ongoing}</span>
+            <strong>On Going Cases</strong>
+            <small>All departments</small>
+          </button>
+          <button className="role-action-card green" type="button" onClick={() => setActivePage("completed-patients")}>
+            <span>{loading ? "..." : caseStatusMetrics.completed}</span>
+            <strong>Completed Cases</strong>
+            <small>All departments</small>
+          </button>
+          <button className="role-action-card gold" type="button" onClick={() => setActivePage("expected-cases")}>
+            <span>{loading ? "..." : caseStatusMetrics.expected}</span>
+            <strong>Expected Cases</strong>
+            <small>Checkup done, appointment expected</small>
+          </button>
+          <button className="role-action-card cyan" type="button" onClick={() => setActivePage("to-be-appointed")}>
+            <span>{loading ? "..." : caseStatusMetrics.toBeAppointment}</span>
+            <strong>To Be Appointment</strong>
+            <small>Cases marked from Expected</small>
+          </button>
+          <button className="role-action-card rose" type="button" onClick={() => setActivePage("follow-up")}>
+            <span>{loading ? "..." : caseStatusMetrics.followUp}</span>
+            <strong>Follow Up</strong>
+            <small>Only Follow Up Needed: Yes</small>
+          </button>
+          <button className="role-action-card blue" type="button" onClick={() => setActivePage("account-receivable")}>
+            <span>{loading ? "..." : caseStatusMetrics.receivables}</span>
+            <strong>Receivables</strong>
+            <small>Open balances</small>
           </button>
         </section>
 

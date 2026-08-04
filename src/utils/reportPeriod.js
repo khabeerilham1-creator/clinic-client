@@ -28,14 +28,41 @@ export const monthBounds = (month, year) => ({
   end: new Date(year, month, 0, 23, 59, 59, 999),
 });
 
-export const dateInPeriod = (value, month, year) => {
+const parseReportDate = (value) => {
   if (!value) {
-    return false;
+    return null;
   }
 
-  const date = new Date(value);
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
 
-  if (Number.isNaN(date.getTime())) {
+  const text = String(value);
+  const isoDate = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+  if (isoDate) {
+    const [, parsedYear, parsedMonth, parsedDay] = isoDate;
+    return new Date(Number(parsedYear), Number(parsedMonth) - 1, Number(parsedDay));
+  }
+
+  const localDate = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+
+  if (localDate) {
+    const [, parsedDay, parsedMonth, rawYear] = localDate;
+    const parsedYear = rawYear.length === 2 ? `20${rawYear}` : rawYear;
+
+    return new Date(Number(parsedYear), Number(parsedMonth) - 1, Number(parsedDay));
+  }
+
+  const date = new Date(text);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const dateInPeriod = (value, month, year) => {
+  const date = parseReportDate(value);
+
+  if (!date) {
     return false;
   }
 
