@@ -77,7 +77,7 @@ function ToothSVG({ shape, selected }) {
   return shapes[shape] || shapes.molar;
 }
 
-export default function ToothChart({ patientData, setPatientData, onToothSelect, selectedToothNos, hideNotes }) {
+export default function ToothChart({ patientData, setPatientData, onToothSelect, selectedToothNos, hideNotes, hideHeader }) {
   const notes = patientData?.toothNotes || "";
   const selectedNumbers = normalizeSelection(
     selectedToothNos !== undefined
@@ -150,14 +150,13 @@ export default function ToothChart({ patientData, setPatientData, onToothSelect,
 
   return (
     <div>
-      <div style={{ marginBottom: "18px" }}>
-        <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px" }}>
-          Tooth Selection Chart
-        </h2>
-        <p style={{ color: "#64748b", fontSize: "13px", margin: 0 }}>
-          Click any tooth to select it for the hard tissue entry below. The same tooth can be selected and added repeatedly.
-        </p>
-      </div>
+      {!hideHeader && (
+        <div style={{ marginBottom: "18px" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px" }}>
+            Tooth Chart
+          </h2>
+        </div>
+      )}
 
       <div style={{ background: "#f8fafc", borderRadius: "16px", padding: "16px 10px", border: "1px solid #e8ecf0", marginBottom: "14px" }}>
         <div style={{ fontSize: "10px", color: "#94a3b8", marginBottom: "6px", paddingLeft: "4px" }}>Upper jaw (maxillary) 1-16</div>

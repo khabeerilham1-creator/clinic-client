@@ -39,6 +39,8 @@ const EMPTY_PATIENT = {
   orthodonticAdjustments: [],
   fullDenture: {},
   acknowledgement: {},
+  caseStatus: {},
+  caseUploads: [],
   invoices: [],
   invoice: [],
   discount: 0,
@@ -56,7 +58,7 @@ const todayInputValue = () => todayDisplayValue();
 
 const TABS = [
   { id: "biography", label: "Bio-data" },
-  { id: "checkup", label: "Clinical Exam" },
+  { id: "checkup", label: "Assessment" },
   { id: "plannedSequence", label: "Planned" },
   { id: "invoice", label: "Invoice" },
   { id: "account", label: "Account Status" },
@@ -95,11 +97,143 @@ const defaultTabForSheet = (sheetType) => (SHEET_TABS[sheetType] || TABS)[0].id;
 const normalizeSheetType = (sheetType) =>
   SHEETS.some((sheet) => sheet.id === sheetType) ? sheetType : "routine";
 
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
+
+const fileSizeLabel = (size = 0) => {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  return `${Math.max(1, Math.round(size / 1024))} KB`;
+};
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () =>
+      resolve({
+        id: `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dataUrl: reader.result,
+        uploadedAt: new Date().toISOString(),
+      });
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+function DepartmentPicker({ sheets, selectedId, onSelect }) {
+  return (
+    <section className="department-picker-card no-print">
+      <div className="department-picker-grid">
+        {sheets.map((sheet) => (
+          <button
+            key={sheet.id}
+            type="button"
+            className={`department-case-card${selectedId === sheet.id ? " active" : ""}`}
+            onClick={() => onSelect(sheet.id)}
+          >
+            <strong>{sheet.label}</strong>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CaseUploadsPanel({ patientData, setPatientData, sheetType }) {
+  const uploads = Array.isArray(patientData.caseUploads) ? patientData.caseUploads : [];
+
+  const updateUploads = (nextUploads) => {
+    setPatientData((current) => ({
+      ...current,
+      caseUploads: nextUploads,
+    }));
+  };
+
+  const handleFiles = async (event) => {
+    const files = Array.from(event.target.files || []);
+    const acceptedFiles = files.filter((file) => file.size <= MAX_UPLOAD_SIZE);
+
+    if (acceptedFiles.length === 0) {
+      event.target.value = "";
+      return;
+    }
+
+    const convertedFiles = await Promise.all(acceptedFiles.map(readFileAsDataUrl));
+    updateUploads([
+      ...uploads,
+      ...convertedFiles.map((file) => ({
+        ...file,
+        department: sheetType,
+        category: "OPG / X-ray",
+      })),
+    ]);
+    event.target.value = "";
+  };
+
+  const updateUpload = (id, field, value) => {
+    updateUploads(uploads.map((upload) => (upload.id === id ? { ...upload, [field]: value } : upload)));
+  };
+
+  const deleteUpload = (id) => {
+    updateUploads(uploads.filter((upload) => upload.id !== id));
+  };
+
+  return (
+    <section className="case-upload-panel detail-card no-print">
+      <div className="panel-heading compact-heading">
+        <div>
+          <h3>Case Uploads</h3>
+        </div>
+        <label className="btn btn-sm btn-primary upload-button">
+          Upload
+          <input type="file" multiple accept="image/*,.pdf" onChange={handleFiles} />
+        </label>
+      </div>
+
+      {uploads.length > 0 && (
+        <div className="case-upload-grid">
+          {uploads.map((upload) => (
+            <div className="case-upload-item" key={upload.id}>
+              {String(upload.type || "").startsWith("image/") ? (
+                <img src={upload.dataUrl} alt={upload.name} />
+              ) : (
+                <div className="case-upload-file">PDF</div>
+              )}
+              <div className="case-upload-meta">
+                <input
+                  value={upload.category || ""}
+                  onChange={(event) => updateUpload(upload.id, "category", event.target.value)}
+                  aria-label="Upload category"
+                />
+                <strong>{upload.name}</strong>
+                <span>{fileSizeLabel(upload.size)}</span>
+              </div>
+              <div className="row-actions">
+                <a className="btn btn-sm" href={upload.dataUrl} download={upload.name}>
+                  Open
+                </a>
+                <button className="btn btn-sm btn-danger" type="button" onClick={() => deleteUpload(upload.id)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Patients({ activePage, setActivePage, handleLogout }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const shift = activeShift();
   const [data, setData] = useState(EMPTY_PATIENT);
   const [sheetType, setSheetType] = useState("routine");
+  const [departmentReady, setDepartmentReady] = useState(false);
   const [tab, setTab] = useState("biography");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -119,6 +253,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
         const nextSheetType = normalizeSheetType(nextData.entrySheetType || nextData.sheetType);
 
         setSheetType(nextSheetType);
+        setDepartmentReady(true);
         setTab(defaultTabForSheet(nextSheetType));
         setData({ ...nextData, entrySheetType: nextSheetType });
       } catch (error) {
@@ -128,6 +263,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       const nextData = applyUserToClient(applyShiftToPatient(EMPTY_PATIENT));
 
       setSheetType("routine");
+      setDepartmentReady(false);
       setTab(defaultTabForSheet("routine"));
       setData(nextData);
     }
@@ -316,6 +452,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
     localStorage.removeItem("editPatient");
     setSheetType("routine");
+    setDepartmentReady(false);
     setData(applyUserToClient(applyShiftToPatient(EMPTY_PATIENT)));
     setTab(defaultTabForSheet("routine"));
     notify("Form cleared. Ready for new case.");
@@ -331,6 +468,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
 
     playSectionSound("section");
     setSheetType(normalized);
+    setDepartmentReady(true);
     setTab(defaultTabForSheet(normalized));
     setData((current) => ({
       ...current,
@@ -376,10 +514,10 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
       <div className="patient-entry-shell">
         <div className="topbar">
           <button type="button" className="btn btn-ghost btn-icon no-print" onClick={() => setActivePage("dashboard")}>
-            Back
+            &lt;
           </button>
 
-          <div>
+          <div className="new-case-title-block">
             <div className="topbar-title">{data.isEditing ? "Edit Case" : "New Case"}</div>
             {data.biography?.regNo && (
               <span style={{ fontSize: "12px", color: "var(--muted)" }}>Reg #{data.biography.regNo}</span>
@@ -420,83 +558,66 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
             <div className={`notice ${message.type === "danger" ? "danger" : ""}`}>{message.text}</div>
           )}
 
-          <div className="sheet-bar no-print" aria-label="Case entry department">
-            {SHEETS.map((sheet) => (
-              <button
-                key={sheet.id}
-                type="button"
-                className={`sheet-bar-item${sheetType === sheet.id ? " active" : ""}`}
-                onClick={() => goToSheet(sheet.id)}
-              >
-                {sheet.label}
-              </button>
-            ))}
-          </div>
+          {!departmentReady ? (
+            <DepartmentPicker sheets={SHEETS} selectedId={sheetType} onSelect={goToSheet} />
+          ) : (
+            <>
+              <div className="card fade-in compact-case-card">
+                {tab === "biography" && <Biography patientData={data} setPatientData={setData} />}
+                {tab === "checkup" && <Checkup patientData={data} setPatientData={setData} />}
+                {tab === "plannedSequence" && <PlannedSequence patientData={data} setPatientData={setData} />}
+                {tab === "implantSheet" && (
+                  <ImplantCommencementSheet patientData={data} setPatientData={setData} />
+                )}
+                {tab === "orthodonticAssessment" && (
+                  <OrthodonticAssessmentSheet patientData={data} setPatientData={setData} />
+                )}
+                {tab === "orthodonticAdjustments" && (
+                  <OrthodonticAdjustmentsSheet patientData={data} setPatientData={setData} />
+                )}
+                {tab === "fullDentureSheet" && <FullDentureSheet patientData={data} setPatientData={setData} />}
+                {tab === "formatPending" && (
+                  <div className="empty-state">Format pending.</div>
+                )}
+                {tab === "invoice" && (
+                  <Invoice
+                    patientData={data}
+                    setPatientData={setData}
+                    initialPayment={initialPayment}
+                    setInitialPayment={setInitialPayment}
+                  />
+                )}
+                {tab === "account" && <AccountLedger patientData={data} setPatientData={setData} />}
+              </div>
 
-          <div className="tab-bar">
-            {activeTabs.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`tab-item${tab === item.id ? " active" : ""}`}
-                onClick={() => goToTab(item.id)}
-              >
-                {item.label}
-                {done[item.id] && <span className="tab-done">Done</span>}
-              </button>
-            ))}
-          </div>
+              <CaseUploadsPanel patientData={data} setPatientData={setData} sheetType={sheetType} />
 
-          <div className="card fade-in">
-            {tab === "biography" && <Biography patientData={data} setPatientData={setData} />}
-            {tab === "checkup" && <Checkup patientData={data} setPatientData={setData} />}
-            {tab === "plannedSequence" && <PlannedSequence patientData={data} setPatientData={setData} />}
-            {tab === "implantSheet" && (
-              <ImplantCommencementSheet patientData={data} setPatientData={setData} />
-            )}
-            {tab === "orthodonticAssessment" && (
-              <OrthodonticAssessmentSheet patientData={data} setPatientData={setData} />
-            )}
-            {tab === "orthodonticAdjustments" && (
-              <OrthodonticAdjustmentsSheet patientData={data} setPatientData={setData} />
-            )}
-            {tab === "fullDentureSheet" && <FullDentureSheet patientData={data} setPatientData={setData} />}
-            {tab === "formatPending" && (
-              <div className="empty-state">Format pending.</div>
-            )}
-            {tab === "invoice" && (
-              <Invoice
-                patientData={data}
-                setPatientData={setData}
-                initialPayment={initialPayment}
-                setInitialPayment={setInitialPayment}
-              />
-            )}
-            {tab === "account" && <AccountLedger patientData={data} setPatientData={setData} />}
-          </div>
-
-          <div className="form-pager no-print">
-            <button
-              type="button"
-              className="btn"
-              disabled={tabIndex === 0}
-              onClick={() => goToTab(activeTabs[tabIndex - 1].id)}
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={tabIndex === activeTabs.length - 1}
-              onClick={() => goToTab(activeTabs[tabIndex + 1].id)}
-            >
-              Next
-            </button>
-          </div>
+              <div className="form-pager no-print">
+                <button
+                  type="button"
+                  className="btn btn-icon"
+                  aria-label="Previous"
+                  disabled={tabIndex === 0}
+                  onClick={() => goToTab(activeTabs[tabIndex - 1].id)}
+                >
+                  &lt;
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-icon"
+                  aria-label="Next"
+                  disabled={tabIndex === activeTabs.length - 1}
+                  onClick={() => goToTab(activeTabs[tabIndex + 1].id)}
+                >
+                  &gt;
+                </button>
+              </div>
+            </>
+          )}
 
         </div>
 
-        <div className="bottom-bar no-print">
+        {departmentReady && <div className="bottom-bar no-print">
           <div className="progress-tabs">
             {activeTabs.map((item) => (
               <button
@@ -521,7 +642,7 @@ export default function Patients({ activePage, setActivePage, handleLogout }) {
               {loading ? <><div className="spinner" /> Saving...</> : "Save Case"}
             </button>
           )}
-        </div>
+        </div>}
       </div>
     </Layout>
   );

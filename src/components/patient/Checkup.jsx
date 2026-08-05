@@ -296,33 +296,13 @@ function Checkup({ patientData, setPatientData }) {
     <div className="clinical-section">
       <div className="panel-heading">
         <div>
-          <h2>Clinical Exam</h2>
-          <p>Soft tissue and hard tissue findings with automatic treatment suggestions.</p>
+          <h2>Assessment</h2>
         </div>
       </div>
 
-      <section className="clinical-chart-card followup-toggle-card">
-        <div>
-          <h3>Follow Up Needed</h3>
-          <p className="table-subtext">Only cases marked yes here will appear in Follow Up.</p>
-        </div>
-        <div className="segmented-control" aria-label="Follow up needed">
-          {["No", "Yes"].map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={(checkupData.followUpNeeded || "No") === option ? "active" : ""}
-              onClick={() => setCheckup({ followUpNeeded: option })}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </section>
-
       <section className="clinical-chart-card">
         <ClinicalSelector
-          title="Soft Tissue Chart"
+          title="Soft Tissue Assessment"
           options={SOFT_TISSUE_CONDITIONS}
           selectedCondition={checkupData.softSelectedCondition || checkupData.selectedCondition}
           suggestedTreatment={checkupData.softSuggestedTreatment || checkupData.suggestedTreatment}
@@ -342,11 +322,13 @@ function Checkup({ patientData, setPatientData }) {
       </section>
 
       <section className="clinical-chart-card">
+        <h3 className="clinical-chart-title">Hard Tissue Tooth Chart</h3>
         <div className="tooth-chart-wrap">
           <ToothChart
             patientData={patientData}
             setPatientData={setPatientData}
             onToothSelect={handleToothSelect}
+            hideHeader={true}
           />
         </div>
       </section>
@@ -358,7 +340,7 @@ function Checkup({ patientData, setPatientData }) {
         </div>
 
         <ClinicalSelector
-          title="Hard Tissue Chart"
+          title="Hard Tissue Assessment"
           options={HARD_TISSUE_CONDITIONS}
           selectedCondition={checkupData.hardSelectedCondition}
           suggestedTreatment={checkupData.hardSuggestedTreatment}
@@ -388,6 +370,7 @@ function Checkup({ patientData, setPatientData }) {
       </section>
 
       <section className="clinical-chart-card">
+        <h3 className="clinical-chart-title">Lab Task Tooth Chart</h3>
         <div className="tooth-chart-wrap">
           <ToothChart
             patientData={patientData}
@@ -395,6 +378,7 @@ function Checkup({ patientData, setPatientData }) {
             onToothSelect={handleLabToothSelect}
             selectedToothNos={labSelectedToothNos}
             hideNotes={true}
+            hideHeader={true}
           />
         </div>
       </section>
@@ -406,7 +390,7 @@ function Checkup({ patientData, setPatientData }) {
         </div>
 
         <ClinicalSelector
-          title="Lab Task Chart"
+          title="Lab Task Assessment"
           options={LAB_TASK_CONDITIONS}
           selectedCondition={checkupData.labSelectedCondition}
           suggestedTreatment={checkupData.labSuggestedTreatment}

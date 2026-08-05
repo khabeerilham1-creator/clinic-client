@@ -31,7 +31,6 @@ export const CATEGORY_OPTIONS = [
 
 export const DEPARTMENT_OPTIONS = [
   { id: "routine", label: "Comprehensive" },
-  { id: "singleTooth", label: "Single Tooth" },
   { id: "implant", label: "Dental Implant" },
   { id: "orthodontic", label: "Orthodontic" },
   { id: "peads", label: "Peads" },

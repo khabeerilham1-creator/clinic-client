@@ -589,35 +589,6 @@ function Biography({
             mb-1
             font-medium
           ">
-            Referred Date
-          </label>
-
-          <input
-            type="text"
-            name="referralDate"
-            value={
-              formData.referralDate || ""
-            }
-            onChange={handleChange}
-            placeholder="dd/mm/yyyy"
-            inputMode="numeric"
-            className="
-              w-full
-              border
-              rounded-lg
-              p-3
-            "
-          />
-
-        </div>
-
-        <div>
-
-          <label className="
-            block
-            mb-1
-            font-medium
-          ">
             Referred By
           </label>
 
